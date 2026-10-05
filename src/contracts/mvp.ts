@@ -1,0 +1,35 @@
+export type MvpAreaId = 'home' | 'patricia' | 'consultas' | 'questionarios' | 'cofre';
+
+export type MvpAreaStatus = 'mock' | 'planned' | 'blocked';
+
+export type MvpArea = {
+  id: MvpAreaId;
+  route: '/' | '/patricia' | '/consultas' | '/questionarios' | '/cofre';
+  title: string;
+  label: string;
+  eyebrow: string;
+  description: string;
+  status: MvpAreaStatus;
+};
+
+export type HomeInsight = {
+  label: string;
+  value: string;
+  tone: 'primary' | 'calm' | 'warm';
+};
+
+export type MockAction = {
+  label: string;
+  detail: string;
+};
+
+export type TimelineItem = {
+  title: string;
+  meta: string;
+  description: string;
+};
+
+export type ContractNotice = {
+  title: string;
+  description: string;
+};

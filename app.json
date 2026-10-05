@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "iPsiquiatra-Aplicativo",
+    "slug": "ipsiquiatra-aplicativo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/ip-icon.png",
+    "scheme": "ipsiquiatraaplicativo",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/ip-icon.png"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#EEE8FF",
+        "foregroundImage": "./assets/images/ip-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#7B42F6",
+          "image": "./assets/images/ip-icon.png",
+          "imageWidth": 96
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
