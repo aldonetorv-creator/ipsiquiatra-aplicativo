@@ -49,9 +49,9 @@ export const mvpAreas: MvpArea[] = [
 ];
 
 export const homeInsights: HomeInsight[] = [
-  { label: 'Próximo retorno', value: 'Qui, 15:30', tone: 'primary' },
-  { label: 'Check-in aberto', value: '2 min', tone: 'calm' },
-  { label: 'Cofre', value: '3 itens', tone: 'warm' },
+  { label: 'Próximo retorno', value: 'Qui, 15:30', tone: 'purple' },
+  { label: 'Check-in aberto', value: '2 min', tone: 'blue' },
+  { label: 'Cofre', value: '3 itens', tone: 'white' },
 ];
 
 export const homeTimeline: TimelineItem[] = [

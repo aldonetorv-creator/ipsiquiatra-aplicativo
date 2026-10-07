@@ -2,19 +2,23 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+// Paleta iPsiquiatra: azul, roxo e branco (ver docs/identidade-visual).
 export const Tokens = {
   color: {
-    background: '#F7F5F2',
+    background: '#F5F6FC',
     surface: '#FFFFFF',
-    surfaceMuted: '#F0ECE8',
-    text: '#201A24',
-    muted: '#6A6470',
-    border: '#E3DDE8',
-    brand: '#7B42F6',
+    surfaceMuted: '#EEF0FA',
+    text: '#1B2559',
+    muted: '#5B6487',
+    border: '#E1E4F2',
+    blue: '#2F45B5',
+    blueSoft: '#E8ECFB',
+    blueBorder: '#C9D2F5',
+    brand: '#6B3FD9',
     brandDeep: '#4A1F9A',
-    brandSoft: '#B99BFF',
-    teal: '#2E948A',
-    amber: '#B7791F',
+    brandSoft: '#EFEAFD',
+    brandBorder: '#D9CCFA',
+    onBrand: '#FFFFFF',
   },
   radius: {
     sm: 8,
@@ -27,15 +31,15 @@ export const Colors = {
     text: Tokens.color.text,
     background: Tokens.color.background,
     backgroundElement: Tokens.color.surface,
-    backgroundSelected: '#EEE8FF',
+    backgroundSelected: Tokens.color.brandSoft,
     textSecondary: Tokens.color.muted,
   },
   dark: {
-    text: '#F7F2FA',
-    background: '#151019',
-    backgroundElement: '#241A2D',
-    backgroundSelected: '#35234A',
-    textSecondary: '#C9C0D0',
+    text: '#F3F4FF',
+    background: '#0F1330',
+    backgroundElement: '#1A1F45',
+    backgroundSelected: '#2D2363',
+    textSecondary: '#B8BEDC',
   },
 } as const;
 

@@ -16,10 +16,10 @@ export function Panel({ children, style }: PanelProps) {
 type StatCardProps = {
   label: string;
   value: string;
-  tone?: 'primary' | 'calm' | 'warm';
+  tone?: 'purple' | 'blue' | 'white';
 };
 
-export function StatCard({ label, value, tone = 'primary' }: StatCardProps) {
+export function StatCard({ label, value, tone = 'purple' }: StatCardProps) {
   return (
     <View style={[styles.stat, styles[tone]]}>
       <ThemedText type="small" style={styles.statLabel}>
@@ -86,17 +86,17 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
   },
-  primary: {
-    backgroundColor: '#F3F0FF',
-    borderColor: '#DDD2FF',
+  purple: {
+    backgroundColor: Tokens.color.brandSoft,
+    borderColor: Tokens.color.brandBorder,
   },
-  calm: {
-    backgroundColor: '#EAF7F5',
-    borderColor: '#BCE4DF',
+  blue: {
+    backgroundColor: Tokens.color.blueSoft,
+    borderColor: Tokens.color.blueBorder,
   },
-  warm: {
-    backgroundColor: '#FFF4E2',
-    borderColor: '#F1D4A5',
+  white: {
+    backgroundColor: Tokens.color.surface,
+    borderColor: Tokens.color.border,
   },
   statLabel: {
     color: Tokens.color.muted,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   pill: {
     alignSelf: 'flex-start',
     borderRadius: 999,
-    backgroundColor: '#EEE8FF',
+    backgroundColor: Tokens.color.brandSoft,
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
