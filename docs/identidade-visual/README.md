@@ -14,8 +14,13 @@ Os nomes de pacientes nos mockups (João, Aldo) e as datas são fictícios.
 ## Logo
 
 O logo oficial do aplicativo é `assets/images/ip-icon.png` (monograma `iP` roxo,
-1254×1254, fundo transparente). O favicon web (`assets/images/favicon.png`) é
-gerado a partir dele.
+1254×1254, fundo transparente). Derivados gerados a partir dele:
+
+- `assets/images/favicon.png`: favicon web, recortado no contorno do logo.
+- `assets/images/android-icon-foreground.png`: primeiro plano do ícone
+  adaptativo do Android, com o logo em 54% da tela para caber na área segura
+  (o launcher só mostra os 66% centrais e aplica máscara de círculo ou
+  squircle). Usar o `ip-icon.png` direto cortava o "i".
 
 ## Patrícia — foto oficial
 
