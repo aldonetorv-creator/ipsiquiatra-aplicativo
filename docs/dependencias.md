@@ -21,7 +21,8 @@ execução. **Nunca usar `npm audit fix --force`** (propõe downgrade para Expo 
 | Momento | Alertas | Origens |
 |---|---|---|
 | Commit inicial do Codex | 30 (19 altos, 11 moderados) | `braces`, `node-forge`, `decode-uri-component`, `uuid` |
-| Após override de `uuid` (etapa 4) | 22 (19 altos, 3 moderados) | `braces`, `node-forge`, `decode-uri-component` |
+| Patches do SDK 57 (expo 57.0.27, etapa 1) | 29 (18 altos, 11 moderados) | as mesmas quatro |
+| Após override de `uuid` (etapa 4) | 21 (18 altos, 3 moderados) | `braces`, `node-forge`, `decode-uri-component` |
 
 ## Alertas ainda abertos
 
