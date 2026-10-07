@@ -2,7 +2,7 @@
 
 /**
  * Converte a saída de `npm audit --json` em um resumo Markdown para o CI.
- * Uso: node scripts/audit-summary.js audit.json
+ * Uso: node scripts/audit-summary.js audit.json ["Título da seção"]
  *
  * Lista apenas os pacotes de origem dos alertas (os que têm advisory próprio),
  * para que a cadeia transitiva não esconda a causa real.
@@ -12,8 +12,9 @@
 const fs = require('fs');
 
 const file = process.argv[2];
+const title = process.argv[3] ?? 'npm audit (dependências de produção)';
 if (!file) {
-  console.error('Uso: node scripts/audit-summary.js <audit.json>');
+  console.error('Uso: node scripts/audit-summary.js <audit.json> ["Título"]');
   process.exit(2);
 }
 
@@ -42,7 +43,7 @@ advisories.sort(
 );
 
 const lines = [
-  '## npm audit (dependências de produção)',
+  `## ${title}`,
   '',
   `Total: **${totals.total ?? 0}** — ` +
     severityOrder.map((s) => `${s}: ${totals[s] ?? 0}`).join(' · '),
@@ -56,10 +57,5 @@ if (advisories.length > 0) {
   }
   lines.push('');
 }
-
-lines.push(
-  'Este passo não falha o CI: os alertas conhecidos estão registrados na issue #1. ' +
-    'Não usar `npm audit fix --force`.'
-);
 
 console.log(lines.join('\n'));

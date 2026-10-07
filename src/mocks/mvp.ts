@@ -110,24 +110,6 @@ export const questionnaireActions: MockAction[] = [
   },
 ];
 
-export const vaultItems: TimelineItem[] = [
-  {
-    title: 'Atestado',
-    meta: 'PDF mock',
-    description: 'Nenhum arquivo real armazenado nesta Sprint 0.',
-  },
-  {
-    title: 'Recibo',
-    meta: 'Disponível após consulta',
-    description: 'Fluxos de pagamento e NFS-e ficam fora deste primeiro passo.',
-  },
-  {
-    title: 'Orientações',
-    meta: 'Somente exemplo',
-    description: 'Conteúdo demonstrativo para validar a experiência visual.',
-  },
-];
-
 export const contractNotices: ContractNotice[] = [
   {
     title: 'Sem dados reais',

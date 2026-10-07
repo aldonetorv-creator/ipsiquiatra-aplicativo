@@ -25,16 +25,27 @@ npm install
 npm run web
 npm run lint
 npm run typecheck
+npm test
 ```
 
 ## Integração contínua
 
 O workflow `.github/workflows/ci.yml` roda em todo PR e em push na `main`:
-instalação limpa, TypeScript, lint, Expo Doctor e exportação web. Um job
+instalação limpa, TypeScript, lint, testes (Jest com `jest-expo`), Expo Doctor e
+exportação web. Um job
 separado registra o `npm audit` no resumo da execução e como artefato, sem
 falhar o CI (alertas conhecidos na issue #1). O Dependabot
 (`.github/dependabot.yml`) acompanha npm e GitHub Actions; trocas de SDK do
 Expo continuam manuais, com `npx expo install --fix`.
+
+## Contrato com a fonte de dados
+
+As telas não importam mocks de dados: leem pela interface `PatientAppGateway`
+(`src/contracts/platform.ts`), entregue pelo `PatientAppGatewayProvider`
+(`src/services/patient-app-gateway.tsx`). Hoje a implementação padrão é o mock
+local (`src/mocks/patient-app-gateway.ts`); uma API real substitui o mock nesse
+provider, sem mudar as telas. O Cofre é a primeira tela ligada ao contrato
+(`useDocuments`), coberta por testes em `src/__tests__`.
 
 ## Princípio de evolução
 
