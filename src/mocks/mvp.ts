@@ -4,8 +4,8 @@ export const mvpAreas: MvpArea[] = [
   {
     id: 'home',
     route: '/',
-    title: 'Home',
-    label: 'Home',
+    title: 'Início',
+    label: 'Início',
     eyebrow: 'Visão do dia',
     description: 'Resumo acolhedor do cuidado, com próximos passos e alertas leves.',
     status: 'mock',
@@ -64,21 +64,6 @@ export const homeTimeline: TimelineItem[] = [
     title: 'Questionário de rotina',
     meta: 'Mock local',
     description: 'Entrada visual para um check-in breve, sem persistência de respostas.',
-  },
-];
-
-export const patriciaActions: MockAction[] = [
-  {
-    label: 'Confirmar horário',
-    detail: 'Fluxo planejado para mensagens administrativas, sem envio real.',
-  },
-  {
-    label: 'Dúvida sobre preparo',
-    detail: 'Resposta simulada com conteúdo genérico e não clínico.',
-  },
-  {
-    label: 'Falar com a equipe',
-    detail: 'Reserva visual para handoff humano quando houver integração.',
   },
 ];
 

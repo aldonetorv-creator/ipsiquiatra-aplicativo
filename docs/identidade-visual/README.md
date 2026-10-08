@@ -27,7 +27,8 @@ O logo oficial do aplicativo é `assets/images/ip-icon.png` (monograma `iP` roxo
 ![Patrícia](./05-patricia-foto-oficial.webp)
 
 A Patrícia é a assistente do Dr. Aldo e o centro da experiência: o produto deve
-ser desenvolvido ao redor dela. **Esta é a foto oficial.** Os rostos usados para
+ser desenvolvido ao redor dela. **Esta é a foto oficial.** O app usa uma cópia
+reduzida, `assets/images/patricia.webp` (512×512). Os rostos usados para
 a Patrícia nos mockups abaixo são provisórios e devem ser substituídos por esta
 imagem.
 

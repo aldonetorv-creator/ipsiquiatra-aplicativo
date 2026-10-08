@@ -44,8 +44,16 @@ As telas não importam mocks de dados: leem pela interface `PatientAppGateway`
 (`src/contracts/platform.ts`), entregue pelo `PatientAppGatewayProvider`
 (`src/services/patient-app-gateway.tsx`). Hoje a implementação padrão é o mock
 local (`src/mocks/patient-app-gateway.ts`); uma API real substitui o mock nesse
-provider, sem mudar as telas. O Cofre é a primeira tela ligada ao contrato
-(`useDocuments`), coberta por testes em `src/__tests__`.
+provider, sem mudar as telas. O Cofre (`useDocuments`) e a conversa com a
+Patrícia (`useConversation`) estão ligados ao contrato, com testes em
+`src/__tests__`.
+
+## Patrícia nesta versão
+
+A conversa com a Patrícia é **simulada**: as respostas são textos fixos e não
+clínicos, ela não lê nem interpreta o que o paciente escreve (sem IA, conforme
+a issue #1) e nada é guardado fora da sessão. A tela mostra esse aviso e os
+contatos de emergência (CVV 188 e SAMU 192).
 
 ## Princípio de evolução
 

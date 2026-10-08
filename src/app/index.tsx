@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ListItem, Panel, StatCard } from '@/components/mvp/cards';
 import { ScreenShell } from '@/components/mvp/screen-shell';
@@ -16,6 +17,23 @@ export default function HomeScreen() {
           <StatCard key={insight.label} {...insight} />
         ))}
       </View>
+
+      <Panel>
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Antes da sua consulta
+        </ThemedText>
+        <ThemedText type="default" style={styles.body}>
+          Questionários curtos sobre como você esteve nos últimos dias.
+        </ThemedText>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/questionarios')}
+          style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+          <ThemedText type="smallBold" style={styles.actionText}>
+            Ver questionários
+          </ThemedText>
+        </Pressable>
+      </Panel>
 
       <Panel>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -52,5 +70,21 @@ const styles = StyleSheet.create({
     color: Tokens.color.text,
     fontSize: 22,
     lineHeight: 28,
+  },
+  body: {
+    color: Tokens.color.muted,
+  },
+  action: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    backgroundColor: Tokens.color.blue,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  actionText: {
+    color: Tokens.color.onBrand,
+  },
+  pressed: {
+    opacity: 0.8,
   },
 });
