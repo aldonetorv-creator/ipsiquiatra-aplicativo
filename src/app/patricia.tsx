@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Composer } from '@/components/patricia/composer';
@@ -14,24 +14,60 @@ import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { ConversationMessage } from '@/contracts/platform';
 import { useConversation } from '@/hooks/use-conversation';
+import { dayKey, formatDayLabel } from '@/utils/time';
+
+// Linhas da conversa: mensagens com um separador sempre que o dia muda.
+type Row =
+  | { kind: 'day'; key: string; label: string }
+  | { kind: 'message'; key: string; message: ConversationMessage };
+
+function withDaySeparators(messages: ConversationMessage[]): Row[] {
+  const rows: Row[] = [];
+  let currentDay = '';
+  for (const message of messages) {
+    const day = dayKey(new Date(message.sentAt));
+    if (day !== currentDay) {
+      currentDay = day;
+      rows.push({ kind: 'day', key: `day-${day}`, label: formatDayLabel(message.sentAt) });
+    }
+    rows.push({ kind: 'message', key: message.id, message });
+  }
+  return rows;
+}
 
 export default function PatriciaScreen() {
-  const { state, sendMessage, recordMood, requestService } = useConversation();
+  const { state, sendMessage, recordMood, requestService, clearHistory } = useConversation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
-  const list = useRef<FlatList<ConversationMessage>>(null);
+  const [confirmingClear, setConfirmingClear] = useState(false);
 
-  const renderItem = ({ item }: { item: ConversationMessage }) =>
-    item.kind === 'mood_check' ? (
+  const renderItem = ({ item }: { item: Row }) => {
+    if (item.kind === 'day') {
+      return (
+        <View style={styles.day}>
+          <ThemedText type="small" style={styles.dayText}>
+            {item.label}
+          </ThemedText>
+        </View>
+      );
+    }
+    const message = item.message;
+    return message.kind === 'mood_check' ? (
       <PatriciaRow>
         <MoodCheckCard
-          message={item}
-          onSubmit={(level, note) => recordMood({ checkId: item.id, level, note })}
+          message={message}
+          onSubmit={(level, note) => recordMood({ checkId: message.id, level, note })}
         />
       </PatriciaRow>
     ) : (
-      <MessageBubble message={item} />
+      <MessageBubble message={message} />
     );
+  };
+
+  const confirmClear = async () => {
+    setConfirmingClear(false);
+    setActionError(await clearHistory());
+  };
 
   return (
     <ScreenBackground>
@@ -49,7 +85,50 @@ export default function PatriciaScreen() {
                 Assistente do Dr. Aldo
               </ThemedText>
             </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Apagar histórico"
+              onPress={() => setConfirmingClear(true)}
+              hitSlop={8}
+              style={({ pressed }) => [styles.clear, pressed && styles.pressed]}>
+              <SymbolView
+                name={{ ios: 'trash', android: 'delete', web: 'delete' }}
+                tintColor={Tokens.color.muted}
+                size={20}
+              />
+            </Pressable>
           </View>
+
+          {confirmingClear ? (
+            <View style={styles.confirm}>
+              <ThemedText type="small" style={styles.confirmText}>
+                Apagar toda a conversa e os registros de humor deste aparelho? Não dá para desfazer.
+              </ThemedText>
+              <View style={styles.confirmActions}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setConfirmingClear(false)}
+                  style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}>
+                  <ThemedText type="smallBold" style={styles.cancelText}>
+                    Cancelar
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Confirmar: apagar histórico"
+                  onPress={confirmClear}
+                  style={({ pressed }) => [
+                    styles.confirmButton,
+                    styles.deleteButton,
+                    pressed && styles.pressed,
+                  ]}>
+                  <ThemedText type="smallBold" style={styles.deleteText}>
+                    Apagar
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
 
           <View style={styles.notice}>
             <SymbolView
@@ -58,8 +137,8 @@ export default function PatriciaScreen() {
               size={18}
             />
             <ThemedText type="small" style={styles.noticeText}>
-              Versão de demonstração: a Patrícia ainda não lê suas mensagens. Em emergência, ligue
-              188 (CVV) ou 192 (SAMU).
+              Versão de demonstração: a Patrícia ainda não lê suas mensagens. O histórico fica salvo
+              só neste aparelho. Em emergência, ligue 188 (CVV) ou 192 (SAMU).
             </ThemedText>
           </View>
 
@@ -70,14 +149,15 @@ export default function PatriciaScreen() {
               </ThemedText>
             </View>
           ) : (
+            // Lista invertida (padrão de chat): abre já nas mensagens mais
+            // recentes, e as novas entram embaixo sem precisar rolar.
             <FlatList
-              ref={list}
-              data={state.messages}
-              keyExtractor={(message) => message.id}
+              inverted
+              data={withDaySeparators(state.messages).reverse()}
+              keyExtractor={(row) => row.key}
               renderItem={renderItem}
               contentContainerStyle={styles.messages}
               keyboardShouldPersistTaps="handled"
-              onContentSizeChange={() => list.current?.scrollToEnd({ animated: true })}
             />
           )}
 
@@ -161,7 +241,63 @@ const styles = StyleSheet.create({
     borderColor: Tokens.color.brandBorder,
   },
   headerCopy: {
+    flex: 1,
     gap: 2,
+  },
+  clear: {
+    alignSelf: 'flex-start',
+    padding: 8,
+    borderRadius: 999,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
+  confirm: {
+    gap: 10,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: Tokens.color.surface,
+    borderWidth: 1,
+    borderColor: Tokens.color.brandBorder,
+  },
+  confirmText: {
+    color: Tokens.color.text,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  confirmButton: {
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: Tokens.color.border,
+  },
+  cancelText: {
+    color: Tokens.color.text,
+  },
+  deleteButton: {
+    borderColor: Tokens.color.brandDeep,
+    backgroundColor: Tokens.color.brandDeep,
+  },
+  deleteText: {
+    color: Tokens.color.onBrand,
+  },
+  day: {
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+  },
+  dayText: {
+    color: Tokens.color.muted,
+    fontSize: 12,
+    lineHeight: 16,
   },
   name: {
     color: Tokens.color.brand,

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.22",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.27",
     "expo-constants": "~57.0.21",
     "expo-font": "~57.0.4",
@@ -58,7 +59,8 @@
     "moduleNameMapper": {
       "\\.css$": "<rootDir>/test/style-stub.js",
       "^@/assets/(.*)$": "<rootDir>/assets/$1",
-      "^@/(.*)$": "<rootDir>/src/$1"
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@react-native-async-storage/async-storage$": "<rootDir>/node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js"
     }
   }
 }

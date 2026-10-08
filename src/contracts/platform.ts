@@ -86,4 +86,6 @@ export interface PatientAppGateway {
   requestService(service: PatientService): Promise<ApiResult<ConversationMessage[]>>;
   // Registros de humor do paciente, do mais antigo para o mais recente.
   listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
+  // Apaga a conversa e os registros de humor e recomeça a conversa.
+  clearHistory(): Promise<ApiResult<ConversationMessage[]>>;
 }

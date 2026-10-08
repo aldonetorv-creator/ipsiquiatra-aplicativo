@@ -4,6 +4,20 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 const WEEKDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MONTHS_LONG = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+];
 
 // Hora local no formato 24h (ex.: 09:05).
 export function formatTime(iso: string) {
@@ -33,6 +47,17 @@ export function greetingFor(now: Date = new Date()) {
 // Chave do dia local (ex.: 2026-03-09), para agrupar registros por dia.
 export function dayKey(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+// Separador de dia na conversa: "Hoje", "Ontem", "5 de outubro" (com o ano
+// quando não é o ano corrente).
+export function formatDayLabel(iso: string, now: Date = new Date()) {
+  const date = new Date(iso);
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  if (dayKey(date) === dayKey(now)) return 'Hoje';
+  if (dayKey(date) === dayKey(yesterday)) return 'Ontem';
+  const label = `${date.getDate()} de ${MONTHS_LONG[date.getMonth()]}`;
+  return date.getFullYear() === now.getFullYear() ? label : `${label} de ${date.getFullYear()}`;
 }
 
 export type CalendarDay = {
