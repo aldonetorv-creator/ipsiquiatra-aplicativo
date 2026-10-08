@@ -4,8 +4,8 @@ export const mvpAreas: MvpArea[] = [
   {
     id: 'home',
     route: '/',
-    title: 'Home',
-    label: 'Home',
+    title: 'Início',
+    label: 'Início',
     eyebrow: 'Visão do dia',
     description: 'Resumo acolhedor do cuidado, com próximos passos e alertas leves.',
     status: 'mock',
