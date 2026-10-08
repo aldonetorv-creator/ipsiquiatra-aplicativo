@@ -65,9 +65,9 @@ automaticamente quando um pagamento cai na conta. Os caminhos encontrados:
 - **NuPay for Business**, o produto de pagamentos do Nubank para empresas. Tem
   API e aviso de pagamento, mas exige contrato e é voltado a lojas online.
   Contato técnico informado na documentação: oi-nupay@nubank.com.br.
-- **Intermediário de pagamento** que gera a cobrança (cartão ou Pix, por
-  exemplo), avisa o servidor do app quando o paciente paga e deposita o valor
-  na conta Nubank PJ do consultório.
+- **Intermediário de pagamento** que gera a cobrança (cartão ou Pix), avisa
+  o servidor do app quando o paciente paga e deposita o valor na conta Nubank
+  PJ do consultório.
 - **Open Finance**, por agregadores regulados, para ler os recebimentos da
   conta e conferir os pagamentos.
 
