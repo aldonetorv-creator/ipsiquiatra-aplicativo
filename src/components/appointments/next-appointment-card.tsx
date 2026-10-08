@@ -45,7 +45,7 @@ export function NextAppointmentCard({ appointment, onReschedule, onOpen }: Props
       </View>
 
       <View style={styles.doctor}>
-        <DoctorAvatar name={appointment.doctor.name} />
+        <DoctorAvatar doctor={appointment.doctor} />
         <View style={styles.copy}>
           <ThemedText type="smallBold" style={styles.doctorName}>
             {appointment.doctor.name}

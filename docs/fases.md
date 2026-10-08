@@ -197,6 +197,26 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 - O contrato das consultas (`listAppointments`) já registra se a consulta é
   teleconsulta ou presencial. Assim o botão de entrar na videochamada pode
   chegar depois sem mudar o formato dos dados.
+- **Foto do médico (decisão do Dr. Aldo):** o cartão da consulta mostra a
+  mesma foto que o médico envia em "Perfil médico" na plataforma
+  (`doctorProfile.photo`). O contrato já tem `doctor.photoUrl`, e o app mostra
+  a foto quando ela vem e as iniciais quando não vem. Na fase 2, a API da
+  plataforma precisa entregar essa foto ao app. Hoje a página pública da
+  Patrícia não a expõe. Na demonstração aparecem só as iniciais, porque este
+  repositório é público.
+- **Foto do paciente, o caminho inverso (decisão do Dr. Aldo, fase 2):** o
+  paciente pode enviar a própria foto pelo app, e ela aparece no cadastro dele
+  na plataforma. Hoje a plataforma só reserva o espaço: o campo `photo` do
+  paciente é sempre `false`, e o cadastro mostra as iniciais. Falta guardar a
+  foto do paciente na plataforma. Cuidados:
+  - envio opcional, com consentimento, e o paciente pode trocar ou remover a
+    foto;
+  - só depois do login, indo para o cadastro do paciente certo;
+  - a anonimização da plataforma já apaga a foto do paciente e deve continuar
+    apagando;
+  - a foto nunca aparece em link público, SMS ou WhatsApp;
+  - a imagem é reduzida antes do envio, como a plataforma já faz com a foto do
+    médico.
 - O Cofre agrupado por consulta já reserva o lugar da nota fiscal de cada
   consulta.
 

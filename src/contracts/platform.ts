@@ -23,6 +23,14 @@ export type ConsentRecord = {
 
 export type AppointmentModality = 'telemedicine' | 'in_person';
 
+// `photoUrl`: a foto que o médico envia em "Perfil médico" na plataforma, a
+// mesma do site (docs/fases.md). Sem foto, o app mostra as iniciais.
+export type Doctor = {
+  name: string;
+  specialty: string;
+  photoUrl: string | null;
+};
+
 // Consulta do paciente com o médico. `startsAt` em ISO 8601 (UTC).
 export type Appointment = {
   id: string;
@@ -30,7 +38,7 @@ export type Appointment = {
   durationMinutes: number;
   modality: AppointmentModality;
   status: 'scheduled' | 'completed';
-  doctor: { name: string; specialty: string };
+  doctor: Doctor;
 };
 
 export type DocumentKind =

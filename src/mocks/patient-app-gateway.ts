@@ -4,6 +4,7 @@ import {
   Appointment,
   ConsentRecord,
   ConversationMessage,
+  Doctor,
   DocumentMetadata,
   MESSAGE_MAX_LENGTH,
   MOOD_NOTE_MAX_LENGTH,
@@ -30,7 +31,13 @@ const validationFailure = (message: string): ApiFailure => ({
   requestId: REQUEST_ID,
 });
 
-export const mockDoctor = { name: 'Dr. Aldo Araújo', specialty: 'Psiquiatra' };
+// Sem foto na demonstração: este repositório é público. Na fase 2 a foto vem
+// do "Perfil médico" da plataforma.
+export const mockDoctor: Doctor = {
+  name: 'Dr. Aldo Araújo',
+  specialty: 'Psiquiatra',
+  photoUrl: null,
+};
 
 // Consultas fictícias, em datas relativas ao dia de hoje para a demonstração
 // sempre ter uma consulta passada recente e uma próxima.

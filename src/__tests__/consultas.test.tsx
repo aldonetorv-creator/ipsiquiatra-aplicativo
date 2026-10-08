@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 
 import ConsultasScreen from '@/app/consultas';
 import { PatientAppGateway } from '@/contracts/platform';
-import { createMockPatientAppGateway } from '@/mocks/patient-app-gateway';
+import { createMockPatientAppGateway, mockDoctor } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { formatLongDate } from '@/utils/time';
 
@@ -58,6 +58,31 @@ describe('Consultas', () => {
 
     expect(requestService).toHaveBeenCalledWith(service);
     expect(router.push).toHaveBeenCalledWith('/patricia');
+  });
+
+  it('mostra a foto do médico, vinda do perfil da plataforma', async () => {
+    const next = {
+      id: 'next',
+      startsAt: new Date(Date.now() + 3 * 86400000).toISOString(),
+      durationMinutes: 60,
+      modality: 'telemedicine' as const,
+      status: 'scheduled' as const,
+      doctor: { ...mockDoctor, photoUrl: 'https://example.com/perfil-medico.jpg' },
+    };
+    await renderWith({
+      ...createMockPatientAppGateway(),
+      listAppointments: async () => ({ ok: true, requestId: 'test', data: [next] }),
+    });
+
+    expect(await screen.findByLabelText('Foto de Dr. Aldo Araújo')).toBeOnTheScreen();
+    expect(screen.queryByText('AA')).toBeNull();
+  });
+
+  it('sem foto no perfil, mostra as iniciais do médico', async () => {
+    await renderWith(createMockPatientAppGateway());
+
+    expect(await screen.findByText('AA')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Foto de Dr. Aldo Araújo')).toBeNull();
   });
 
   it('sem consultas, mostra os estados vazios', async () => {
