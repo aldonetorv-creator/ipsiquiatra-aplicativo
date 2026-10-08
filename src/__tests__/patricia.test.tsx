@@ -83,6 +83,16 @@ describe('Conversa com a Patrícia', () => {
     expect(router.push).toHaveBeenCalledWith('/consultas');
   });
 
+  it('amplia a foto da Patrícia ao tocar e fecha de novo', async () => {
+    await renderWith();
+
+    await fireEvent.press(screen.getAllByRole('imagebutton', { name: 'Ver foto da Patrícia' })[0]);
+    expect(screen.getByLabelText('Foto da Patrícia, assistente do Dr. Aldo')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar foto da Patrícia' }));
+    expect(screen.queryByLabelText('Foto da Patrícia, assistente do Dr. Aldo')).toBeNull();
+  });
+
   it('mostra o erro do contrato e mantém o texto digitado', async () => {
     await renderWith({
       sendMessage: async () => ({

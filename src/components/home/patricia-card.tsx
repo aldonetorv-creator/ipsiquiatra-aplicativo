@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PatriciaAvatar } from '@/components/patricia/patricia-avatar';
 import { ThemedText } from '@/components/themed-text';
-import { Tokens } from '@/constants/theme';
+import { Shadows, Tokens } from '@/constants/theme';
 import { ConversationMessage } from '@/contracts/platform';
 import { formatRelative } from '@/utils/time';
 
@@ -19,7 +19,9 @@ export function PatriciaCard({ lastMessage, onPress }: Props) {
       accessibilityLabel="Abrir conversa com a Patrícia"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      <PatriciaAvatar size={60} />
+      <View style={styles.avatarRing}>
+        <PatriciaAvatar size={68} zoomable />
+      </View>
       <View style={styles.copy}>
         <View style={styles.titleRow}>
           <ThemedText type="smallBold" style={styles.name}>
@@ -31,13 +33,16 @@ export function PatriciaCard({ lastMessage, onPress }: Props) {
             </ThemedText>
           ) : null}
         </View>
-        <ThemedText type="small" style={styles.preview} numberOfLines={2}>
-          {lastMessage ? lastMessage.text : 'Assistente do Dr. Aldo'}
+        <ThemedText type="small" style={styles.role}>
+          Assistente do Dr. Aldo
+        </ThemedText>
+        <ThemedText type="default" style={styles.preview} numberOfLines={2}>
+          {lastMessage ? lastMessage.text : 'Estou aqui para ajudar com o seu cuidado.'}
         </ThemedText>
       </View>
       <SymbolView
         name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-        tintColor={Tokens.color.muted}
+        tintColor={Tokens.color.brand}
         size={20}
       />
     </Pressable>
@@ -50,17 +55,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: Tokens.color.border,
+    borderColor: 'rgba(225, 228, 242, 0.7)',
     backgroundColor: Tokens.color.surface,
+    boxShadow: Shadows.card,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
+  },
+  avatarRing: {
+    padding: 3,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: Tokens.color.brandBorder,
   },
   copy: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   titleRow: {
     flexDirection: 'row',
@@ -69,16 +81,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   name: {
-    color: Tokens.color.text,
-    fontSize: 18,
-    lineHeight: 24,
+    color: Tokens.color.brand,
+    fontSize: 20,
+    lineHeight: 26,
   },
   time: {
     color: Tokens.color.muted,
     fontSize: 13,
   },
-  preview: {
+  role: {
     color: Tokens.color.muted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  preview: {
+    marginTop: 4,
+    color: Tokens.color.text,
     fontSize: 15,
     lineHeight: 21,
   },

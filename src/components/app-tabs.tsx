@@ -19,7 +19,7 @@ export default function AppTabs() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Tokens.color.blue,
+        tabBarActiveTintColor: Tokens.color.brand,
         tabBarInactiveTintColor: Tokens.color.muted,
         tabBarStyle: {
           backgroundColor: Tokens.color.surface,

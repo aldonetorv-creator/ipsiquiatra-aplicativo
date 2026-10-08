@@ -36,7 +36,7 @@ export default function PatriciaScreen() {
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <KeyboardAvoidingView behavior="padding" style={styles.column}>
           <View style={styles.header}>
-            <PatriciaAvatar size={56} />
+            <PatriciaAvatar size={64} zoomable />
             <View style={styles.headerCopy}>
               <ThemedText type="subtitle" style={styles.name}>
                 Patrícia

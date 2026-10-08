@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Tokens } from '@/constants/theme';
+import { Shadows, Tokens } from '@/constants/theme';
 
 type PanelProps = {
   children: ReactNode;
@@ -39,23 +39,14 @@ export function ListItem({ title, meta, children }: ListItemProps) {
   );
 }
 
-export function StatusPill({ children }: { children: ReactNode }) {
-  return (
-    <View style={styles.pill}>
-      <ThemedText type="code" style={styles.pillText}>
-        {children}
-      </ThemedText>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   panel: {
     width: '100%',
-    borderRadius: 8,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: Tokens.color.border,
+    borderColor: 'rgba(225, 228, 242, 0.7)',
     backgroundColor: Tokens.color.surface,
+    boxShadow: Shadows.card,
     padding: 18,
     gap: 14,
   },
@@ -79,16 +70,5 @@ const styles = StyleSheet.create({
   },
   body: {
     color: Tokens.color.muted,
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    backgroundColor: Tokens.color.brandSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  pillText: {
-    color: Tokens.color.brandDeep,
-    textTransform: 'uppercase',
   },
 });

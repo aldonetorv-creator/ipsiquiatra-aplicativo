@@ -1,12 +1,17 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CarePlanCard } from '@/components/home/care-plan-card';
 import { MoodWeekCard } from '@/components/home/mood-week-card';
 import { PatriciaCard } from '@/components/home/patricia-card';
 import { ThemedText } from '@/components/themed-text';
+import { Card } from '@/components/ui/card';
+import { GradientButton } from '@/components/ui/gradient-button';
+import { IconBadge } from '@/components/ui/icon-badge';
+import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
 
@@ -21,7 +26,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <ScreenBackground>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.brand}>
@@ -38,7 +43,7 @@ export default function HomeScreen() {
               {state.status === 'ready' ? `${state.greeting}!` : 'Olá!'}
             </ThemedText>
             <ThemedText type="default" style={styles.greetingSubtitle}>
-              Como você está hoje?
+              Tem alguém acompanhando você.
             </ThemedText>
           </View>
 
@@ -61,46 +66,51 @@ export default function HomeScreen() {
             </>
           ) : null}
 
-          <View style={styles.card}>
-            <View style={styles.cardIcon}>
-              <SymbolView
-                name={{ ios: 'doc.text', android: 'description', web: 'description' }}
-                tintColor={Tokens.color.blue}
-                size={22}
-              />
-            </View>
-            <View style={styles.cardCopy}>
+          <Card style={styles.row}>
+            <IconBadge
+              name={{ ios: 'doc.text', android: 'description', web: 'description' }}
+              tone="blue"
+              size={46}
+            />
+            <View style={styles.rowCopy}>
               <ThemedText type="smallBold" style={styles.cardTitle}>
                 Antes da sua consulta
               </ThemedText>
               <ThemedText type="small" style={styles.muted}>
-                Questionários curtos sobre como você esteve nos últimos dias.
+                O Dr. Aldo pediu algumas informações sobre como você esteve nos últimos dias.
               </ThemedText>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => router.push('/questionarios')}
-                style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-                <ThemedText type="smallBold" style={styles.secondaryButtonText}>
-                  Responder agora
-                </ThemedText>
-              </Pressable>
+              <View style={styles.rowAction}>
+                <View style={styles.duration}>
+                  <SymbolView
+                    name={{ ios: 'clock', android: 'schedule', web: 'schedule' }}
+                    tintColor={Tokens.color.muted}
+                    size={16}
+                  />
+                  <ThemedText type="small" style={styles.muted}>
+                    3 minutos
+                  </ThemedText>
+                </View>
+                <GradientButton
+                  label="Responder agora"
+                  size="small"
+                  onPress={() => router.push('/questionarios')}
+                />
+              </View>
             </View>
-          </View>
+          </Card>
+
+          <CarePlanCard />
 
           <ThemedText type="small" style={styles.demo}>
             Versão de demonstração: dados fictícios, nada é enviado ao consultório.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Tokens.color.background,
-  },
   safeArea: {
     flex: 1,
   },
@@ -117,22 +127,22 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   brandName: {
-    color: Tokens.color.text,
-    fontSize: 22,
-    lineHeight: 28,
+    color: Tokens.color.brand,
+    fontSize: 24,
+    lineHeight: 30,
   },
   muted: {
     color: Tokens.color.muted,
   },
   greeting: {
     gap: 4,
-    marginTop: 8,
+    marginTop: 10,
     marginBottom: 4,
   },
   greetingTitle: {
     color: Tokens.color.text,
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 34,
+    lineHeight: 40,
   },
   greetingSubtitle: {
     color: Tokens.color.muted,
@@ -141,45 +151,31 @@ const styles = StyleSheet.create({
   error: {
     color: Tokens.color.brandDeep,
   },
-  card: {
+  row: {
     flexDirection: 'row',
-    gap: 14,
-    padding: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Tokens.color.border,
-    backgroundColor: Tokens.color.surface,
+    alignItems: 'flex-start',
   },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Tokens.color.blueSoft,
-  },
-  cardCopy: {
+  rowCopy: {
     flex: 1,
+    gap: 4,
+  },
+  rowAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 8,
+  },
+  duration: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
   },
   cardTitle: {
     color: Tokens.color.text,
     fontSize: 18,
     lineHeight: 24,
-  },
-  secondaryButton: {
-    alignSelf: 'flex-start',
-    marginTop: 6,
-    borderRadius: 999,
-    backgroundColor: Tokens.color.brand,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-  },
-  secondaryButtonText: {
-    color: Tokens.color.onBrand,
-  },
-  pressed: {
-    opacity: 0.85,
   },
   demo: {
     textAlign: 'center',

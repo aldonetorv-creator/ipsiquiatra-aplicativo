@@ -13,7 +13,7 @@ export function MessageBubble({ message }: { message: TextMessage }) {
 
   return (
     <View style={[styles.row, fromPatient && styles.rowPatient]}>
-      {fromPatient ? null : <PatriciaAvatar size={36} />}
+      {fromPatient ? null : <PatriciaAvatar size={36} zoomable />}
       <View style={[styles.bubble, fromPatient ? styles.bubblePatient : styles.bubblePatricia]}>
         <ThemedText type="default" style={styles.text}>
           {message.text}
@@ -29,7 +29,7 @@ export function MessageBubble({ message }: { message: TextMessage }) {
 export function PatriciaRow({ children }: { children: ReactNode }) {
   return (
     <View style={styles.row}>
-      <PatriciaAvatar size={36} />
+      <PatriciaAvatar size={36} zoomable />
       <View style={styles.fill}>{children}</View>
     </View>
   );
