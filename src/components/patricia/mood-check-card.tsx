@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { formatTime } from './format-time';
+import { moodOptions } from './mood-options';
 
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
 import { MOOD_NOTE_MAX_LENGTH, MoodCheckMessage, MoodLevel } from '@/contracts/platform';
-
-export const moodOptions: { level: MoodLevel; label: string; face: string; tint: string }[] = [
-  { level: 1, label: 'Muito mal', face: '😣', tint: '#FDE7EC' },
-  { level: 2, label: 'Mal', face: '🙁', tint: '#FDEFE4' },
-  { level: 3, label: 'Mais ou menos', face: '😐', tint: '#EEF0F6' },
-  { level: 4, label: 'Bem', face: '🙂', tint: '#E8ECFB' },
-  { level: 5, label: 'Muito bem', face: '😄', tint: '#EFEAFD' },
-];
+import { formatTime } from '@/utils/time';
 
 type Props = {
   message: MoodCheckMessage;

@@ -8,7 +8,11 @@ import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useFocusEffect: (effect: () => void) =>
+    jest.requireActual<typeof import('react')>('react').useEffect(effect, [effect]),
+}));
 
 async function renderWith(overrides: Partial<PatientAppGateway> = {}) {
   const gateway = { ...createMockPatientAppGateway(), ...overrides };

@@ -13,25 +13,6 @@ export function Panel({ children, style }: PanelProps) {
   return <View style={[styles.panel, style]}>{children}</View>;
 }
 
-type StatCardProps = {
-  label: string;
-  value: string;
-  tone?: 'purple' | 'blue' | 'white';
-};
-
-export function StatCard({ label, value, tone = 'purple' }: StatCardProps) {
-  return (
-    <View style={[styles.stat, styles[tone]]}>
-      <ThemedText type="small" style={styles.statLabel}>
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold" style={styles.statValue}>
-        {value}
-      </ThemedText>
-    </View>
-  );
-}
-
 type ListItemProps = {
   title: string;
   meta?: string;
@@ -77,34 +58,6 @@ const styles = StyleSheet.create({
     backgroundColor: Tokens.color.surface,
     padding: 18,
     gap: 14,
-  },
-  stat: {
-    flex: 1,
-    minWidth: 110,
-    borderRadius: 8,
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-  },
-  purple: {
-    backgroundColor: Tokens.color.brandSoft,
-    borderColor: Tokens.color.brandBorder,
-  },
-  blue: {
-    backgroundColor: Tokens.color.blueSoft,
-    borderColor: Tokens.color.blueBorder,
-  },
-  white: {
-    backgroundColor: Tokens.color.surface,
-    borderColor: Tokens.color.border,
-  },
-  statLabel: {
-    color: Tokens.color.muted,
-  },
-  statValue: {
-    color: Tokens.color.text,
-    fontSize: 18,
-    lineHeight: 22,
   },
   listItem: {
     gap: 8,

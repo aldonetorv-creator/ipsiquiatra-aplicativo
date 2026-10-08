@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 import { ApiResult, ConversationMessage, RecordMoodInput } from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
@@ -31,7 +32,9 @@ export function useConversation() {
   const gateway = usePatientAppGateway();
   const [state, setState] = useState<ConversationState>({ status: 'loading', messages: [] });
 
-  useEffect(() => {
+  // Recarrega sempre que a aba ganha foco: outra tela (ex.: Início) pode ter
+  // aberto um novo cartão de humor.
+  const load = useCallback(() => {
     let active = true;
     gateway
       .listConversation()
@@ -50,6 +53,7 @@ export function useConversation() {
       active = false;
     };
   }, [gateway]);
+  useFocusEffect(load);
 
   const apply = useCallback(
     async <T>(

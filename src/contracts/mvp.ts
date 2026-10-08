@@ -12,12 +12,6 @@ export type MvpArea = {
   status: MvpAreaStatus;
 };
 
-export type HomeInsight = {
-  label: string;
-  value: string;
-  tone: 'purple' | 'blue' | 'white';
-};
-
 export type MockAction = {
   label: string;
   detail: string;
@@ -29,7 +23,3 @@ export type TimelineItem = {
   description: string;
 };
 
-export type ContractNotice = {
-  title: string;
-  description: string;
-};

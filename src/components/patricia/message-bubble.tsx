@@ -2,11 +2,11 @@ import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PatriciaAvatar } from './patricia-avatar';
-import { formatTime } from './format-time';
 
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
 import { TextMessage } from '@/contracts/platform';
+import { formatTime } from '@/utils/time';
 
 export function MessageBubble({ message }: { message: TextMessage }) {
   const fromPatient = message.author === 'patient';
