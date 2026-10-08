@@ -1,0 +1,44 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    # As versões de expo, react, react-native e dos módulos nativos são
+    # fixadas pelo SDK do Expo. Mudança de SDK é feita de forma coordenada
+    # com `npx expo install --fix` (ver issue #1, etapa 7), não pelo Dependabot.
+    ignore:
+      - dependency-name: expo
+        update-types: [version-update:semver-major]
+      - dependency-name: expo-*
+        update-types: [version-update:semver-major]
+      - dependency-name: '@expo/*'
+        update-types: [version-update:semver-major]
+      - dependency-name: eslint-config-expo
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: '@types/react'
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: react-native
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: react-native-*
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+    groups:
+      expo-sdk-patches:
+        patterns: ['expo', 'expo-*', '@expo/*', 'react-native', 'react-native-*']
+        update-types: [patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo

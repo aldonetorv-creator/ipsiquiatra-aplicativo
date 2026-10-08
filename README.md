@@ -24,8 +24,17 @@ Aplicativo do paciente iPsiquiatra, iniciado como Sprint 0 em React Native, Expo
 npm install
 npm run web
 npm run lint
-npx tsc --noEmit
+npm run typecheck
 ```
+
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` roda em todo PR e em push na `main`:
+instalação limpa, TypeScript, lint, Expo Doctor e exportação web. Um job
+separado registra o `npm audit` no resumo da execução e como artefato, sem
+falhar o CI (alertas conhecidos na issue #1). O Dependabot
+(`.github/dependabot.yml`) acompanha npm e GitHub Actions; trocas de SDK do
+Expo continuam manuais, com `npx expo install --fix`.
 
 ## Princípio de evolução
 
