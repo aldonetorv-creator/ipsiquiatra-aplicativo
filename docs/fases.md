@@ -71,10 +71,10 @@ sem backend, seguindo as regras da
 
 | Área | Situação |
 |---|---|
-| Início | Feito: última mensagem da Patrícia, diário de humor da semana, "Antes da sua consulta" e plano de cuidados. |
+| Início | Feito: última mensagem da Patrícia, "Sua próxima consulta", "Antes da sua consulta", diário de humor da semana, "Seu plano de cuidados está pronto" e "Agora: Acompanhamento · X dias desde sua última consulta". |
 | Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor e atalhos "Posso ajudar você com". |
-| Consultas | Próximo passo: "Sua próxima consulta", "Agora: Acompanhamento · X dias desde sua última consulta" e "Seu plano de cuidados está pronto". |
-| Cofre | Próximo passo: documentos agrupados por consulta. |
+| Consultas | Feito: próxima consulta (teleconsulta ou presencial) e consultas anteriores, pelo contrato. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
+| Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
 | Questionários | Tela de demonstração, ainda sem conteúdo. |
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
@@ -194,9 +194,29 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
   Na fase 2, a implementação real passa a atendê-los sem mudar as telas.
 - A conversa já separa tipos de mensagem (texto e registro de humor). A
   cobrança entra como mais um tipo, com valor e situação do pagamento.
-- O contrato das consultas, próximo passo da fase 1, vai registrar se a
-  consulta é teleconsulta ou presencial. Assim o botão de entrar na
-  videochamada pode chegar depois sem mudar o formato dos dados.
+- O contrato das consultas (`listAppointments`) já registra se a consulta é
+  teleconsulta ou presencial. Assim o botão de entrar na videochamada pode
+  chegar depois sem mudar o formato dos dados.
+- **Foto do médico (decisão do Dr. Aldo):** o cartão da consulta mostra a
+  mesma foto que o médico envia em "Perfil médico" na plataforma
+  (`doctorProfile.photo`). O contrato já tem `doctor.photoUrl`, e o app mostra
+  a foto quando ela vem e as iniciais quando não vem. Na fase 2, a API da
+  plataforma precisa entregar essa foto ao app. Hoje a página pública da
+  Patrícia não a expõe. Na demonstração aparecem só as iniciais, porque este
+  repositório é público.
+- **Foto do paciente, o caminho inverso (decisão do Dr. Aldo, fase 2):** o
+  paciente pode enviar a própria foto pelo app, e ela aparece no cadastro dele
+  na plataforma. Hoje a plataforma só reserva o espaço: o campo `photo` do
+  paciente é sempre `false`, e o cadastro mostra as iniciais. Falta guardar a
+  foto do paciente na plataforma. Cuidados:
+  - envio opcional, com consentimento, e o paciente pode trocar ou remover a
+    foto;
+  - só depois do login, indo para o cadastro do paciente certo;
+  - a anonimização da plataforma já apaga a foto do paciente e deve continuar
+    apagando;
+  - a foto nunca aparece em link público, SMS ou WhatsApp;
+  - a imagem é reduzida antes do envio, como a plataforma já faz com a foto do
+    médico.
 - O Cofre agrupado por consulta já reserva o lugar da nota fiscal de cada
   consulta.
 

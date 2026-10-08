@@ -17,9 +17,3 @@ export type MockAction = {
   detail: string;
 };
 
-export type TimelineItem = {
-  title: string;
-  meta: string;
-  description: string;
-};
-

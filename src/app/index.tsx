@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { NextAppointmentCard } from '@/components/appointments/next-appointment-card';
 import { CarePlanCard } from '@/components/home/care-plan-card';
+import { FollowUpCard } from '@/components/home/follow-up-card';
 import { MoodWeekCard } from '@/components/home/mood-week-card';
 import { PatriciaCard } from '@/components/home/patricia-card';
 import { ThemedText } from '@/components/themed-text';
@@ -16,12 +18,19 @@ import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
 
 export default function HomeScreen() {
-  const { state, ensureMoodCheck } = useHome();
-  const [moodError, setMoodError] = useState<string | null>(null);
+  const { state, ensureMoodCheck, requestService } = useHome();
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const registerMood = async () => {
     const failure = await ensureMoodCheck();
-    setMoodError(failure);
+    setActionError(failure);
+    if (!failure) router.push('/patricia');
+  };
+
+  // Remarcar acontece na conversa: a Patrícia recebe o pedido e responde lá.
+  const reschedule = async () => {
+    const failure = await requestService('reschedule_appointment');
+    setActionError(failure);
     if (!failure) router.push('/patricia');
   };
 
@@ -57,49 +66,35 @@ export default function HomeScreen() {
                 lastMessage={state.lastFromPatricia}
                 onPress={() => router.push('/patricia')}
               />
-              <MoodWeekCard entries={state.moodEntries} onRegister={registerMood} />
-              {moodError ? (
+              {actionError ? (
                 <ThemedText type="small" style={styles.error}>
-                  {moodError}
+                  {actionError}
                 </ThemedText>
+              ) : null}
+
+              {state.nextAppointment ? (
+                <>
+                  <NextAppointmentCard
+                    appointment={state.nextAppointment}
+                    onOpen={() => router.push('/consultas')}
+                    onReschedule={reschedule}
+                  />
+                  <BeforeAppointmentCard />
+                </>
+              ) : null}
+
+              <MoodWeekCard entries={state.moodEntries} onRegister={registerMood} />
+
+              <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/cofre')} />
+
+              {state.daysSinceLastAppointment !== null ? (
+                <FollowUpCard
+                  daysSinceLast={state.daysSinceLastAppointment}
+                  onPress={() => router.push('/consultas')}
+                />
               ) : null}
             </>
           ) : null}
-
-          <Card style={styles.row}>
-            <IconBadge
-              name={{ ios: 'doc.text', android: 'description', web: 'description' }}
-              tone="blue"
-              size={46}
-            />
-            <View style={styles.rowCopy}>
-              <ThemedText type="smallBold" style={styles.cardTitle}>
-                Antes da sua consulta
-              </ThemedText>
-              <ThemedText type="small" style={styles.muted}>
-                O Dr. Aldo pediu algumas informações sobre como você esteve nos últimos dias.
-              </ThemedText>
-              <View style={styles.rowAction}>
-                <View style={styles.duration}>
-                  <SymbolView
-                    name={{ ios: 'clock', android: 'schedule', web: 'schedule' }}
-                    tintColor={Tokens.color.muted}
-                    size={16}
-                  />
-                  <ThemedText type="small" style={styles.muted}>
-                    3 minutos
-                  </ThemedText>
-                </View>
-                <GradientButton
-                  label="Responder agora"
-                  size="small"
-                  onPress={() => router.push('/questionarios')}
-                />
-              </View>
-            </View>
-          </Card>
-
-          <CarePlanCard />
 
           <ThemedText type="small" style={styles.demo}>
             Versão de demonstração: dados fictícios, nada é enviado ao consultório.
@@ -107,6 +102,44 @@ export default function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
     </ScreenBackground>
+  );
+}
+
+// Pedido de informações antes da próxima consulta.
+function BeforeAppointmentCard() {
+  return (
+    <Card style={styles.row}>
+      <IconBadge
+        name={{ ios: 'doc.text', android: 'description', web: 'description' }}
+        tone="blue"
+        size={46}
+      />
+      <View style={styles.rowCopy}>
+        <ThemedText type="smallBold" style={styles.cardTitle}>
+          Antes da sua consulta
+        </ThemedText>
+        <ThemedText type="small" style={styles.muted}>
+          O Dr. Aldo pediu algumas informações sobre como você esteve nos últimos dias.
+        </ThemedText>
+        <View style={styles.rowAction}>
+          <View style={styles.duration}>
+            <SymbolView
+              name={{ ios: 'clock', android: 'schedule', web: 'schedule' }}
+              tintColor={Tokens.color.muted}
+              size={16}
+            />
+            <ThemedText type="small" style={styles.muted}>
+              3 minutos
+            </ThemedText>
+          </View>
+          <GradientButton
+            label="Responder agora"
+            size="small"
+            onPress={() => router.push('/questionarios')}
+          />
+        </View>
+      </View>
+    </Card>
   );
 }
 
