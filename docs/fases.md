@@ -47,6 +47,8 @@ depois da fase 1.
 
 - **Meio de pagamento:** cartão e Pix.
 - **Remarcação de consulta já paga:** o valor pago vira crédito.
+- **Cancelamento de consulta já paga:** o valor pago vira crédito, a não ser
+  que o paciente peça o reembolso.
 - **Atalho "Pedir nota fiscal" vira "Ver nota fiscal":**
   - nota já emitida: abre a nota no Cofre;
   - nota ainda não emitida: avisa que a nota fiscal será emitida 24 horas
@@ -59,7 +61,7 @@ depois da fase 1.
 
 ### Ainda em aberto
 
-- **Cancelamento de consulta já paga:** crédito, reembolso e prazo mínimo.
+- **Prazo mínimo** de antecedência para remarcar ou cancelar, se houver.
 
 ### Integração com o Nubank
 
