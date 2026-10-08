@@ -58,10 +58,16 @@ depois da fase 1.
   aparece "Nota fiscal referente à consulta do dia" seguido da data da
   consulta, por exemplo "Nota fiscal referente à consulta do dia 15/10/2026".
   O aviso de nota ainda não emitida também diz de qual consulta ela é.
+- **Prazo para remarcar ou cancelar:** até 24 horas antes da consulta. É a
+  regra que a Patrícia já usa na plataforma do iPsiquiatra (repositório
+  `aldonetorv-creator/ipsiquiatra`, `changeMinHours: 24` em
+  `patricia-core.mjs`, ajustável nas configurações da Patrícia):
+  - faltando menos de 24 horas, a Patrícia não muda a agenda: explica ao
+    paciente e avisa o Dr. Aldo para decidir;
+  - a plataforma também limita a 2 remarcações por consulta.
 
-### Ainda em aberto
-
-- **Prazo mínimo** de antecedência para remarcar ou cancelar, se houver.
+  A Patrícia do app deve seguir as mesmas regras da plataforma, para o
+  paciente ter a mesma resposta no site e no aplicativo.
 
 ### Integração com o Nubank
 
