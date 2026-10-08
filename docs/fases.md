@@ -51,6 +51,11 @@ depois da fase 1.
   - nota já emitida: abre a nota no Cofre;
   - nota ainda não emitida: avisa que a nota fiscal será emitida 24 horas
     depois da realização da consulta.
+- **Toda nota fiscal mostra a consulta a que se refere:** sempre que o
+  paciente conferir uma nota (no Cofre, em "Ver nota fiscal" ou na conversa),
+  aparece "Nota fiscal referente à consulta do dia" seguido da data da
+  consulta, por exemplo "Nota fiscal referente à consulta do dia 15/10/2026".
+  O aviso de nota ainda não emitida também diz de qual consulta ela é.
 
 ### Ainda em aberto
 
