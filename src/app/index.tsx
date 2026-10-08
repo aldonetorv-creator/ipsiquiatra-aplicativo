@@ -73,14 +73,14 @@ export default function HomeScreen() {
               ) : null}
 
               {state.nextAppointment ? (
-                <>
-                  <NextAppointmentCard
-                    appointment={state.nextAppointment}
-                    onOpen={() => router.push('/consultas')}
-                    onReschedule={reschedule}
-                  />
-                  <BeforeAppointmentCard />
-                </>
+                <NextAppointmentCard
+                  appointment={state.nextAppointment}
+                  onOpen={() => router.push('/consultas')}
+                  onReschedule={reschedule}
+                />
+              ) : null}
+              {state.pendingQuestionnaireMinutes > 0 ? (
+                <BeforeAppointmentCard minutes={state.pendingQuestionnaireMinutes} />
               ) : null}
 
               <MoodWeekCard entries={state.moodEntries} onRegister={registerMood} />
@@ -105,8 +105,8 @@ export default function HomeScreen() {
   );
 }
 
-// Pedido de informações antes da próxima consulta.
-function BeforeAppointmentCard() {
+// Questionários que o Dr. Aldo pediu para a próxima consulta.
+function BeforeAppointmentCard({ minutes }: { minutes: number }) {
   return (
     <Card style={styles.row}>
       <IconBadge
@@ -129,7 +129,7 @@ function BeforeAppointmentCard() {
               size={16}
             />
             <ThemedText type="small" style={styles.muted}>
-              3 minutos
+              {minutes === 1 ? '1 minuto' : `${minutes} minutos`}
             </ThemedText>
           </View>
           <GradientButton

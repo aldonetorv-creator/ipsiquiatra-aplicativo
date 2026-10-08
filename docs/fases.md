@@ -75,7 +75,7 @@ sem backend, seguindo as regras da
 | Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor e atalhos "Posso ajudar você com". |
 | Consultas | Feito: próxima consulta (teleconsulta ou presencial) e consultas anteriores, pelo contrato. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
 | Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
-| Questionários | Tela de demonstração, ainda sem conteúdo. |
+| Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
 conversa, mas nesta fase a Patrícia só avisa que o serviço chega em breve.
@@ -219,6 +219,15 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
     médico.
 - O Cofre agrupado por consulta já reserva o lugar da nota fiscal de cada
   consulta.
+- Os questionários usam os mesmos textos e opções da plataforma
+  (`src/mocks/questionnaires.ts`), e `submitQuestionnaire` devolve
+  `safetyTriggered`. Na fase 2:
+  - as respostas vão para o prontuário;
+  - a resposta de segurança do PHQ-9 também avisa o médico, como a plataforma
+    já faz no site. Hoje o app só mostra as orientações de emergência e avisa
+    que a demonstração não chega ao Dr. Aldo;
+  - o app não mostra pontuação nem interpretação ao paciente: isso fica com o
+    médico.
 
 ## IA
 

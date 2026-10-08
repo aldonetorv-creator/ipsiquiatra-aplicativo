@@ -17,7 +17,10 @@ export function PageScreen({ title, subtitle, children }: Props) {
   return (
     <ScreenBackground>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <ThemedText type="title" style={styles.title}>
               {title}

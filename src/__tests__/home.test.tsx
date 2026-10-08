@@ -90,11 +90,43 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/patricia');
   });
 
-  it('leva aos questionários', async () => {
+  it('leva aos questionários, com o tempo do que falta responder', async () => {
     await renderWith(createMockPatientAppGateway());
 
-    await fireEvent.press(await screen.findByRole('button', { name: 'Responder agora' }));
+    expect(await screen.findByText('6 minutos')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Responder agora' }));
     expect(router.push).toHaveBeenCalledWith('/questionarios');
+  });
+
+  it('desconta os questionários respondidos e some quando tudo foi respondido', async () => {
+    const gateway = createMockPatientAppGateway();
+    const listed = await gateway.listQuestionnaires();
+    if (!listed.ok) throw new Error('listQuestionnaires falhou');
+    const answerAll = async (ids: string[]) => {
+      for (const item of listed.data.filter((questionnaire) => ids.includes(questionnaire.id))) {
+        const answers = Object.fromEntries(
+          item.questions.map((question) => [
+            question.id,
+            question.type === 'scale' ? question.options[0] : 'Resposta',
+          ])
+        );
+        await gateway.submitQuestionnaire({ questionnaireId: item.id, answers });
+      }
+    };
+
+    await answerAll(['general']);
+    const first = await render(
+      <PatientAppGatewayProvider gateway={gateway}>
+        <HomeScreen />
+      </PatientAppGatewayProvider>
+    );
+    expect(await screen.findByText('4 minutos')).toBeOnTheScreen();
+    await first.unmount();
+
+    await answerAll(listed.data.map((item) => item.id));
+    await renderWith(gateway);
+    expect(await screen.findByText('Sua próxima consulta')).toBeOnTheScreen();
+    expect(screen.queryByText('Antes da sua consulta')).toBeNull();
   });
 
   it('mostra a próxima consulta, que abre a tela Consultas', async () => {

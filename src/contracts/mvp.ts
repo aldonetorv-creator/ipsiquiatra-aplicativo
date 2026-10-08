@@ -11,9 +11,3 @@ export type MvpArea = {
   description: string;
   status: MvpAreaStatus;
 };
-
-export type MockAction = {
-  label: string;
-  detail: string;
-};
-

@@ -6,6 +6,8 @@ import {
   MOOD_NOTE_MAX_LENGTH,
   MoodLevel,
   PatientAppGateway,
+  QUESTIONNAIRE_TEXT_MAX_LENGTH,
+  Questionnaire,
 } from '@/contracts/platform';
 import {
   createMockPatientAppGateway,
@@ -14,6 +16,7 @@ import {
   mockDoctor,
   mockPatientAppGateway,
   patriciaScript,
+  QUESTIONNAIRES_STORAGE_KEY,
 } from '@/mocks/patient-app-gateway';
 import { createMemoryStore } from '@/services/storage';
 
@@ -362,5 +365,130 @@ describe('consultas simuladas', () => {
     current = new Date(end + 24 * 60 * 60 * 1000);
     expect((await invoiceOf()).availability).toBe('mock_only');
     expect(invoiceIsDue(last, current)).toBe(true);
+  });
+});
+
+describe('questionários simulados', () => {
+  const fixedNow = new Date(2026, 9, 8, 9, 0);
+
+  const answersFor = (questionnaire: Questionnaire, scaleIndex = 0) =>
+    Object.fromEntries(
+      questionnaire.questions.map((question) => [
+        question.id,
+        question.type === 'scale' ? question.options[scaleIndex] : 'Texto de teste',
+      ])
+    );
+
+  async function listed(gateway: PatientAppGateway) {
+    const result = await gateway.listQuestionnaires();
+    if (!result.ok) throw new Error('listQuestionnaires falhou');
+    return result.data;
+  }
+
+  it('pede a Atualização pré-consulta e as escalas para a próxima consulta', async () => {
+    const gateway = createMockPatientAppGateway({ now: () => fixedNow });
+    const appointments = await gateway.listAppointments();
+    if (!appointments.ok) throw new Error('listAppointments falhou');
+    const next = appointments.data.find((item) => item.status === 'scheduled')!;
+
+    const questionnaires = await listed(gateway);
+
+    expect(questionnaires.map((item) => item.id)).toEqual([
+      'general',
+      'baseline-who5',
+      'baseline-phq9',
+      'baseline-gad7',
+    ]);
+    for (const item of questionnaires) {
+      expect(item.appointmentId).toBe(next.id);
+      expect(item.answeredAt).toBeNull();
+    }
+    const safety = questionnaires.flatMap((item) =>
+      item.questions.filter((question) => question.type === 'scale' && question.safety)
+    );
+    expect(safety.map((question) => question.id)).toEqual(['phq9-9']);
+  });
+
+  it('registra as respostas no aparelho e não aceita responder de novo', async () => {
+    const store = createMemoryStore();
+    const gateway = createMockPatientAppGateway({ now: () => fixedNow, store });
+    const [general] = await listed(gateway);
+
+    const result = await gateway.submitQuestionnaire({
+      questionnaireId: general.id,
+      answers: answersFor(general),
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      requestId: expect.any(String),
+      data: {
+        questionnaire: expect.objectContaining({ id: 'general', answeredAt: fixedNow.toISOString() }),
+        safetyTriggered: false,
+      },
+    });
+    // Outra abertura do app lê o que ficou salvo.
+    const reopened = createMockPatientAppGateway({ now: () => fixedNow, store });
+    expect((await listed(reopened))[0].answeredAt).toBe(fixedNow.toISOString());
+    expect(
+      await reopened.submitQuestionnaire({ questionnaireId: 'general', answers: answersFor(general) })
+    ).toMatchObject({ ok: false, error: { message: 'Este questionário já foi respondido.' } });
+  });
+
+  it('aciona a segurança com qualquer resposta além de "Nunca ou quase nunca" no item 9', async () => {
+    for (const [index, expected] of [
+      [0, false],
+      [1, true],
+      [3, true],
+    ] as const) {
+      const gateway = createMockPatientAppGateway({ now: () => fixedNow });
+      const phq9 = (await listed(gateway)).find((item) => item.id === 'baseline-phq9')!;
+      const answers = { ...answersFor(phq9, 0), 'phq9-9': answersFor(phq9, index)['phq9-9'] };
+
+      const result = await gateway.submitQuestionnaire({ questionnaireId: phq9.id, answers });
+
+      expect(result.ok && result.data.safetyTriggered).toBe(expected);
+    }
+  });
+
+  it.each([
+    ['pergunta obrigatória em branco', { mainChange: '' }, 'Responda todas as perguntas.'],
+    [
+      'opção que não existe',
+      { medicationUse: 'Talvez' },
+      'Escolha uma das opções em cada pergunta.',
+    ],
+    [
+      'texto longo demais',
+      { priority: 'a'.repeat(QUESTIONNAIRE_TEXT_MAX_LENGTH + 1) },
+      `Cada resposta pode ter até ${QUESTIONNAIRE_TEXT_MAX_LENGTH} caracteres.`,
+    ],
+  ])('recusa %s', async (_case, override, message) => {
+    const gateway = createMockPatientAppGateway({ now: () => fixedNow });
+    const [general] = await listed(gateway);
+
+    const result = await gateway.submitQuestionnaire({
+      questionnaireId: general.id,
+      answers: { ...answersFor(general), ...override },
+    });
+
+    expect(result).toMatchObject({ ok: false, error: { code: 'validation_failed', message } });
+    expect((await listed(gateway))[0].answeredAt).toBeNull();
+  });
+
+  it('recusa questionário desconhecido', async () => {
+    const result = await createMockPatientAppGateway().submitQuestionnaire({
+      questionnaireId: 'nao-existe',
+      answers: {},
+    });
+
+    expect(result).toMatchObject({ ok: false, error: { message: 'Questionário não encontrado.' } });
+  });
+
+  it('começa sem respostas quando o que está salvo está corrompido', async () => {
+    const store = createMemoryStore({ [QUESTIONNAIRES_STORAGE_KEY]: '{corrompido' });
+    const gateway = createMockPatientAppGateway({ now: () => fixedNow, store });
+
+    expect((await listed(gateway)).every((item) => item.answeredAt === null)).toBe(true);
   });
 });

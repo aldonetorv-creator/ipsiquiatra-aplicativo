@@ -97,6 +97,43 @@ export type MoodEntry = {
   recordedAt: string;
 };
 
+export const QUESTIONNAIRE_TEXT_MAX_LENGTH = 1000;
+
+export type QuestionnaireQuestion =
+  | {
+      id: string;
+      prompt: string;
+      type: 'scale';
+      options: string[];
+      required: boolean;
+      // Pergunta de segurança (item 9 do PHQ-9): qualquer resposta além da
+      // primeira opção mostra na hora as orientações de emergência.
+      safety?: boolean;
+    }
+  | { id: string; prompt: string; type: 'text'; required: boolean };
+
+// Questionário que o médico pede antes da consulta. Os textos são os mesmos
+// da plataforma (docs/fases.md, "Uma só Patrícia por médico").
+export type Questionnaire = {
+  id: string;
+  title: string;
+  description: string;
+  estimatedMinutes: number;
+  // Consulta para a qual o médico pediu as respostas.
+  appointmentId: string | null;
+  questions: QuestionnaireQuestion[];
+  answeredAt: string | null;
+};
+
+// Resposta de cada pergunta pelo `id`: o texto da opção escolhida ou o texto
+// livre digitado.
+export type QuestionnaireAnswers = Record<string, string>;
+
+export type SubmitQuestionnaireInput = {
+  questionnaireId: string;
+  answers: QuestionnaireAnswers;
+};
+
 // Pedidos que a Patrícia vai atender de verdade na fase 2 (agenda e NFS-e).
 export type PatientService = 'schedule_appointment' | 'reschedule_appointment' | 'request_invoice';
 
@@ -124,4 +161,11 @@ export interface PatientAppGateway {
   listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
   // Apaga a conversa e os registros de humor e recomeça a conversa.
   clearHistory(): Promise<ApiResult<ConversationMessage[]>>;
+  // Questionários pedidos pelo médico, na ordem em que devem ser respondidos.
+  listQuestionnaires(): Promise<ApiResult<Questionnaire[]>>;
+  // `safetyTriggered`: a resposta de segurança pede as orientações de
+  // emergência (e, na fase 2, o aviso ao médico).
+  submitQuestionnaire(
+    input: SubmitQuestionnaireInput
+  ): Promise<ApiResult<{ questionnaire: Questionnaire; safetyTriggered: boolean }>>;
 }
