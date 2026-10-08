@@ -8,7 +8,11 @@ import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useFocusEffect: (effect: () => void) =>
+    jest.requireActual<typeof import('react')>('react').useEffect(effect, [effect]),
+}));
 
 async function renderWith(overrides: Partial<PatientAppGateway> = {}) {
   const gateway = { ...createMockPatientAppGateway(), ...overrides };
@@ -61,22 +65,46 @@ describe('Conversa com a Patrícia', () => {
     expect(screen.getByRole('radio', { name: 'Bem' })).toBeSelected();
   });
 
-  it('abre um novo cartão de humor pelo atalho', async () => {
+  it.each([
+    ['Agendar consulta', 'schedule_appointment'],
+    ['Remarcar', 'reschedule_appointment'],
+    ['Pedir nota fiscal', 'request_invoice'],
+  ] as const)('"%s" mostra o pedido e a resposta de que chega em breve', async (label, service) => {
     await renderWith();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Registrar humor' }));
+    await fireEvent.press(screen.getByRole('button', { name: label }));
 
-    expect(await screen.findByText(patriciaScript.moodCheckAgain)).toBeOnTheScreen();
+    expect(await screen.findByText(patriciaScript.services[service].request)).toBeOnTheScreen();
+    expect(screen.getByText(patriciaScript.services[service].reply)).toBeOnTheScreen();
   });
 
-  it('leva aos documentos e às consultas pelos atalhos', async () => {
+  it('"Encontrar documento" leva ao Cofre', async () => {
     await renderWith();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Meus documentos' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Minhas consultas' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Encontrar documento' }));
 
     expect(router.push).toHaveBeenCalledWith('/cofre');
-    expect(router.push).toHaveBeenCalledWith('/consultas');
+  });
+
+  it('recolhe o painel de ajuda enquanto o paciente digita', async () => {
+    await renderWith();
+    const input = screen.getByLabelText('Mensagem para a Patrícia');
+
+    await fireEvent(input, 'focus');
+    expect(screen.queryByText('Posso ajudar você com:')).toBeNull();
+
+    await fireEvent(input, 'blur');
+    expect(screen.getByText('Posso ajudar você com:')).toBeOnTheScreen();
+  });
+
+  it('amplia a foto da Patrícia ao tocar e fecha de novo', async () => {
+    await renderWith();
+
+    await fireEvent.press(screen.getAllByRole('imagebutton', { name: 'Ver foto da Patrícia' })[0]);
+    expect(screen.getByLabelText('Foto da Patrícia, assistente do Dr. Aldo')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar foto da Patrícia' }));
+    expect(screen.queryByLabelText('Foto da Patrícia, assistente do Dr. Aldo')).toBeNull();
   });
 
   it('mostra o erro do contrato e mantém o texto digitado', async () => {

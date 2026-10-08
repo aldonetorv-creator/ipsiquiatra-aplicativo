@@ -1,4 +1,4 @@
-import { ContractNotice, HomeInsight, MockAction, MvpArea, TimelineItem } from '@/contracts/mvp';
+import { MockAction, MvpArea, TimelineItem } from '@/contracts/mvp';
 
 export const mvpAreas: MvpArea[] = [
   {
@@ -48,25 +48,6 @@ export const mvpAreas: MvpArea[] = [
   },
 ];
 
-export const homeInsights: HomeInsight[] = [
-  { label: 'Próximo retorno', value: 'Qui, 15:30', tone: 'purple' },
-  { label: 'Check-in aberto', value: '2 min', tone: 'blue' },
-  { label: 'Cofre', value: '3 itens', tone: 'white' },
-];
-
-export const homeTimeline: TimelineItem[] = [
-  {
-    title: 'Consulta de acompanhamento',
-    meta: 'Dados fictícios',
-    description: 'Card reservado para mostrar uma consulta futura quando a API existir.',
-  },
-  {
-    title: 'Questionário de rotina',
-    meta: 'Mock local',
-    description: 'Entrada visual para um check-in breve, sem persistência de respostas.',
-  },
-];
-
 export const appointmentTimeline: TimelineItem[] = [
   {
     title: 'Consulta presencial',
@@ -95,17 +76,3 @@ export const questionnaireActions: MockAction[] = [
   },
 ];
 
-export const contractNotices: ContractNotice[] = [
-  {
-    title: 'Sem dados reais',
-    description: 'As telas usam mocks locais e não coletam PHI, prontuário ou documentos.',
-  },
-  {
-    title: 'Contrato primeiro',
-    description: 'Tipos e mocks ficam separados para orientar futuras APIs com revisão.',
-  },
-  {
-    title: 'Escopo protegido',
-    description: 'Autenticação real, pagamentos, NFS-e, telemedicina e IA clínica ficam fora.',
-  },
-];

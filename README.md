@@ -55,6 +55,11 @@ clínicos, ela não lê nem interpreta o que o paciente escreve (sem IA, conform
 a issue #1) e nada é guardado fora da sessão. A tela mostra esse aviso e os
 contatos de emergência (CVV 188 e SAMU 192).
 
+Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
+passam pelo contrato (`requestService`), mas nesta fase a Patrícia só avisa que
+o serviço chega em breve: agenda e NFS-e são da fase 2. "Encontrar documento"
+abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
+
 ## Princípio de evolução
 
 A base é contract-first: futuras integrações devem nascer a partir dos tipos e mocks locais, passar por revisão estrutural e manter dados sensíveis fora do app até existir arquitetura aprovada.

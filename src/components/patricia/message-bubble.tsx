@@ -2,18 +2,18 @@ import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PatriciaAvatar } from './patricia-avatar';
-import { formatTime } from './format-time';
 
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
 import { TextMessage } from '@/contracts/platform';
+import { formatTime } from '@/utils/time';
 
 export function MessageBubble({ message }: { message: TextMessage }) {
   const fromPatient = message.author === 'patient';
 
   return (
     <View style={[styles.row, fromPatient && styles.rowPatient]}>
-      {fromPatient ? null : <PatriciaAvatar size={36} />}
+      {fromPatient ? null : <PatriciaAvatar size={36} zoomable />}
       <View style={[styles.bubble, fromPatient ? styles.bubblePatient : styles.bubblePatricia]}>
         <ThemedText type="default" style={styles.text}>
           {message.text}
@@ -29,7 +29,7 @@ export function MessageBubble({ message }: { message: TextMessage }) {
 export function PatriciaRow({ children }: { children: ReactNode }) {
   return (
     <View style={styles.row}>
-      <PatriciaAvatar size={36} />
+      <PatriciaAvatar size={36} zoomable />
       <View style={styles.fill}>{children}</View>
     </View>
   );

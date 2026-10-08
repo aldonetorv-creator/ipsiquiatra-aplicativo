@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
-import { ApiResult, ConversationMessage, RecordMoodInput } from '@/contracts/platform';
+import {
+  ApiResult,
+  ConversationMessage,
+  PatientService,
+  RecordMoodInput,
+} from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
 
 export type ConversationState =
@@ -31,7 +37,9 @@ export function useConversation() {
   const gateway = usePatientAppGateway();
   const [state, setState] = useState<ConversationState>({ status: 'loading', messages: [] });
 
-  useEffect(() => {
+  // Recarrega sempre que a aba ganha foco: outra tela (ex.: Início) pode ter
+  // aberto um novo cartão de humor.
+  const load = useCallback(() => {
     let active = true;
     gateway
       .listConversation()
@@ -50,6 +58,7 @@ export function useConversation() {
       active = false;
     };
   }, [gateway]);
+  useFocusEffect(load);
 
   const apply = useCallback(
     async <T>(
@@ -76,14 +85,16 @@ export function useConversation() {
     (text: string) => apply(() => gateway.sendMessage(text), (messages) => messages),
     [apply, gateway]
   );
-  const requestMoodCheck = useCallback(
-    () => apply(() => gateway.requestMoodCheck(), (messages) => messages),
-    [apply, gateway]
-  );
   const recordMood = useCallback(
     (input: RecordMoodInput) => apply(() => gateway.recordMood(input), (data) => data.messages),
     [apply, gateway]
   );
 
-  return { state, sendMessage, requestMoodCheck, recordMood };
+  const requestService = useCallback(
+    (service: PatientService) =>
+      apply(() => gateway.requestService(service), (messages) => messages),
+    [apply, gateway]
+  );
+
+  return { state, sendMessage, recordMood, requestService };
 }

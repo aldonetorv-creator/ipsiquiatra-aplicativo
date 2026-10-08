@@ -139,6 +139,40 @@ describe('conversa simulada com a Patrícia', () => {
     expect(result).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
   });
 
+  it('lista os humores registrados na sessão, começando vazio', async () => {
+    const gateway = newGateway();
+    const empty = await gateway.listMoodEntries();
+    expect(empty).toEqual({ ok: true, requestId: expect.any(String), data: [] });
+
+    const checkId = await firstMoodCheckId(gateway);
+    await gateway.recordMood({ checkId, level: 5, note: null });
+
+    const result = await gateway.listMoodEntries();
+    expect(result.ok && result.data).toEqual([
+      expect.objectContaining({ checkId, level: 5, recordedAt: fixedNow.toISOString() }),
+    ]);
+  });
+
+  it.each(['schedule_appointment', 'reschedule_appointment', 'request_invoice'] as const)(
+    'responde ao pedido de %s avisando que chega em breve',
+    async (service) => {
+      const result = await newGateway().requestService(service);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data).toEqual([
+        expect.objectContaining({
+          author: 'patient',
+          text: patriciaScript.services[service].request,
+        }),
+        expect.objectContaining({
+          author: 'patricia',
+          text: expect.stringMatching(/^Em breve/),
+        }),
+      ]);
+    }
+  );
+
   it('abre um novo cartão de humor quando pedido', async () => {
     const gateway = newGateway();
     const result = await gateway.requestMoodCheck();

@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Tokens } from '@/constants/theme';
+import { Shadows, Tokens } from '@/constants/theme';
 
 type PanelProps = {
   children: ReactNode;
@@ -11,25 +11,6 @@ type PanelProps = {
 
 export function Panel({ children, style }: PanelProps) {
   return <View style={[styles.panel, style]}>{children}</View>;
-}
-
-type StatCardProps = {
-  label: string;
-  value: string;
-  tone?: 'purple' | 'blue' | 'white';
-};
-
-export function StatCard({ label, value, tone = 'purple' }: StatCardProps) {
-  return (
-    <View style={[styles.stat, styles[tone]]}>
-      <ThemedText type="small" style={styles.statLabel}>
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold" style={styles.statValue}>
-        {value}
-      </ThemedText>
-    </View>
-  );
 }
 
 type ListItemProps = {
@@ -58,53 +39,16 @@ export function ListItem({ title, meta, children }: ListItemProps) {
   );
 }
 
-export function StatusPill({ children }: { children: ReactNode }) {
-  return (
-    <View style={styles.pill}>
-      <ThemedText type="code" style={styles.pillText}>
-        {children}
-      </ThemedText>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   panel: {
     width: '100%',
-    borderRadius: 8,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: Tokens.color.border,
+    borderColor: 'rgba(225, 228, 242, 0.7)',
     backgroundColor: Tokens.color.surface,
+    boxShadow: Shadows.card,
     padding: 18,
     gap: 14,
-  },
-  stat: {
-    flex: 1,
-    minWidth: 110,
-    borderRadius: 8,
-    padding: 14,
-    gap: 8,
-    borderWidth: 1,
-  },
-  purple: {
-    backgroundColor: Tokens.color.brandSoft,
-    borderColor: Tokens.color.brandBorder,
-  },
-  blue: {
-    backgroundColor: Tokens.color.blueSoft,
-    borderColor: Tokens.color.blueBorder,
-  },
-  white: {
-    backgroundColor: Tokens.color.surface,
-    borderColor: Tokens.color.border,
-  },
-  statLabel: {
-    color: Tokens.color.muted,
-  },
-  statValue: {
-    color: Tokens.color.text,
-    fontSize: 18,
-    lineHeight: 22,
   },
   listItem: {
     gap: 8,
@@ -126,16 +70,5 @@ const styles = StyleSheet.create({
   },
   body: {
     color: Tokens.color.muted,
-  },
-  pill: {
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    backgroundColor: Tokens.color.brandSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  pillText: {
-    color: Tokens.color.brandDeep,
-    textTransform: 'uppercase',
   },
 });

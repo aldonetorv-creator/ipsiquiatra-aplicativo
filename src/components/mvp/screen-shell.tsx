@@ -2,10 +2,9 @@ import { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BrandMark } from '@/components/mvp/brand-mark';
-import { StatusPill } from '@/components/mvp/cards';
 import { ThemedText } from '@/components/themed-text';
-import { BottomTabInset, MaxContentWidth, Tokens } from '@/constants/theme';
+import { ScreenBackground } from '@/components/ui/screen-background';
+import { MaxContentWidth, Tokens } from '@/constants/theme';
 
 type ScreenShellProps = {
   eyebrow: string;
@@ -16,16 +15,14 @@ type ScreenShellProps = {
 
 export function ScreenShell({ eyebrow, title, description, children }: ScreenShellProps) {
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea}>
+    <ScreenBackground>
+      <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           alwaysBounceVertical={false}>
           <View style={styles.header}>
-            <BrandMark />
             <View style={styles.headerCopy}>
-              <StatusPill>Sprint 0 mock</StatusPill>
               <ThemedText type="smallBold" style={styles.eyebrow}>
                 {eyebrow}
               </ThemedText>
@@ -40,15 +37,11 @@ export function ScreenShell({ eyebrow, title, description, children }: ScreenShe
           {children}
         </ScrollView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Tokens.color.background,
-  },
   safeArea: {
     flex: 1,
   },
@@ -58,7 +51,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 20,
     paddingTop: 22,
-    paddingBottom: BottomTabInset + 28,
+    paddingBottom: 32,
     gap: 18,
   },
   header: {

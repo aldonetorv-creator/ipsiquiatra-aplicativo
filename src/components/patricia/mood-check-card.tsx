@@ -1,19 +1,13 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { formatTime } from './format-time';
+import { moodOptions } from './mood-options';
 
 import { ThemedText } from '@/components/themed-text';
+import { GradientButton } from '@/components/ui/gradient-button';
 import { Tokens } from '@/constants/theme';
 import { MOOD_NOTE_MAX_LENGTH, MoodCheckMessage, MoodLevel } from '@/contracts/platform';
-
-export const moodOptions: { level: MoodLevel; label: string; face: string; tint: string }[] = [
-  { level: 1, label: 'Muito mal', face: '😣', tint: '#FDE7EC' },
-  { level: 2, label: 'Mal', face: '🙁', tint: '#FDEFE4' },
-  { level: 3, label: 'Mais ou menos', face: '😐', tint: '#EEF0F6' },
-  { level: 4, label: 'Bem', face: '🙂', tint: '#E8ECFB' },
-  { level: 5, label: 'Muito bem', face: '😄', tint: '#EFEAFD' },
-];
+import { formatTime } from '@/utils/time';
 
 type Props = {
   message: MoodCheckMessage;
@@ -108,16 +102,15 @@ export function MoodCheckCard({ message, onSubmit }: Props) {
               {error}
             </ThemedText>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: selected === null || sending }}
-            disabled={selected === null || sending}
-            onPress={submit}
-            style={[styles.submit, (selected === null || sending) && styles.submitDisabled]}>
-            <ThemedText type="smallBold" style={styles.submitText}>
-              Registrar
-            </ThemedText>
-          </Pressable>
+          <View style={styles.submit}>
+            <GradientButton
+              label="Registrar"
+              size="small"
+              chevron={false}
+              disabled={selected === null || sending}
+              onPress={submit}
+            />
+          </View>
         </>
       )}
     </View>
@@ -213,16 +206,6 @@ const styles = StyleSheet.create({
   },
   submit: {
     alignSelf: 'flex-end',
-    borderRadius: 999,
-    backgroundColor: Tokens.color.blue,
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-  },
-  submitDisabled: {
-    opacity: 0.4,
-  },
-  submitText: {
-    color: Tokens.color.onBrand,
   },
   done: {
     alignSelf: 'flex-end',

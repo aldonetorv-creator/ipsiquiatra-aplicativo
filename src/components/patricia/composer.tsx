@@ -1,16 +1,18 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Tokens } from '@/constants/theme';
+import { Gradients, Shadows, Tokens } from '@/constants/theme';
 import { MESSAGE_MAX_LENGTH } from '@/contracts/platform';
 
 type Props = {
   onSend: (text: string) => Promise<string | null>;
+  onFocusChange?: (focused: boolean) => void;
 };
 
-export function Composer({ onSend }: Props) {
+export function Composer({ onSend, onFocusChange }: Props) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,8 @@ export function Composer({ onSend }: Props) {
           multiline
           style={styles.input}
           accessibilityLabel="Mensagem para a Patrícia"
+          onFocus={() => onFocusChange?.(true)}
+          onBlur={() => onFocusChange?.(false)}
         />
         <Pressable
           accessibilityRole="button"
@@ -55,11 +59,17 @@ export function Composer({ onSend }: Props) {
           disabled={!canSend}
           onPress={send}
           style={[styles.send, !canSend && styles.sendDisabled]}>
-          <SymbolView
-            name={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
-            tintColor={Tokens.color.onBrand}
-            size={20}
-          />
+          <LinearGradient
+            colors={Gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.sendGradient}>
+            <SymbolView
+              name={{ ios: 'paperplane.fill', android: 'send', web: 'send' }}
+              tintColor={Tokens.color.onBrand}
+              size={20}
+            />
+          </LinearGradient>
         </Pressable>
       </View>
     </View>
@@ -93,7 +103,11 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: Tokens.color.blue,
+    boxShadow: Shadows.floating,
+  },
+  sendGradient: {
+    flex: 1,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -26,6 +26,18 @@ export const Tokens = {
   },
 } as const;
 
+// Degradês e sombras da identidade visual (ver docs/identidade-visual).
+export const Gradients = {
+  background: ['#E9ECFB', '#F4F3FD', '#FAF9FE'],
+  primary: ['#2F45B5', '#6B3FD9'],
+  soft: ['#F3F0FE', '#E9EDFC'],
+} as const;
+
+export const Shadows = {
+  card: '0px 8px 24px rgba(27, 37, 89, 0.08)',
+  floating: '0px 6px 16px rgba(47, 69, 181, 0.28)',
+} as const;
+
 export const Colors = {
   light: {
     text: Tokens.color.text,
@@ -80,5 +92,4 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 54, android: 82 }) ?? 72;
 export const MaxContentWidth = 820;
