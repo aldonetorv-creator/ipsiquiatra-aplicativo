@@ -1,6 +1,7 @@
 import {
   ApiFailure,
   ApiResult,
+  Appointment,
   ConsentRecord,
   ConversationMessage,
   DocumentMetadata,
@@ -29,30 +30,103 @@ const validationFailure = (message: string): ApiFailure => ({
   requestId: REQUEST_ID,
 });
 
+export const mockDoctor = { name: 'Dr. Aldo Araújo', specialty: 'Psiquiatra' };
+
+// Consultas fictícias, em datas relativas ao dia de hoje para a demonstração
+// sempre ter uma consulta passada recente e uma próxima.
+export function mockAppointments(now: Date): Appointment[] {
+  const at = (daysFromToday: number, hour: number, minute = 0) =>
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + daysFromToday,
+      hour,
+      minute
+    ).toISOString();
+  return [
+    {
+      id: 'appt-1',
+      startsAt: at(-60, 10),
+      durationMinutes: 60,
+      modality: 'in_person',
+      status: 'completed',
+      doctor: mockDoctor,
+    },
+    {
+      id: 'appt-2',
+      startsAt: at(-8, 14, 30),
+      durationMinutes: 60,
+      modality: 'telemedicine',
+      status: 'completed',
+      doctor: mockDoctor,
+    },
+    {
+      id: 'appt-3',
+      startsAt: at(7, 14, 30),
+      durationMinutes: 60,
+      modality: 'telemedicine',
+      status: 'scheduled',
+      doctor: mockDoctor,
+    },
+  ];
+}
+
+const INVOICE_DELAY_MS = 24 * 60 * 60 * 1000;
+
+// A nota fiscal sai 24 horas depois da realização da consulta (docs/fases.md).
+function invoiceIssueTime(appointment: Appointment) {
+  const end = new Date(appointment.startsAt).getTime() + appointment.durationMinutes * 60000;
+  return end + INVOICE_DELAY_MS;
+}
+
+export function invoiceIsDue(appointment: Appointment, now: Date) {
+  return now.getTime() >= invoiceIssueTime(appointment);
+}
+
 // Documentos fictícios: nenhum dado real de paciente nem arquivo armazenado.
-export const mockDocuments: DocumentMetadata[] = [
-  {
-    id: 'mock-certificate',
-    displayName: 'Atestado de comparecimento',
-    kind: 'certificate',
-    createdAt: '2026-01-15',
-    availability: 'mock_only',
-  },
-  {
-    id: 'mock-receipt',
-    displayName: 'Recibo de consulta',
-    kind: 'receipt',
-    createdAt: '2026-01-15',
-    availability: 'mock_only',
-  },
-  {
-    id: 'mock-guidance',
-    displayName: 'Orientações gerais',
-    kind: 'guidance',
-    createdAt: '2026-01-15',
-    availability: 'mock_only',
-  },
-];
+export function mockDocuments(appointments: Appointment[], now: Date): DocumentMetadata[] {
+  const documents: DocumentMetadata[] = [];
+  const add = (
+    appointment: Appointment | null,
+    id: string,
+    kind: DocumentMetadata['kind'],
+    displayName: string
+  ) =>
+    documents.push({
+      id,
+      displayName,
+      kind,
+      createdAt: appointment?.startsAt ?? now.toISOString(),
+      appointmentId: appointment?.id ?? null,
+      availability: 'mock_only',
+    });
+
+  const [first, last] = appointments.filter((item) => item.status === 'completed');
+  if (first) {
+    add(first, 'doc-report-1', 'report', 'Relatório da consulta');
+    add(first, 'doc-prescription-1', 'prescription', 'Receita');
+    add(first, 'doc-certificate-1', 'certificate', 'Atestado de comparecimento');
+  }
+  if (last) {
+    add(last, 'doc-care-plan-2', 'care_plan', 'Plano de cuidados');
+    add(last, 'doc-prescription-2', 'prescription', 'Receita');
+    add(last, 'doc-exams-2', 'exam_request', 'Solicitação de exames');
+  }
+  for (const appointment of [first, last]) {
+    if (!appointment) continue;
+    const due = invoiceIsDue(appointment, now);
+    documents.push({
+      id: `doc-invoice-${appointment.id}`,
+      displayName: 'Nota fiscal',
+      kind: 'invoice',
+      createdAt: due ? new Date(invoiceIssueTime(appointment)).toISOString() : appointment.startsAt,
+      appointmentId: appointment.id,
+      availability: due ? 'mock_only' : 'pending',
+    });
+  }
+  add(null, 'doc-guidance', 'guidance', 'Orientações gerais');
+  return documents;
+}
 
 // Respostas fixas: a Patrícia desta versão não lê nem interpreta o que o
 // paciente escreve (sem IA e sem conteúdo clínico, conforme a issue #1).
@@ -183,9 +257,15 @@ export function createMockPatientAppGateway({
     if (!askedToday) await append(moodCheck(patriciaScript.moodCheck));
   };
 
+  // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
+  const appointments = mockAppointments(now());
+
   return {
+    async listAppointments() {
+      return mockResult([...appointments]);
+    },
     async listDocuments() {
-      return mockResult(mockDocuments);
+      return mockResult(mockDocuments(appointments, now()));
     },
     async readConsent(): Promise<ApiResult<ConsentRecord>> {
       return mockResult({

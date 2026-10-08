@@ -21,12 +21,38 @@ export type ConsentRecord = {
   status: 'not_requested' | 'accepted' | 'revoked';
 };
 
+export type AppointmentModality = 'telemedicine' | 'in_person';
+
+// Consulta do paciente com o médico. `startsAt` em ISO 8601 (UTC).
+export type Appointment = {
+  id: string;
+  startsAt: string;
+  durationMinutes: number;
+  modality: AppointmentModality;
+  status: 'scheduled' | 'completed';
+  doctor: { name: string; specialty: string };
+};
+
+export type DocumentKind =
+  | 'care_plan'
+  | 'prescription'
+  | 'exam_request'
+  | 'report'
+  | 'invoice'
+  | 'certificate'
+  | 'guidance';
+
 export type DocumentMetadata = {
   id: string;
   displayName: string;
-  kind: 'receipt' | 'certificate' | 'guidance';
+  kind: DocumentKind;
   createdAt: string;
-  availability: 'mock_only' | 'available' | 'expired';
+  // Consulta a que o documento pertence (o Cofre agrupa por ela); null para
+  // documentos avulsos.
+  appointmentId: string | null;
+  // 'pending': ainda não emitido. A nota fiscal fica assim até 24 horas
+  // depois da realização da consulta (docs/fases.md).
+  availability: 'mock_only' | 'available' | 'pending' | 'expired';
 };
 
 export const MESSAGE_MAX_LENGTH = 1000;
@@ -75,6 +101,8 @@ export type RecordMoodInput = {
 // As operações da conversa devolvem as mensagens a inserir ou atualizar
 // (pelo `id`) na tela, na ordem em que aparecem.
 export interface PatientAppGateway {
+  // Consultas do paciente, da mais antiga para a mais recente.
+  listAppointments(): Promise<ApiResult<Appointment[]>>;
   listDocuments(): Promise<ApiResult<DocumentMetadata[]>>;
   readConsent(): Promise<ApiResult<ConsentRecord>>;
   listConversation(): Promise<ApiResult<ConversationMessage[]>>;

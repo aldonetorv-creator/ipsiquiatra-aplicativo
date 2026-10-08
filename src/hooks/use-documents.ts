@@ -1,35 +1,36 @@
 import { useEffect, useState } from 'react';
 
-import { ApiFailure, DocumentMetadata } from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
+import { DocumentGroup, groupDocumentsByAppointment } from '@/utils/appointments';
 
 export type DocumentsState =
   | { status: 'loading' }
-  | { status: 'ready'; documents: DocumentMetadata[] }
-  | { status: 'error'; error: ApiFailure['error'] };
+  | { status: 'ready'; groups: DocumentGroup[] }
+  | { status: 'error'; error: string };
 
+const unavailable = 'Não foi possível carregar os documentos.';
+
+// Documentos do Cofre, agrupados pela consulta a que pertencem.
 export function useDocuments(): DocumentsState {
   const gateway = usePatientAppGateway();
   const [state, setState] = useState<DocumentsState>({ status: 'loading' });
 
   useEffect(() => {
     let active = true;
-    gateway
-      .listDocuments()
-      .then((result) => {
+    Promise.all([gateway.listDocuments(), gateway.listAppointments()])
+      .then(([documents, appointments]) => {
         if (!active) return;
-        setState(
-          result.ok
-            ? { status: 'ready', documents: result.data }
-            : { status: 'error', error: result.error }
-        );
+        if (!documents.ok) return setState({ status: 'error', error: documents.error.message });
+        if (!appointments.ok) {
+          return setState({ status: 'error', error: appointments.error.message });
+        }
+        setState({
+          status: 'ready',
+          groups: groupDocumentsByAppointment(documents.data, appointments.data),
+        });
       })
       .catch(() => {
-        if (!active) return;
-        setState({
-          status: 'error',
-          error: { code: 'not_available', message: 'Não foi possível carregar os documentos.' },
-        });
+        if (active) setState({ status: 'error', error: unavailable });
       });
     return () => {
       active = false;

@@ -7,6 +7,7 @@ import HomeScreen from '@/app/index';
 import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
+import { formatDayMonth, formatTime } from '@/utils/time';
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -92,8 +93,71 @@ describe('Início', () => {
   it('leva aos questionários', async () => {
     await renderWith(createMockPatientAppGateway());
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Responder agora' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Responder agora' }));
     expect(router.push).toHaveBeenCalledWith('/questionarios');
+  });
+
+  it('mostra a próxima consulta, que abre a tela Consultas', async () => {
+    const gateway = createMockPatientAppGateway();
+    const appointments = await gateway.listAppointments();
+    if (!appointments.ok) throw new Error('listAppointments falhou');
+    const next = appointments.data.find((item) => item.status === 'scheduled')!;
+    await renderWith(gateway);
+
+    expect(await screen.findByText('Sua próxima consulta')).toBeOnTheScreen();
+    expect(
+      screen.getByText(`${formatDayMonth(next.startsAt)} · ${formatTime(next.startsAt)}`)
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Em 7 dias')).toBeOnTheScreen();
+    expect(screen.getByText('Dr. Aldo Araújo')).toBeOnTheScreen();
+    expect(screen.getByText('Teleconsulta')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver consulta' }));
+    expect(router.push).toHaveBeenCalledWith('/consultas');
+  });
+
+  it('pede a remarcação à Patrícia e abre a conversa', async () => {
+    const gateway = createMockPatientAppGateway();
+    const requestService = jest.spyOn(gateway, 'requestService');
+    await renderWith(gateway);
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remarcar consulta' }));
+
+    expect(requestService).toHaveBeenCalledWith('reschedule_appointment');
+    expect(router.push).toHaveBeenCalledWith('/patricia');
+  });
+
+  it('avisa que o plano de cuidados está pronto e o abre no Cofre', async () => {
+    await renderWith(createMockPatientAppGateway());
+
+    expect(await screen.findByText('Seu plano de cuidados está pronto')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Abrir plano de cuidados' }));
+    expect(router.push).toHaveBeenCalledWith('/cofre');
+  });
+
+  it('conta os dias desde a última consulta', async () => {
+    await renderWith(createMockPatientAppGateway());
+
+    await fireEvent.press(
+      await screen.findByRole('button', {
+        name: 'Agora: Acompanhamento. 8 dias desde sua última consulta',
+      })
+    );
+    expect(router.push).toHaveBeenCalledWith('/consultas');
+  });
+
+  it('sem consultas, esconde os cartões de consulta e o plano fica para depois', async () => {
+    await renderWith({
+      ...createMockPatientAppGateway(),
+      listAppointments: async () => ({ ok: true, requestId: 'test', data: [] }),
+      listDocuments: async () => ({ ok: true, requestId: 'test', data: [] }),
+    });
+
+    expect(await screen.findByText('Seu plano de cuidados')).toBeOnTheScreen();
+    expect(screen.queryByText('Sua próxima consulta')).toBeNull();
+    expect(screen.queryByText('Antes da sua consulta')).toBeNull();
+    expect(screen.queryByText(/desde sua última consulta/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Abrir plano de cuidados' })).toBeNull();
   });
 
   it('mostra o erro do contrato', async () => {

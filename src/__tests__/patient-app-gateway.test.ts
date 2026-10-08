@@ -10,31 +10,45 @@ import {
 import {
   createMockPatientAppGateway,
   HISTORY_STORAGE_KEY,
+  invoiceIsDue,
+  mockDoctor,
   mockPatientAppGateway,
   patriciaScript,
 } from '@/mocks/patient-app-gateway';
 import { createMemoryStore } from '@/services/storage';
 
-const kinds: DocumentMetadata['kind'][] = ['receipt', 'certificate', 'guidance'];
+const kinds: DocumentMetadata['kind'][] = [
+  'care_plan',
+  'prescription',
+  'exam_request',
+  'report',
+  'invoice',
+  'certificate',
+  'guidance',
+];
 
 describe('mockPatientAppGateway', () => {
   it('lista documentos fictícios que respeitam o contrato', async () => {
     const result = await mockPatientAppGateway.listDocuments();
+    const appointments = await mockPatientAppGateway.listAppointments();
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
+    if (!result.ok || !appointments.ok) return;
     expect(result.requestId).toEqual(expect.any(String));
     expect(result.data.length).toBeGreaterThan(0);
 
     const ids = result.data.map((doc) => doc.id);
     expect(new Set(ids).size).toBe(ids.length);
 
+    const appointmentIds = appointments.data.map((item) => item.id);
     for (const doc of result.data) {
       expect(kinds).toContain(doc.kind);
       expect(doc.displayName).not.toHaveLength(0);
       expect(doc.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}/);
-      // Sem dados reais nesta fase: todo documento do mock é só exemplo.
-      expect(doc.availability).toBe('mock_only');
+      // Sem dados reais nesta fase: todo documento do mock é só exemplo
+      // (ou uma nota fiscal ainda não emitida).
+      expect(['mock_only', 'pending']).toContain(doc.availability);
+      if (doc.appointmentId !== null) expect(appointmentIds).toContain(doc.appointmentId);
     }
   });
 
@@ -291,5 +305,62 @@ describe('histórico salvo no aparelho', () => {
     expect(reopened.ok && reopened.data.map((message) => message.text)).not.toContain(
       'Algo pessoal'
     );
+  });
+});
+
+describe('consultas simuladas', () => {
+  const fixedNow = new Date(2026, 9, 8, 9, 0);
+
+  it('tem consultas realizadas e uma próxima, com o Dr. Aldo', async () => {
+    const result = await createMockPatientAppGateway({ now: () => fixedNow }).listAppointments();
+    if (!result.ok) throw new Error('listAppointments falhou');
+
+    const starts = result.data.map((item) => new Date(item.startsAt).getTime());
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+    for (const appointment of result.data) {
+      expect(appointment.doctor).toEqual(mockDoctor);
+      expect(['telemedicine', 'in_person']).toContain(appointment.modality);
+      const isFuture = new Date(appointment.startsAt) > fixedNow;
+      expect(appointment.status).toBe(isFuture ? 'scheduled' : 'completed');
+    }
+    expect(result.data.filter((item) => item.status === 'scheduled')).toHaveLength(1);
+    expect(result.data.filter((item) => item.status === 'completed').length).toBeGreaterThan(0);
+  });
+
+  it('agrupa os documentos por consulta, com a nota fiscal de cada consulta', async () => {
+    const gateway = createMockPatientAppGateway({ now: () => fixedNow });
+    const appointments = await gateway.listAppointments();
+    const documents = await gateway.listDocuments();
+    if (!appointments.ok || !documents.ok) throw new Error('falhou');
+
+    for (const appointment of appointments.data.filter((item) => item.status === 'completed')) {
+      const invoices = documents.data.filter(
+        (doc) => doc.kind === 'invoice' && doc.appointmentId === appointment.id
+      );
+      expect(invoices).toHaveLength(1);
+    }
+    expect(documents.data.some((doc) => doc.kind === 'care_plan')).toBe(true);
+  });
+
+  it('deixa a nota fiscal pendente até 24 horas depois da consulta', async () => {
+    let current = fixedNow;
+    const gateway = createMockPatientAppGateway({ now: () => current });
+    const appointments = await gateway.listAppointments();
+    if (!appointments.ok) throw new Error('listAppointments falhou');
+    const last = appointments.data.filter((item) => item.status === 'completed').pop()!;
+    const end = new Date(last.startsAt).getTime() + last.durationMinutes * 60000;
+    const invoiceOf = async () => {
+      const result = await gateway.listDocuments();
+      if (!result.ok) throw new Error('listDocuments falhou');
+      return result.data.find((doc) => doc.id === `doc-invoice-${last.id}`)!;
+    };
+
+    current = new Date(end + 23 * 60 * 60 * 1000);
+    expect((await invoiceOf()).availability).toBe('pending');
+    expect(invoiceIsDue(last, current)).toBe(false);
+
+    current = new Date(end + 24 * 60 * 60 * 1000);
+    expect((await invoiceOf()).availability).toBe('mock_only');
+    expect(invoiceIsDue(last, current)).toBe(true);
   });
 });

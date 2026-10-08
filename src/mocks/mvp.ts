@@ -1,4 +1,4 @@
-import { MockAction, MvpArea, TimelineItem } from '@/contracts/mvp';
+import { MockAction, MvpArea } from '@/contracts/mvp';
 
 export const mvpAreas: MvpArea[] = [
   {
@@ -45,19 +45,6 @@ export const mvpAreas: MvpArea[] = [
     eyebrow: 'Documentos protegidos',
     description: 'Organização visual de arquivos e recibos, sem upload ou armazenamento real.',
     status: 'mock',
-  },
-];
-
-export const appointmentTimeline: TimelineItem[] = [
-  {
-    title: 'Consulta presencial',
-    meta: 'Quinta, 15:30',
-    description: 'Endereço e confirmação serão lidos por contrato futuro.',
-  },
-  {
-    title: 'Retorno breve',
-    meta: 'A definir',
-    description: 'Espaço para reagendamento e lembretes quando a agenda real existir.',
   },
 ];
 

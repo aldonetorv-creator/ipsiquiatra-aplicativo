@@ -79,3 +79,44 @@ export function lastSevenDays(now: Date = new Date()): CalendarDay[] {
     };
   });
 }
+
+// Data local no formato 05/10/2026.
+export function formatDate(iso: string) {
+  const date = new Date(iso);
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+// "15 de outubro" (com o ano quando não é o ano corrente).
+export function formatDayMonth(iso: string, now: Date = new Date()) {
+  const date = new Date(iso);
+  const label = `${date.getDate()} de ${MONTHS_LONG[date.getMonth()]}`;
+  return date.getFullYear() === now.getFullYear() ? label : `${label} de ${date.getFullYear()}`;
+}
+
+// "5 de outubro de 2026".
+export function formatLongDate(iso: string) {
+  const date = new Date(iso);
+  return `${date.getDate()} de ${MONTHS_LONG[date.getMonth()]} de ${date.getFullYear()}`;
+}
+
+// Selo de data do Cofre: dia com dois dígitos e mês abreviado ("05", "OUT").
+export function dateBadge(iso: string) {
+  const date = new Date(iso);
+  return { day: pad(date.getDate()), month: MONTHS[date.getMonth()].toUpperCase() };
+}
+
+// Diferença em dias de calendário locais (positiva quando `to` é depois de `from`).
+export function calendarDaysBetween(from: Date, to: Date) {
+  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+  const end = new Date(to.getFullYear(), to.getMonth(), to.getDate());
+  // Arredonda para absorver a hora a mais ou a menos do horário de verão.
+  return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+// "Hoje", "Amanhã", "Em 7 dias".
+export function formatDaysUntil(iso: string, now: Date = new Date()) {
+  const days = calendarDaysBetween(now, new Date(iso));
+  if (days <= 0) return 'Hoje';
+  if (days === 1) return 'Amanhã';
+  return `Em ${days} dias`;
+}

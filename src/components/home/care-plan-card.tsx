@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { SymbolView } from 'expo-symbols';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
@@ -32,24 +33,51 @@ function Landscape() {
   );
 }
 
-export function CarePlanCard() {
+type Props = {
+  // Pronto quando a última consulta já tem o plano de cuidados no Cofre.
+  ready: boolean;
+  onOpen: () => void;
+};
+
+export function CarePlanCard({ ready, onOpen }: Props) {
   return (
     <Card style={styles.card}>
-      <View style={styles.copy}>
+      {/* Paisagem no canto, atrás do texto, como no mockup. */}
+      <View style={styles.art} pointerEvents="none">
+        <Landscape />
+      </View>
+      <View style={styles.row}>
         <IconBadge
           name={{ ios: 'leaf.fill', android: 'eco', web: 'eco' }}
           tone="green"
           size={44}
         />
-        <ThemedText type="smallBold" style={styles.title}>
-          Seu plano de cuidados
-        </ThemedText>
-        <ThemedText type="small" style={styles.text}>
-          Vai aparecer aqui depois da sua consulta com o Dr. Aldo, personalizado para você.
-        </ThemedText>
-      </View>
-      <View style={styles.art}>
-        <Landscape />
+        <View style={styles.copy}>
+          <ThemedText type="smallBold" style={styles.title}>
+            {ready ? 'Seu plano de cuidados está pronto' : 'Seu plano de cuidados'}
+          </ThemedText>
+          <ThemedText type="small" style={styles.text}>
+            {ready
+              ? 'Um plano personalizado para a sua continuidade de tratamento.'
+              : 'Vai aparecer aqui depois da sua consulta com o Dr. Aldo, personalizado para você.'}
+          </ThemedText>
+          {ready ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Abrir plano de cuidados"
+              onPress={onOpen}
+              style={({ pressed }) => [styles.open, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.openText}>
+                Abrir plano
+              </ThemedText>
+              <SymbolView
+                name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+                tintColor={Tokens.color.brand}
+                size={16}
+              />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     </Card>
   );
@@ -57,16 +85,16 @@ export function CarePlanCard() {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    padding: 0,
     overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
   },
   copy: {
     flex: 1,
     gap: 6,
-    padding: 18,
-    paddingRight: 0,
   },
   title: {
     color: Tokens.color.text,
@@ -75,8 +103,30 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Tokens.color.muted,
+    // Deixa a paisagem do canto à vista.
+    marginRight: 56,
   },
   art: {
-    justifyContent: 'flex-end',
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+  },
+  open: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: Tokens.color.brandSoft,
+  },
+  openText: {
+    color: Tokens.color.brand,
+    fontSize: 14,
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });
