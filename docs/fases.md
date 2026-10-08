@@ -21,7 +21,6 @@ sem backend, seguindo as regras da
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
 conversa, mas nesta fase a Patrícia só avisa que o serviço chega em breve.
 
-
 ## Fase 2 — atendimento pelo app
 
 **Nada desta fase está implementado.** Ela faz parte do escopo do MVP e entra
@@ -32,7 +31,7 @@ depois da fase 1.
 1. **Agendamento.** O paciente agenda ou remarca pela Patrícia ou pela tela de
    Consultas. Cada consulta indica se é teleconsulta ou presencial.
 2. **Cobrança.** Depois do agendamento, a Patrícia manda no app uma mensagem de
-   cobrança para o paciente.
+   cobrança para o paciente, que paga com cartão ou Pix.
 3. **Pagamento.** O pagamento é confirmado pela integração com o Nubank, e a
    Patrícia avisa o paciente na conversa.
 4. **Consulta.** A teleconsulta acontece por videochamada dentro do app:
@@ -44,13 +43,18 @@ depois da fase 1.
 5. **Nota fiscal.** A NFS-e é emitida 24 horas depois da consulta e fica no
    Cofre, no grupo da consulta correspondente.
 
-### Decisões em aberto
+### Decisões do Dr. Aldo
 
-- **Meio de pagamento:** Pix, cartão ou ambos.
-- **Remarcação e cancelamento** de consulta já paga: crédito, reembolso ou prazo
-  mínimo.
-- **Atalho "Pedir nota fiscal":** com a emissão automática, ele pode virar
-  "Ver nota fiscal" ou reenviar a nota.
+- **Meio de pagamento:** cartão e Pix.
+- **Remarcação de consulta já paga:** o valor pago vira crédito.
+- **Atalho "Pedir nota fiscal" vira "Ver nota fiscal":**
+  - nota já emitida: abre a nota no Cofre;
+  - nota ainda não emitida: avisa que a nota fiscal será emitida 24 horas
+    depois da realização da consulta.
+
+### Ainda em aberto
+
+- **Cancelamento de consulta já paga:** crédito, reembolso e prazo mínimo.
 
 ### Integração com o Nubank
 
@@ -61,11 +65,15 @@ automaticamente quando um pagamento cai na conta. Os caminhos encontrados:
 - **NuPay for Business**, o produto de pagamentos do Nubank para empresas. Tem
   API e aviso de pagamento, mas exige contrato e é voltado a lojas online.
   Contato técnico informado na documentação: oi-nupay@nubank.com.br.
-- **Intermediário de pagamento** que gera a cobrança (Pix com QR Code, por
+- **Intermediário de pagamento** que gera a cobrança (cartão ou Pix, por
   exemplo), avisa o servidor do app quando o paciente paga e deposita o valor
   na conta Nubank PJ do consultório.
 - **Open Finance**, por agregadores regulados, para ler os recebimentos da
   conta e conferir os pagamentos.
+
+Como o pagamento aceita cartão e Pix, o caminho mais provável é um
+intermediário que receba os dois. O NuPay atende quem paga com conta Nubank,
+o que não cobre cartões de outros bancos (a confirmar).
 
 Evitar soluções não oficiais, como ler os e-mails de aviso do Nubank, que não
 trazem dados suficientes para identificar o pagamento.
