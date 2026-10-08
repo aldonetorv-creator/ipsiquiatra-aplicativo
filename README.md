@@ -66,6 +66,10 @@ Patrícia abre um novo registro de humor. Ver privacidade em
 `docs/dependencias.md`. A tela mostra esse aviso e os
 contatos de emergência (CVV 188 e SAMU 192).
 
+Esse roteiro é provisório. A Patrícia é uma só, a mesma do site: na fase 2, o
+app conversa com o serviço da Patrícia na plataforma do iPsiquiatra (uma
+Patrícia por médico), sem lógica própria no app. Ver `docs/fases.md`.
+
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
 passam pelo contrato (`requestService`), mas nesta fase a Patrícia só avisa que
 o serviço chega em breve: agenda e NFS-e são da fase 2 (ver `docs/fases.md`). "Encontrar documento"

@@ -4,6 +4,34 @@ Plano do produto combinado com o Dr. Aldo. Uma funcionalidade só entra no
 código na fase dela; até lá, fica registrada aqui para que as decisões de
 agora não fechem o caminho. Atualizar este arquivo quando o escopo mudar.
 
+## Uma só Patrícia por médico
+
+Regra do Dr. Aldo, que vale para todas as fases: a Patrícia é **uma só**, a
+mesma no site e no aplicativo. Mesma lógica, mesmas regras, mesmo contexto e
+mesmas instruções: um único "cérebro" atendendo em várias plataformas. Cada
+médico tem a sua Patrícia; a do Dr. Aldo é a Patrícia do Dr. Aldo, no site e no
+app.
+
+- **Onde ela mora:** na plataforma do iPsiquiatra (repositório
+  `aldonetorv-creator/ipsiquiatra`, `patricia-service.mjs` e
+  `patricia-core.mjs`). A plataforma já tem uma Patrícia por médico, com
+  configuração própria (valor, modalidade, convênios, regras de remarcação) e
+  endereço próprio no site (`/patricia/<slug>`).
+- **Site e app são portas para a mesma Patrícia.** O app não terá uma Patrícia
+  própria: na fase 2, a conversa do app chama o serviço da Patrícia na
+  plataforma, pelo contrato `PatientAppGateway`.
+- **Regra nova entra uma vez, na plataforma,** e vale no site e no app (por
+  exemplo, prazo de remarcação, cobrança e nota fiscal).
+- **Na fase 1,** a Patrícia do app é só um roteiro de demonstração, sem IA, e
+  não deve ganhar lógica própria além disso.
+
+**A decidir na fase 2 (mesmo contexto):** hoje a plataforma guarda a conversa
+só em memória (as últimas mensagens vão junto com a reserva confirmada, para o
+médico conferir), e o app guarda o histórico no aparelho. Para a Patrícia
+lembrar do paciente no site e no app, e o paciente ver no app o que conversou
+no site, a conversa do paciente identificado precisa ficar guardada na
+plataforma, com consentimento e as proteções de dado sensível de saúde (LGPD).
+
 ## Fase 1 — MVP de demonstração (atual)
 
 Aplicativo do paciente com **dados simulados**, sem paciente real, sem PHI e
@@ -66,8 +94,8 @@ depois da fase 1.
     paciente e avisa o Dr. Aldo para decidir;
   - a plataforma também limita a 2 remarcações por consulta.
 
-  A Patrícia do app deve seguir as mesmas regras da plataforma, para o
-  paciente ter a mesma resposta no site e no aplicativo.
+  Como a Patrícia é a mesma (ver "Uma só Patrícia por médico"), essa regra
+  vale igual no site e no aplicativo.
 
 ### Integração com o Nubank
 
@@ -98,8 +126,8 @@ credenciais bancárias não podem ir no aplicativo do paciente.
 
 A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
 
-- backend e API real no lugar do mock (o contrato `PatientAppGateway` já
-  permite a troca sem mudar as telas);
+- a API da plataforma do iPsiquiatra no lugar do mock, a mesma que atende o
+  site (o contrato `PatientAppGateway` já permite a troca sem mudar as telas);
 - login do paciente;
 - criptografia em repouso do histórico no aparelho, consentimento explícito e
   política de retenção (ver `docs/dependencias.md`, seção de privacidade);
@@ -141,6 +169,15 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 - O Cofre agrupado por consulta já reserva o lugar da nota fiscal de cada
   consulta.
 
-## Ainda sem fase definida
+## IA
 
-- IA na Patrícia (hoje ela não lê nem interpreta as mensagens).
+- **Fase 1:** a Patrícia do app não usa IA; ela não lê nem interpreta as
+  mensagens.
+- **Fase 2:** o app passa a usar a Patrícia da plataforma, que já conversa com
+  IA como secretária virtual: agendamento, dúvidas sobre o atendimento e as
+  perguntas de preparação para a consulta, sem diagnóstico e sem orientar
+  medicamento. Valem as travas da plataforma: a IA não escreve na agenda
+  sozinha (o paciente confirma) e a detecção de crise é feita por regras fora
+  da IA.
+- **IA clínica** (diagnóstico, conduta, interpretação de sintomas) continua
+  fora do escopo.
