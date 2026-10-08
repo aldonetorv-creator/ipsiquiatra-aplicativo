@@ -11,6 +11,12 @@ template.
 
 Os nomes de pacientes nos mockups (João, Aldo) e as datas são fictícios.
 
+## Logo
+
+O logo oficial do aplicativo é `assets/images/ip-icon.png` (monograma `iP` roxo,
+1254×1254, fundo transparente). O favicon web (`assets/images/favicon.png`) é
+gerado a partir dele.
+
 ## Patrícia — foto oficial
 
 ![Patrícia](./05-patricia-foto-oficial.webp)
