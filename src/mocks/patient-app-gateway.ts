@@ -95,6 +95,8 @@ export function createMockPatientAppGateway({
     moodCheck(patriciaScript.moodCheck),
   ];
 
+  const moodEntries: MoodEntry[] = [];
+
   const append = (...messages: ConversationMessage[]) => {
     conversation.push(...messages);
     return messages;
@@ -154,8 +156,12 @@ export function createMockPatientAppGateway({
         note: trimmedNote,
         recordedAt: now().toISOString(),
       };
+      moodEntries.push(entry);
       const reply = append(text('patricia', patriciaScript.afterMood));
       return mockResult({ entry, messages: [answered, ...reply] });
+    },
+    async listMoodEntries() {
+      return mockResult([...moodEntries]);
     },
   };
 }

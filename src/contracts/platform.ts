@@ -80,4 +80,6 @@ export interface PatientAppGateway {
   recordMood(
     input: RecordMoodInput
   ): Promise<ApiResult<{ entry: MoodEntry; messages: ConversationMessage[] }>>;
+  // Registros de humor do paciente, do mais antigo para o mais recente.
+  listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
 }

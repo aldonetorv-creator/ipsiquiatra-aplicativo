@@ -139,6 +139,20 @@ describe('conversa simulada com a Patrícia', () => {
     expect(result).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
   });
 
+  it('lista os humores registrados na sessão, começando vazio', async () => {
+    const gateway = newGateway();
+    const empty = await gateway.listMoodEntries();
+    expect(empty).toEqual({ ok: true, requestId: expect.any(String), data: [] });
+
+    const checkId = await firstMoodCheckId(gateway);
+    await gateway.recordMood({ checkId, level: 5, note: null });
+
+    const result = await gateway.listMoodEntries();
+    expect(result.ok && result.data).toEqual([
+      expect.objectContaining({ checkId, level: 5, recordedAt: fixedNow.toISOString() }),
+    ]);
+  });
+
   it('abre um novo cartão de humor quando pedido', async () => {
     const gateway = newGateway();
     const result = await gateway.requestMoodCheck();
