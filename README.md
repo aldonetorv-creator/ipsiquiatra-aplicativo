@@ -51,8 +51,11 @@ Patrícia (`useConversation`) estão ligados ao contrato, com testes em
 ## Patrícia nesta versão
 
 A conversa com a Patrícia é **simulada**: as respostas são textos fixos e não
-clínicos, ela não lê nem interpreta o que o paciente escreve (sem IA, conforme
-a issue #1) e nada é guardado fora da sessão. A tela mostra esse aviso e os
+clínicos, e ela não lê nem interpreta o que o paciente escreve (sem IA, conforme
+a issue #1). O histórico da conversa e do humor fica salvo **só no aparelho**
+(AsyncStorage) e pode ser apagado em "Apagar histórico"; a cada novo dia a
+Patrícia abre um novo registro de humor. Ver privacidade em
+`docs/dependencias.md`. A tela mostra esse aviso e os
 contatos de emergência (CVV 188 e SAMU 192).
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e

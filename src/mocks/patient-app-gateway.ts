@@ -12,6 +12,8 @@ import {
   PatientService,
   TextMessage,
 } from '@/contracts/platform';
+import { createMemoryStore, KeyValueStore } from '@/services/storage';
+import { dayKey } from '@/utils/time';
 
 const REQUEST_ID = 'local-sprint-zero';
 
@@ -84,13 +86,46 @@ export const patriciaScript = {
 
 type MockOptions = {
   now?: () => Date;
+  // Onde o histórico fica salvo; por padrão, só em memória (testes).
+  store?: KeyValueStore;
 };
+
+export const HISTORY_STORAGE_KEY = 'ipsiquiatra:patient-history';
+
+// Formato salvo no aparelho. Mudou o formato? Suba a versão e trate a migração.
+type PersistedHistory = {
+  version: 1;
+  sequence: number;
+  conversation: ConversationMessage[];
+  moodEntries: MoodEntry[];
+};
+
+function parseHistory(raw: string | null): PersistedHistory | null {
+  if (!raw) return null;
+  try {
+    const data = JSON.parse(raw) as Partial<PersistedHistory>;
+    if (
+      data.version !== 1 ||
+      typeof data.sequence !== 'number' ||
+      !Array.isArray(data.conversation) ||
+      !Array.isArray(data.moodEntries)
+    ) {
+      return null;
+    }
+    return data as PersistedHistory;
+  } catch {
+    return null;
+  }
+}
 
 export function createMockPatientAppGateway({
   now = () => new Date(),
+  store = createMemoryStore(),
 }: MockOptions = {}): PatientAppGateway {
-  let sequence = 0;
-  const nextId = (prefix: string) => `${prefix}-${++sequence}`;
+  let history: PersistedHistory | null = null;
+  let loading: Promise<PersistedHistory> | null = null;
+
+  const nextId = (prefix: string) => `${prefix}-${++history!.sequence}`;
 
   const text = (author: TextMessage['author'], body: string): TextMessage => ({
     id: nextId('msg'),
@@ -109,16 +144,43 @@ export function createMockPatientAppGateway({
     answer: null,
   });
 
-  const conversation: ConversationMessage[] = [
-    text('patricia', patriciaScript.greeting),
-    moodCheck(patriciaScript.moodCheck),
-  ];
+  const seed = () => {
+    history = { version: 1, sequence: 0, conversation: [], moodEntries: [] };
+    history.conversation.push(text('patricia', patriciaScript.greeting));
+    history.conversation.push(moodCheck(patriciaScript.moodCheck));
+    return history;
+  };
 
-  const moodEntries: MoodEntry[] = [];
+  // Carrega o histórico salvo uma única vez; sem histórico válido, começa do zero.
+  const load = () => {
+    if (history) return Promise.resolve(history);
+    loading ??= store
+      .getItem(HISTORY_STORAGE_KEY)
+      .catch(() => null)
+      .then((raw) => {
+        history = parseHistory(raw) ?? seed();
+        return history;
+      });
+    return loading;
+  };
 
-  const append = (...messages: ConversationMessage[]) => {
-    conversation.push(...messages);
+  const save = async () => {
+    await store.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
+  };
+
+  const append = async (...messages: ConversationMessage[]) => {
+    history!.conversation.push(...messages);
+    await save();
     return messages;
+  };
+
+  // Diário: a cada novo dia, a Patrícia pergunta de novo como o paciente está.
+  const ensureTodayMoodCheck = async () => {
+    const today = dayKey(now());
+    const askedToday = history!.conversation.some(
+      (message) => message.kind === 'mood_check' && dayKey(new Date(message.sentAt)) === today
+    );
+    if (!askedToday) await append(moodCheck(patriciaScript.moodCheck));
   };
 
   return {
@@ -133,7 +195,9 @@ export function createMockPatientAppGateway({
       });
     },
     async listConversation() {
-      return mockResult([...conversation]);
+      await load();
+      await ensureTodayMoodCheck();
+      return mockResult([...history!.conversation]);
     },
     async sendMessage(body) {
       const trimmed = body.trim();
@@ -143,14 +207,17 @@ export function createMockPatientAppGateway({
       if (trimmed.length > MESSAGE_MAX_LENGTH) {
         return validationFailure(`A mensagem pode ter até ${MESSAGE_MAX_LENGTH} caracteres.`);
       }
+      await load();
       return mockResult(
-        append(text('patient', trimmed), text('patricia', patriciaScript.afterMessage))
+        await append(text('patient', trimmed), text('patricia', patriciaScript.afterMessage))
       );
     },
     async requestMoodCheck() {
-      return mockResult(append(moodCheck(patriciaScript.moodCheckAgain)));
+      await load();
+      return mockResult(await append(moodCheck(patriciaScript.moodCheckAgain)));
     },
     async recordMood({ checkId, level, note }) {
+      const { conversation, moodEntries } = await load();
       const index = conversation.findIndex(
         (message) => message.id === checkId && message.kind === 'mood_check'
       );
@@ -176,16 +243,26 @@ export function createMockPatientAppGateway({
         recordedAt: now().toISOString(),
       };
       moodEntries.push(entry);
-      const reply = append(text('patricia', patriciaScript.afterMood));
+      const reply = await append(text('patricia', patriciaScript.afterMood));
       return mockResult({ entry, messages: [answered, ...reply] });
     },
     async requestService(service) {
       const script = patriciaScript.services[service];
       if (!script) return validationFailure('Serviço desconhecido.');
-      return mockResult(append(text('patient', script.request), text('patricia', script.reply)));
+      await load();
+      return mockResult(
+        await append(text('patient', script.request), text('patricia', script.reply))
+      );
     },
     async listMoodEntries() {
+      const { moodEntries } = await load();
       return mockResult([...moodEntries]);
+    },
+    async clearHistory() {
+      await store.removeItem(HISTORY_STORAGE_KEY);
+      seed();
+      await save();
+      return mockResult([...history!.conversation]);
     },
   };
 }

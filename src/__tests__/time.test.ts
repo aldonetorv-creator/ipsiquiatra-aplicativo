@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { dayKey, formatRelative, greetingFor, lastSevenDays } from '@/utils/time';
+import { dayKey, formatDayLabel, formatRelative, greetingFor, lastSevenDays } from '@/utils/time';
 
 // Datas construídas no fuso local, como o app usa.
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 2, day, hour, minute);
@@ -48,5 +48,18 @@ describe('lastSevenDays', () => {
       expect.objectContaining({ weekday: 'HOJE', isToday: true, key: dayKey(at(3, 0)) })
     );
     expect(days[0].weekday).toBe('QUA');
+  });
+});
+
+describe('formatDayLabel', () => {
+  const now = at(9, 10);
+
+  it.each([
+    [at(9, 8), 'Hoje'],
+    [at(8, 23), 'Ontem'],
+    [at(2, 12), '2 de março'],
+    [new Date(2025, 11, 25, 12), '25 de dezembro de 2025'],
+  ])('%s → %s', (date, expected) => {
+    expect(formatDayLabel(date.toISOString(), now)).toBe(expected);
   });
 });

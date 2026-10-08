@@ -1,11 +1,19 @@
 /// <reference types="jest" />
 
-import { DocumentMetadata, MESSAGE_MAX_LENGTH, MOOD_NOTE_MAX_LENGTH } from '@/contracts/platform';
+import {
+  DocumentMetadata,
+  MESSAGE_MAX_LENGTH,
+  MOOD_NOTE_MAX_LENGTH,
+  MoodLevel,
+  PatientAppGateway,
+} from '@/contracts/platform';
 import {
   createMockPatientAppGateway,
+  HISTORY_STORAGE_KEY,
   mockPatientAppGateway,
   patriciaScript,
 } from '@/mocks/patient-app-gateway';
+import { createMemoryStore } from '@/services/storage';
 
 const kinds: DocumentMetadata['kind'][] = ['receipt', 'certificate', 'guidance'];
 
@@ -186,5 +194,102 @@ describe('conversa simulada com a Patrícia', () => {
         answer: null,
       }),
     ]);
+  });
+});
+
+describe('histórico salvo no aparelho', () => {
+  const day1 = new Date(2026, 2, 9, 20, 0);
+  const day2 = new Date(2026, 2, 10, 9, 0);
+
+  async function answerOpenCheck(gateway: PatientAppGateway, level: MoodLevel) {
+    const result = await gateway.listConversation();
+    if (!result.ok) throw new Error('listConversation falhou');
+    const open = result.data.find(
+      (message) => message.kind === 'mood_check' && message.answer === null
+    )!;
+    await gateway.recordMood({ checkId: open.id, level, note: null });
+  }
+
+  it('mantém conversa e humores ao reabrir o app', async () => {
+    const store = createMemoryStore();
+    const first = createMockPatientAppGateway({ store, now: () => day1 });
+    await first.sendMessage('Mensagem de ontem');
+    await answerOpenCheck(first, 4);
+
+    const reopened = createMockPatientAppGateway({ store, now: () => day1 });
+    const conversation = await reopened.listConversation();
+    const moods = await reopened.listMoodEntries();
+
+    expect(conversation.ok && conversation.data.map((message) => message.text)).toContain(
+      'Mensagem de ontem'
+    );
+    expect(moods.ok && moods.data).toEqual([expect.objectContaining({ level: 4 })]);
+  });
+
+  it('não repete ids depois de reabrir', async () => {
+    const store = createMemoryStore();
+    await createMockPatientAppGateway({ store, now: () => day1 }).sendMessage('Primeira');
+    await createMockPatientAppGateway({ store, now: () => day1 }).sendMessage('Segunda');
+
+    const result = await createMockPatientAppGateway({ store }).listConversation();
+    const ids = result.ok ? result.data.map((message) => message.id) : [];
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('abre um novo cartão de humor a cada dia, mantendo os anteriores', async () => {
+    const store = createMemoryStore();
+    await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 2);
+
+    const nextDay = createMockPatientAppGateway({ store, now: () => day2 });
+    const result = await nextDay.listConversation();
+
+    const checks = result.ok ? result.data.filter((message) => message.kind === 'mood_check') : [];
+    expect(checks).toEqual([
+      expect.objectContaining({ answer: 2, sentAt: day1.toISOString() }),
+      expect.objectContaining({ answer: null, sentAt: day2.toISOString() }),
+    ]);
+    const again = await nextDay.listConversation();
+    expect(again.ok && again.data).toHaveLength(result.ok ? result.data.length : -1);
+  });
+
+  it('recomeça do zero se o histórico salvo estiver corrompido ou noutro formato', async () => {
+    for (const raw of ['{isso não é json', JSON.stringify({ version: 99, conversation: [] })]) {
+      const store = createMemoryStore({ [HISTORY_STORAGE_KEY]: raw });
+      const result = await createMockPatientAppGateway({ store }).listConversation();
+
+      expect(result.ok && result.data[0]).toEqual(
+        expect.objectContaining({ text: patriciaScript.greeting })
+      );
+    }
+  });
+
+  it('continua funcionando se a leitura do aparelho falhar', async () => {
+    const store = {
+      ...createMemoryStore(),
+      getItem: () => Promise.reject(new Error('falha de leitura')),
+    };
+    const result = await createMockPatientAppGateway({ store }).listConversation();
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('apaga conversa e humores e recomeça a conversa', async () => {
+    const store = createMemoryStore();
+    const gateway = createMockPatientAppGateway({ store, now: () => day1 });
+    await gateway.sendMessage('Algo pessoal');
+    await answerOpenCheck(gateway, 1);
+
+    const cleared = await gateway.clearHistory();
+
+    expect(cleared.ok && cleared.data.map((message) => message.kind)).toEqual([
+      'text',
+      'mood_check',
+    ]);
+    const moods = await gateway.listMoodEntries();
+    expect(moods.ok && moods.data).toEqual([]);
+    const reopened = await createMockPatientAppGateway({ store, now: () => day1 }).listConversation();
+    expect(reopened.ok && reopened.data.map((message) => message.text)).not.toContain(
+      'Algo pessoal'
+    );
   });
 });

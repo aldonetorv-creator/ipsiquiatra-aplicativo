@@ -55,6 +55,24 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 | `expo-device` | Sem uso; só o projeto o pedia. Levou junto `ua-parser-js`. |
 | `expo-web-browser` | Usado apenas pelo `external-link` do template, removido. |
 
+## Armazenamento local e privacidade
+
+`@react-native-async-storage/async-storage` (versão fixada pelo SDK 57, no Expo
+Go) guarda no aparelho o histórico da conversa com a Patrícia e os registros
+de humor (chave `ipsiquiatra:patient-history`; na web, `localStorage`). Nada vai
+para a nuvem. O paciente pode apagar tudo pelo botão "Apagar histórico".
+
+Foi escolhido em vez de `expo-sqlite` porque funciona igual em iOS, Android e
+web; o suporte web do `expo-sqlite` ainda é experimental.
+
+**Antes de pacientes reais** (conversa e humor são dados sensíveis de saúde,
+LGPD art. 11):
+
+- criptografar o histórico em repouso (ex.: `expo-sqlite` com SQLCipher ou
+  chave guardada no `expo-secure-store`);
+- pedir consentimento explícito para guardar o histórico;
+- definir retenção e o que acontece ao trocar de aparelho ou sair da conta.
+
 ## Atualizações
 
 O Dependabot (`.github/dependabot.yml`) propõe semanalmente atualizações das

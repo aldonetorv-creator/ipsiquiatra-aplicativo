@@ -96,5 +96,17 @@ export function useConversation() {
     [apply, gateway]
   );
 
-  return { state, sendMessage, recordMood, requestService };
+  // Apaga a conversa e os humores deste aparelho; a conversa recomeça.
+  const clearHistory = useCallback(async (): Promise<string | null> => {
+    try {
+      const result = await gateway.clearHistory();
+      if (!result.ok) return result.error.message;
+      setState({ status: 'ready', messages: result.data });
+      return null;
+    } catch {
+      return unavailable;
+    }
+  }, [gateway]);
+
+  return { state, sendMessage, recordMood, requestService, clearHistory };
 }

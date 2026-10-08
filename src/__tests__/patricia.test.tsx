@@ -97,6 +97,28 @@ describe('Conversa com a Patrícia', () => {
     expect(screen.getByText('Posso ajudar você com:')).toBeOnTheScreen();
   });
 
+  it('separa a conversa por dia', async () => {
+    await renderWith();
+
+    expect(screen.getByText('Hoje')).toBeOnTheScreen();
+  });
+
+  it('apaga o histórico só depois de confirmar', async () => {
+    await renderWith();
+    await fireEvent.changeText(screen.getByLabelText('Mensagem para a Patrícia'), 'Algo pessoal');
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar mensagem' }));
+    expect(await screen.findByText('Algo pessoal')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Apagar histórico' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.getByText('Algo pessoal')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Apagar histórico' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirmar: apagar histórico' }));
+    expect(await screen.findByText(patriciaScript.greeting)).toBeOnTheScreen();
+    expect(screen.queryByText('Algo pessoal')).toBeNull();
+  });
+
   it('amplia a foto da Patrícia ao tocar e fecha de novo', async () => {
     await renderWith();
 
