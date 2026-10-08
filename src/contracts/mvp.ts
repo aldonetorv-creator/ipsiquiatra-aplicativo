@@ -15,7 +15,7 @@ export type MvpArea = {
 export type HomeInsight = {
   label: string;
   value: string;
-  tone: 'primary' | 'calm' | 'warm';
+  tone: 'purple' | 'blue' | 'white';
 };
 
 export type MockAction = {

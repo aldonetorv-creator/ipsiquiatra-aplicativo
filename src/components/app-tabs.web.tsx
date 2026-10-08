@@ -37,7 +37,10 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
         style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
+        <ThemedText
+          type={isFocused ? 'smallBold' : 'small'}
+          themeColor={isFocused ? undefined : 'textSecondary'}
+          style={isFocused && styles.focusedText}>
           {children}
         </ThemedText>
       </ThemedView>
@@ -83,6 +86,9 @@ const styles = StyleSheet.create({
   brandText: {
     marginRight: 'auto',
     color: Tokens.color.brandDeep,
+  },
+  focusedText: {
+    color: Tokens.color.blue,
   },
   pressed: {
     opacity: 0.7,
