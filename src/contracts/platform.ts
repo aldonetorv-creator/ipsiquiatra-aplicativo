@@ -63,6 +63,9 @@ export type MoodEntry = {
   recordedAt: string;
 };
 
+// Pedidos que a Patrícia vai atender de verdade na fase 2 (agenda e NFS-e).
+export type PatientService = 'schedule_appointment' | 'reschedule_appointment' | 'request_invoice';
+
 export type RecordMoodInput = {
   checkId: string;
   level: MoodLevel;
@@ -80,6 +83,7 @@ export interface PatientAppGateway {
   recordMood(
     input: RecordMoodInput
   ): Promise<ApiResult<{ entry: MoodEntry; messages: ConversationMessage[] }>>;
+  requestService(service: PatientService): Promise<ApiResult<ConversationMessage[]>>;
   // Registros de humor do paciente, do mais antigo para o mais recente.
   listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
 }

@@ -9,6 +9,7 @@ import {
   MoodCheckMessage,
   MoodEntry,
   PatientAppGateway,
+  PatientService,
   TextMessage,
 } from '@/contracts/platform';
 
@@ -61,6 +62,24 @@ export const patriciaScript = {
   afterMood: 'Obrigada por me contar como você está. Estou aqui com você. 💙',
   afterMessage:
     'Recebi sua mensagem. Nesta versão de demonstração eu ainda não consigo ler nem responder o que você escreve.',
+  // Agenda e nota fiscal chegam na fase 2; por enquanto a Patrícia orienta.
+  services: {
+    schedule_appointment: {
+      request: 'Quero agendar uma consulta.',
+      reply:
+        'Em breve vou poder agendar sua consulta por aqui. Por enquanto, fale com a equipe do consultório.',
+    },
+    reschedule_appointment: {
+      request: 'Preciso remarcar minha consulta.',
+      reply:
+        'Em breve vou poder remarcar sua consulta por aqui. Por enquanto, fale com a equipe do consultório.',
+    },
+    request_invoice: {
+      request: 'Quero pedir a nota fiscal.',
+      reply:
+        'Em breve vou poder enviar sua nota fiscal por aqui. Por enquanto, fale com a equipe do consultório.',
+    },
+  } satisfies Record<PatientService, { request: string; reply: string }>,
 };
 
 type MockOptions = {
@@ -159,6 +178,11 @@ export function createMockPatientAppGateway({
       moodEntries.push(entry);
       const reply = append(text('patricia', patriciaScript.afterMood));
       return mockResult({ entry, messages: [answered, ...reply] });
+    },
+    async requestService(service) {
+      const script = patriciaScript.services[service];
+      if (!script) return validationFailure('Serviço desconhecido.');
+      return mockResult(append(text('patient', script.request), text('patricia', script.reply)));
     },
     async listMoodEntries() {
       return mockResult([...moodEntries]);

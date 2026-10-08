@@ -56,7 +56,9 @@ export function MoodWeekCard({ entries, onRegister }: Props) {
         </View>
       </View>
 
-      <View style={styles.plot} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      <View
+        style={[styles.plot, !recordedThisWeek && styles.plotEmpty]}
+        onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
         {width > 0 ? (
           <Svg width={width} height={PLOT_HEIGHT} style={StyleSheet.absoluteFill}>
             {points.length > 1 ? (
@@ -103,9 +105,11 @@ export function MoodWeekCard({ entries, onRegister }: Props) {
                   <ThemedText style={styles.faceText}>{option.face}</ThemedText>
                 </View>
               ) : (
-                <View style={styles.emptyDot} />
+                <View style={[styles.emptyDot, !recordedThisWeek && styles.emptyDotCompact]} />
               )}
-              {index === days.length - 1 ? null : <View style={styles.gridLine} />}
+              {index === days.length - 1 || !recordedThisWeek ? null : (
+                <View style={styles.gridLine} />
+              )}
             </View>
           );
         })}
@@ -157,6 +161,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: PLOT_HEIGHT,
   },
+  // Sem registros na semana, o gráfico vira uma linha compacta de pontos.
+  plotEmpty: {
+    height: 28,
+  },
   column: {
     flex: 1,
     alignItems: 'center',
@@ -193,6 +201,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: Tokens.color.border,
+  },
+  emptyDotCompact: {
+    top: 10,
   },
   labels: {
     flexDirection: 'row',

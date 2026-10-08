@@ -5,18 +5,20 @@ import { FlatList, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Composer } from '@/components/patricia/composer';
+import { HelpPanel } from '@/components/patricia/help-panel';
 import { MessageBubble, PatriciaRow } from '@/components/patricia/message-bubble';
 import { MoodCheckCard } from '@/components/patricia/mood-check-card';
 import { PatriciaAvatar } from '@/components/patricia/patricia-avatar';
-import { QuickActions } from '@/components/patricia/quick-actions';
 import { ThemedText } from '@/components/themed-text';
+import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { ConversationMessage } from '@/contracts/platform';
 import { useConversation } from '@/hooks/use-conversation';
 
 export default function PatriciaScreen() {
-  const { state, sendMessage, requestMoodCheck, recordMood } = useConversation();
+  const { state, sendMessage, recordMood, requestService } = useConversation();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [composing, setComposing] = useState(false);
   const list = useRef<FlatList<ConversationMessage>>(null);
 
   const renderItem = ({ item }: { item: ConversationMessage }) =>
@@ -32,11 +34,13 @@ export default function PatriciaScreen() {
     );
 
   return (
-    <View style={styles.root}>
+    <ScreenBackground>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <KeyboardAvoidingView behavior="padding" style={styles.column}>
           <View style={styles.header}>
-            <PatriciaAvatar size={64} zoomable />
+            <View style={styles.avatarRing}>
+              <PatriciaAvatar size={64} zoomable />
+            </View>
             <View style={styles.headerCopy}>
               <ThemedText type="subtitle" style={styles.name}>
                 Patrícia
@@ -83,38 +87,56 @@ export default function PatriciaScreen() {
                 {actionError}
               </ThemedText>
             ) : null}
-            <QuickActions
-              actions={[
-                {
-                  label: 'Registrar humor',
-                  icon: { ios: 'chart.bar.fill', android: 'bar_chart', web: 'bar_chart' },
-                  onPress: async () => setActionError(await requestMoodCheck()),
-                },
-                {
-                  label: 'Minhas consultas',
-                  icon: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
-                  onPress: () => router.push('/consultas'),
-                },
-                {
-                  label: 'Meus documentos',
-                  icon: { ios: 'doc.text', android: 'description', web: 'description' },
-                  onPress: () => router.push('/cofre'),
-                },
-              ]}
-            />
-            <Composer onSend={sendMessage} />
+            {/* Recolhido enquanto o paciente digita, para sobrar espaço à conversa. */}
+            {composing ? null : (
+              <HelpPanel
+                items={[
+                  {
+                    label: 'Agendar consulta',
+                    icon: {
+                      ios: 'calendar.badge.plus',
+                      android: 'calendar_add_on',
+                      web: 'calendar_add_on',
+                    },
+                    tone: 'blue',
+                    onPress: async () =>
+                      setActionError(await requestService('schedule_appointment')),
+                  },
+                  {
+                    label: 'Remarcar',
+                    icon: {
+                      ios: 'arrow.triangle.2.circlepath',
+                      android: 'event_repeat',
+                      web: 'event_repeat',
+                    },
+                    tone: 'purple',
+                    onPress: async () =>
+                      setActionError(await requestService('reschedule_appointment')),
+                  },
+                  {
+                    label: 'Pedir nota fiscal',
+                    icon: { ios: 'doc.plaintext', android: 'receipt_long', web: 'receipt_long' },
+                    tone: 'purple',
+                    onPress: async () => setActionError(await requestService('request_invoice')),
+                  },
+                  {
+                    label: 'Encontrar documento',
+                    icon: { ios: 'folder', android: 'folder_open', web: 'folder_open' },
+                    tone: 'blue',
+                    onPress: () => router.push('/cofre'),
+                  },
+                ]}
+              />
+            )}
+            <Composer onSend={sendMessage} onFocusChange={setComposing} />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Tokens.color.background,
-  },
   safeArea: {
     flex: 1,
   },
@@ -132,13 +154,19 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 10,
   },
+  avatarRing: {
+    padding: 3,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: Tokens.color.brandBorder,
+  },
   headerCopy: {
     gap: 2,
   },
   name: {
-    color: Tokens.color.text,
-    fontSize: 24,
-    lineHeight: 30,
+    color: Tokens.color.brand,
+    fontSize: 26,
+    lineHeight: 32,
   },
   role: {
     color: Tokens.color.muted,
@@ -150,8 +178,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 6,
     padding: 10,
-    borderRadius: 12,
-    backgroundColor: Tokens.color.brandSoft,
+    borderRadius: 14,
+    backgroundColor: 'rgba(239, 234, 253, 0.9)',
   },
   noticeText: {
     flex: 1,
@@ -175,9 +203,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-    borderTopWidth: 1,
-    borderTopColor: Tokens.color.border,
-    backgroundColor: Tokens.color.background,
   },
   actionError: {
     color: Tokens.color.brandDeep,

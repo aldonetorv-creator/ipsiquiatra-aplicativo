@@ -1,7 +1,12 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
-import { ApiResult, ConversationMessage, RecordMoodInput } from '@/contracts/platform';
+import {
+  ApiResult,
+  ConversationMessage,
+  PatientService,
+  RecordMoodInput,
+} from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
 
 export type ConversationState =
@@ -80,14 +85,16 @@ export function useConversation() {
     (text: string) => apply(() => gateway.sendMessage(text), (messages) => messages),
     [apply, gateway]
   );
-  const requestMoodCheck = useCallback(
-    () => apply(() => gateway.requestMoodCheck(), (messages) => messages),
-    [apply, gateway]
-  );
   const recordMood = useCallback(
     (input: RecordMoodInput) => apply(() => gateway.recordMood(input), (data) => data.messages),
     [apply, gateway]
   );
 
-  return { state, sendMessage, requestMoodCheck, recordMood };
+  const requestService = useCallback(
+    (service: PatientService) =>
+      apply(() => gateway.requestService(service), (messages) => messages),
+    [apply, gateway]
+  );
+
+  return { state, sendMessage, recordMood, requestService };
 }
