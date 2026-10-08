@@ -71,7 +71,7 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo 'Este passo não falha o CI: os alertas conhecidos estão registrados na issue #1. Não usar `npm audit fix --force`.' >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: npm-audit
           path: audit-*.json
