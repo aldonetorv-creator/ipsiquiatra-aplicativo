@@ -67,21 +67,6 @@ export const homeTimeline: TimelineItem[] = [
   },
 ];
 
-export const patriciaActions: MockAction[] = [
-  {
-    label: 'Confirmar horário',
-    detail: 'Fluxo planejado para mensagens administrativas, sem envio real.',
-  },
-  {
-    label: 'Dúvida sobre preparo',
-    detail: 'Resposta simulada com conteúdo genérico e não clínico.',
-  },
-  {
-    label: 'Falar com a equipe',
-    detail: 'Reserva visual para handoff humano quando houver integração.',
-  },
-];
-
 export const appointmentTimeline: TimelineItem[] = [
   {
     title: 'Consulta presencial',
