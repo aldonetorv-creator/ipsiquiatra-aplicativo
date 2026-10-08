@@ -68,7 +68,9 @@ contatos de emergência (CVV 188 e SAMU 192).
 
 Esse roteiro é provisório. A Patrícia é uma só, a mesma do site: na fase 2, o
 app conversa com o serviço da Patrícia na plataforma do iPsiquiatra (uma
-Patrícia por médico), sem lógica própria no app. Ver `docs/fases.md`.
+Patrícia por médico), sem lógica própria no app. A conversa, o diário de humor
+e as escalas passam a ser guardados na plataforma e entram no prontuário,
+como contexto para a Patrícia e para o médico. Ver `docs/fases.md`.
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
 passam pelo contrato (`requestService`), mas nesta fase a Patrícia só avisa que

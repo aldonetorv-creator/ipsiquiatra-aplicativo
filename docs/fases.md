@@ -25,12 +25,43 @@ app.
 - **Na fase 1,** a Patrícia do app é só um roteiro de demonstração, sem IA, e
   não deve ganhar lógica própria além disso.
 
-**A decidir na fase 2 (mesmo contexto):** hoje a plataforma guarda a conversa
-só em memória (as últimas mensagens vão junto com a reserva confirmada, para o
-médico conferir), e o app guarda o histórico no aparelho. Para a Patrícia
-lembrar do paciente no site e no app, e o paciente ver no app o que conversou
-no site, a conversa do paciente identificado precisa ficar guardada na
-plataforma, com consentimento e as proteções de dado sensível de saúde (LGPD).
+### Contexto e prontuário
+
+Decisão do Dr. Aldo para a fase 2: o histórico **não fica só no celular**. Ele
+vira contexto para a Patrícia e alimenta o prontuário.
+
+- **No app, o paciente está identificado** (login). A conversa com a Patrícia,
+  o diário de humor e as escalas e questionários respondidos vão para a
+  plataforma e entram no prontuário daquele paciente.
+- **A Patrícia lê esse contexto:** sabe o que já foi conversado com aquele
+  paciente, como ele tem se sentido e o que respondeu, e continua a conversa a
+  partir disso.
+- **O Dr. Aldo vê esse material no prontuário,** junto com o resto da história
+  do paciente.
+- **O celular guarda só uma cópia** para abrir rápido. A versão que vale é a da
+  plataforma.
+- **No site, a conversa pode ser anônima,** então continua sem histórico
+  guardado. Como hoje, só as últimas mensagens seguem com a consulta marcada,
+  para o médico conferir.
+
+Isso segue a regra central da plataforma (`iPsiquiatra_Visao_Produto_MVP_2_0_revisado.md`,
+seção 1.2, no repositório `aldonetorv-creator/ipsiquiatra`): o prontuário é a
+única fonte de verdade clínica, e as funções de IA não guardam contexto
+próprio. Elas leem o prontuário e o atualizam quando apropriado.
+
+A definir antes de implementar:
+
+- **Consentimento explícito** do paciente para a conversa, o humor e as escalas
+  entrarem no prontuário (dado sensível de saúde, LGPD art. 11).
+- **Origem identificada:** o que vem do app entra marcado como relato do
+  paciente ou registro da Patrícia, separado das anotações do médico.
+- **O que o paciente vê:** a própria conversa, o diário e as escalas, mas não o
+  prontuário interno. Documentos e plano de cuidados aparecem só quando o
+  médico libera (a visão da plataforma, seção 11.2, prevê essa camada de
+  publicação).
+- **Risco:** com a conversa sendo lida, o protocolo de crise da plataforma vale
+  também para o que o paciente escreve no app (regras fora da IA, orientação de
+  CVV e SAMU e aviso ao médico).
 
 ## Fase 1 — MVP de demonstração (atual)
 
