@@ -1,70 +1,43 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import { Animated, Easing, StyleSheet } from 'react-native';
 
 import { Tokens } from '@/constants/theme';
 
-const DURATION = 600;
+const HOLD = 120;
+const FADE = 300;
 
 export function AnimatedSplashOverlay() {
-  const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [opacity] = useState(() => new Animated.Value(1));
 
   if (!visible) return null;
 
-  const splashKeyframe = new Keyframe({
-    0: {
-      transform: [{ scale: 1 }],
-      opacity: 1,
-    },
-    20: {
-      opacity: 1,
-    },
-    70: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
-    100: {
-      opacity: 0,
-      transform: [{ scale: 1 }],
-      easing: Easing.elastic(0.7),
-    },
-  });
-
-  const image = <Image source={require('@/assets/images/ip-icon.png')} style={styles.brandMark} />;
-
-  return animate ? (
+  return (
     <Animated.View
-      entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
-        'worklet';
-        if (finished) {
-          scheduleOnRN(setVisible, false);
-        }
-      })}
-      style={styles.splashOverlay}>
-      {image}
-    </Animated.View>
-  ) : (
-    <View
       onLayout={() => {
         SplashScreen.hideAsync().finally(() => {
-          setAnimate(true);
+          Animated.timing(opacity, {
+            toValue: 0,
+            delay: HOLD,
+            duration: FADE,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }).start(() => setVisible(false));
         });
       }}
-      style={styles.splashOverlay}>
-      {image}
-    </View>
+      style={[styles.splashOverlay, { opacity }]}>
+      <Image source={require('@/assets/images/ip-icon.png')} style={styles.brandMark} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Mesmo tamanho da imagem do splash nativo (imageWidth em app.json).
   brandMark: {
-    width: 84,
-    height: 84,
-    borderRadius: 24,
+    width: 96,
+    height: 96,
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
