@@ -18,6 +18,14 @@ Aplicativo do paciente iPsiquiatra, iniciado como Sprint 0 em React Native, Expo
 - Backend, pagamentos, NFS-e, telemedicina e fluxos clínicos reais.
 - IA clínica ou tomada de decisão automatizada.
 
+## Fases
+
+O plano está em [`docs/fases.md`](docs/fases.md). A fase 1 é o MVP de
+demonstração, com dados simulados. A fase 2 traz a jornada completa da
+consulta pelo app: agendamento, cobrança pela Patrícia, pagamento confirmado
+pela integração com o Nubank, teleconsulta por videochamada e nota fiscal
+(NFS-e) emitida 24 horas depois da consulta. Nada dela está implementado ainda.
+
 ## Comandos
 
 ```bash
@@ -58,9 +66,15 @@ Patrícia abre um novo registro de humor. Ver privacidade em
 `docs/dependencias.md`. A tela mostra esse aviso e os
 contatos de emergência (CVV 188 e SAMU 192).
 
+Esse roteiro é provisório. A Patrícia é uma só, a mesma do site: na fase 2, o
+app conversa com o serviço da Patrícia na plataforma do iPsiquiatra (uma
+Patrícia por médico), sem lógica própria no app. A conversa, o diário de humor
+e as escalas passam a ser guardados na plataforma e entram no prontuário,
+como contexto para a Patrícia e para o médico. Ver `docs/fases.md`.
+
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
 passam pelo contrato (`requestService`), mas nesta fase a Patrícia só avisa que
-o serviço chega em breve: agenda e NFS-e são da fase 2. "Encontrar documento"
+o serviço chega em breve: agenda e NFS-e são da fase 2 (ver `docs/fases.md`). "Encontrar documento"
 abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
 
 ## Princípio de evolução
