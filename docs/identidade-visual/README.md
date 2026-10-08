@@ -67,4 +67,5 @@ circular roxa e livros com os temas "Saúde mental", "Bem-estar", "Ciência" e
 Vários fluxos dos mockups dependem de itens que a issue #1 ainda proíbe nesta
 etapa: chat com IA, agendamento real, nota fiscal (NFS-e), documentos clínicos
 reais e qualquer dado de paciente. Até lá, só podem existir como telas com
-dados simulados, sem PHI.
+dados simulados, sem PHI. O que entra em cada fase (teleconsulta, agenda real e
+NFS-e na fase 2) está em [`docs/fases.md`](../fases.md).

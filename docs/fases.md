@@ -1,0 +1,95 @@
+# Fases do aplicativo
+
+Plano do produto combinado com o Dr. Aldo. Uma funcionalidade só entra no
+código na fase dela; até lá, fica registrada aqui para que as decisões de
+agora não fechem o caminho. Atualizar este arquivo quando o escopo mudar.
+
+## Fase 1 — MVP de demonstração (atual)
+
+Aplicativo do paciente com **dados simulados**, sem paciente real, sem PHI e
+sem backend, seguindo as regras da
+[issue #1](https://github.com/aldonetorv-creator/ipsiquiatra-aplicativo/issues/1).
+
+| Área | Situação |
+|---|---|
+| Início | Feito: última mensagem da Patrícia, diário de humor da semana, "Antes da sua consulta" e plano de cuidados. |
+| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor e atalhos "Posso ajudar você com". |
+| Consultas | Próximo passo: "Sua próxima consulta", "Agora: Acompanhamento · X dias desde sua última consulta" e "Seu plano de cuidados está pronto". |
+| Cofre | Próximo passo: documentos agrupados por consulta. |
+| Questionários | Tela de demonstração, ainda sem conteúdo. |
+
+Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
+conversa, mas nesta fase a Patrícia só avisa que o serviço chega em breve.
+
+## Fase 2 — atendimento pelo app
+
+**Nada desta fase está implementado.** Ela faz parte do escopo do MVP e entra
+depois da fase 1.
+
+### Teleconsulta por videochamada
+
+As consultas vão acontecer por telemedicina, dentro do próprio aplicativo:
+
+- O paciente entra na consulta pelo cartão "Sua próxima consulta", na Início ou
+  em Consultas.
+- Sala de espera até o Dr. Aldo iniciar o atendimento.
+- Videochamada entre o paciente e o Dr. Aldo.
+- Depois da consulta, os documentos (plano de cuidados, receitas, relatórios)
+  aparecem no Cofre, no grupo daquela consulta.
+
+### Agenda real
+
+- "Agendar consulta" e "Remarcar" passam a funcionar de verdade, pela Patrícia
+  e pela tela de Consultas.
+- Cada consulta indica se é teleconsulta ou presencial.
+
+### Nota fiscal (NFS-e) pelo app
+
+- "Pedir nota fiscal" emite a NFS-e da consulta direto pelo aplicativo.
+- A nota fica no Cofre, no grupo da consulta correspondente.
+
+### Pré-requisitos da fase 2
+
+A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
+
+- backend e API real no lugar do mock (o contrato `PatientAppGateway` já
+  permite a troca sem mudar as telas);
+- login do paciente;
+- criptografia em repouso do histórico no aparelho, consentimento explícito e
+  política de retenção (ver `docs/dependencias.md`, seção de privacidade);
+- revisão independente de segurança e privacidade (LGPD, dados de saúde são
+  dados sensíveis, art. 11);
+- builds pelo EAS: a videochamada usa código nativo, então o Expo Go deixa de
+  servir para testar e o app passa a precisar de build de desenvolvimento.
+
+### Regras a confirmar antes de implementar
+
+Pontos para validar com assessoria jurídica e contábil, não com este documento:
+
+- **Telemedicina:** Lei 14.510/2022 (telessaúde) e Resolução CFM 2.314/2022.
+  Entre os pontos: consentimento do paciente para o atendimento remoto,
+  registro em prontuário, requisitos de segurança da plataforma, assinatura
+  digital ICP-Brasil em receitas e atestados, e a recomendação de consulta
+  presencial periódica no acompanhamento de doenças crônicas.
+- **Receitas de medicamentos controlados:** regras próprias da Anvisa
+  (Portaria SVS/MS 344/1998). Confirmar o que pode ser emitido e entregue em
+  formato digital.
+- **NFS-e:** como o município do consultório emite a nota (padrão nacional da
+  NFS-e ou sistema próprio), regime tributário, certificado digital para
+  emissão automática e momento da emissão (por exemplo, depois do pagamento).
+
+### Como a fase 1 já se prepara
+
+- O contrato já tem os pedidos `schedule_appointment`,
+  `reschedule_appointment` e `request_invoice` (`src/contracts/platform.ts`).
+  Na fase 2, a implementação real passa a atendê-los sem mudar as telas.
+- O contrato das consultas, próximo passo da fase 1, vai registrar se a
+  consulta é teleconsulta ou presencial. Assim o botão de entrar na
+  videochamada pode chegar depois sem mudar o formato dos dados.
+- O Cofre agrupado por consulta já reserva o lugar da nota fiscal de cada
+  consulta.
+
+## Ainda sem fase definida
+
+- Pagamentos pelo app.
+- IA na Patrícia (hoje ela não lê nem interpreta as mensagens).
