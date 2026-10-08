@@ -57,6 +57,13 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 
 ## Atualizações
 
-O Dependabot (`.github/dependabot.yml`) propõe semanalmente atualizações de
-patch, agrupando as do SDK. Troca de SDK do Expo é manual e coordenada, com
-`npx expo install --fix`, seguindo o guia oficial de migração.
+O Dependabot (`.github/dependabot.yml`) propõe semanalmente atualizações das
+GitHub Actions e das ferramentas de desenvolvimento (ESLint, TypeScript, Jest,
+Testing Library), sem saltos de versão principal.
+
+Ele **não** mexe nos pacotes controlados pelo SDK do Expo (`expo`, `expo-*`,
+`@expo/*`, `react`, `react-dom`, `react-native`, `react-native-*`,
+`jest-expo`, `eslint-config-expo`): o SDK fixa a versão exata de cada um e o
+Expo Doctor reprova qualquer divergência. Quando o Expo publica correções do
+SDK, o Expo Doctor no CI acusa; aí se roda `npx expo install --fix`. Troca de
+SDK é manual e coordenada, seguindo o guia oficial de migração.
