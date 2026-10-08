@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Testes
+        run: npm test -- --ci
+
       - name: Expo Doctor
         run: npx --yes expo-doctor
 
@@ -56,13 +59,20 @@ jobs:
 
       # Só registra os alertas: os conhecidos estão documentados na issue #1.
       # Nunca usar `npm audit fix --force` (propõe downgrade para Expo 44).
+      # Produção usa --omit=optional porque react-native e expo-router declaram
+      # as ferramentas de teste (Jest, Testing Library) como peers opcionais, e
+      # o npm passaria a contá-las como produção. A visão completa vem abaixo.
       - name: npm audit
         run: |
-          npm audit --omit=dev --json > audit.json || true
-          node scripts/audit-summary.js audit.json >> "$GITHUB_STEP_SUMMARY"
+          npm audit --omit=dev --omit=optional --json > audit-producao.json || true
+          npm audit --json > audit-completo.json || true
+          node scripts/audit-summary.js audit-producao.json "npm audit — produção (vai para o app)" >> "$GITHUB_STEP_SUMMARY"
+          node scripts/audit-summary.js audit-completo.json "npm audit — completo (inclui ferramentas de teste e build)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Este passo não falha o CI: os alertas conhecidos estão registrados na issue #1. Não usar `npm audit fix --force`.' >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
           name: npm-audit
-          path: audit.json
+          path: audit-*.json
           retention-days: 30
