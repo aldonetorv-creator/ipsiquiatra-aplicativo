@@ -21,9 +21,10 @@ Aplicativo do paciente iPsiquiatra, iniciado como Sprint 0 em React Native, Expo
 ## Fases
 
 O plano está em [`docs/fases.md`](docs/fases.md). A fase 1 é o MVP de
-demonstração, com dados simulados. A fase 2 traz teleconsulta por videochamada
-dentro do app, agenda real e emissão de nota fiscal (NFS-e) pelo app; nada
-dela está implementado ainda.
+demonstração, com dados simulados. A fase 2 traz a jornada completa da
+consulta pelo app: agendamento, cobrança pela Patrícia, pagamento confirmado
+pela integração com o Nubank, teleconsulta por videochamada e nota fiscal
+(NFS-e) emitida 24 horas depois da consulta. Nada dela está implementado ainda.
 
 ## Comandos
 

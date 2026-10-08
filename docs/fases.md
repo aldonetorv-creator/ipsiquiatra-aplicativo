@@ -21,32 +21,57 @@ sem backend, seguindo as regras da
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
 conversa, mas nesta fase a Patrícia só avisa que o serviço chega em breve.
 
+
 ## Fase 2 — atendimento pelo app
 
 **Nada desta fase está implementado.** Ela faz parte do escopo do MVP e entra
 depois da fase 1.
 
-### Teleconsulta por videochamada
+### Jornada de uma consulta
 
-As consultas vão acontecer por telemedicina, dentro do próprio aplicativo:
+1. **Agendamento.** O paciente agenda ou remarca pela Patrícia ou pela tela de
+   Consultas. Cada consulta indica se é teleconsulta ou presencial.
+2. **Cobrança.** Depois do agendamento, a Patrícia manda no app uma mensagem de
+   cobrança para o paciente.
+3. **Pagamento.** O pagamento é confirmado pela integração com o Nubank, e a
+   Patrícia avisa o paciente na conversa.
+4. **Consulta.** A teleconsulta acontece por videochamada dentro do app:
+   - o paciente entra pelo cartão "Sua próxima consulta", na Início ou em
+     Consultas;
+   - aguarda numa sala de espera até o Dr. Aldo iniciar o atendimento;
+   - depois da consulta, os documentos (plano de cuidados, receitas,
+     relatórios) aparecem no Cofre, no grupo daquela consulta.
+5. **Nota fiscal.** A NFS-e é emitida 24 horas depois da consulta e fica no
+   Cofre, no grupo da consulta correspondente.
 
-- O paciente entra na consulta pelo cartão "Sua próxima consulta", na Início ou
-  em Consultas.
-- Sala de espera até o Dr. Aldo iniciar o atendimento.
-- Videochamada entre o paciente e o Dr. Aldo.
-- Depois da consulta, os documentos (plano de cuidados, receitas, relatórios)
-  aparecem no Cofre, no grupo daquela consulta.
+### Decisões em aberto
 
-### Agenda real
+- **Meio de pagamento:** Pix, cartão ou ambos.
+- **Remarcação e cancelamento** de consulta já paga: crédito, reembolso ou prazo
+  mínimo.
+- **Atalho "Pedir nota fiscal":** com a emissão automática, ele pode virar
+  "Ver nota fiscal" ou reenviar a nota.
 
-- "Agendar consulta" e "Remarcar" passam a funcionar de verdade, pela Patrícia
-  e pela tela de Consultas.
-- Cada consulta indica se é teleconsulta ou presencial.
+### Integração com o Nubank
 
-### Nota fiscal (NFS-e) pelo app
+Pesquisa de outubro de 2026, a confirmar com o Nubank antes de decidir. Não
+encontrei API pública da conta PJ do Nubank para gerar cobranças ou avisar
+automaticamente quando um pagamento cai na conta. Os caminhos encontrados:
 
-- "Pedir nota fiscal" emite a NFS-e da consulta direto pelo aplicativo.
-- A nota fica no Cofre, no grupo da consulta correspondente.
+- **NuPay for Business**, o produto de pagamentos do Nubank para empresas. Tem
+  API e aviso de pagamento, mas exige contrato e é voltado a lojas online.
+  Contato técnico informado na documentação: oi-nupay@nubank.com.br.
+- **Intermediário de pagamento** que gera a cobrança (Pix com QR Code, por
+  exemplo), avisa o servidor do app quando o paciente paga e deposita o valor
+  na conta Nubank PJ do consultório.
+- **Open Finance**, por agregadores regulados, para ler os recebimentos da
+  conta e conferir os pagamentos.
+
+Evitar soluções não oficiais, como ler os e-mails de aviso do Nubank, que não
+trazem dados suficientes para identificar o pagamento.
+
+Em qualquer caminho, a integração fica **no servidor, nunca no app**: chaves e
+credenciais bancárias não podem ir no aplicativo do paciente.
 
 ### Pré-requisitos da fase 2
 
@@ -58,7 +83,7 @@ A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
 - criptografia em repouso do histórico no aparelho, consentimento explícito e
   política de retenção (ver `docs/dependencias.md`, seção de privacidade);
 - revisão independente de segurança e privacidade (LGPD, dados de saúde são
-  dados sensíveis, art. 11);
+  dados sensíveis, art. 11), incluindo os dados de pagamento;
 - builds pelo EAS: a videochamada usa código nativo, então o Expo Go deixa de
   servir para testar e o app passa a precisar de build de desenvolvimento.
 
@@ -74,15 +99,21 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 - **Receitas de medicamentos controlados:** regras próprias da Anvisa
   (Portaria SVS/MS 344/1998). Confirmar o que pode ser emitido e entregue em
   formato digital.
-- **NFS-e:** como o município do consultório emite a nota (padrão nacional da
-  NFS-e ou sistema próprio), regime tributário, certificado digital para
-  emissão automática e momento da emissão (por exemplo, depois do pagamento).
+- **NFS-e:**
+  - como o município do consultório emite a nota (padrão nacional da NFS-e ou
+    sistema próprio);
+  - regime tributário;
+  - certificado digital para emissão automática;
+  - se emitir 24 horas depois da consulta, com o pagamento recebido antes,
+    atende às regras do município.
 
 ### Como a fase 1 já se prepara
 
 - O contrato já tem os pedidos `schedule_appointment`,
   `reschedule_appointment` e `request_invoice` (`src/contracts/platform.ts`).
   Na fase 2, a implementação real passa a atendê-los sem mudar as telas.
+- A conversa já separa tipos de mensagem (texto e registro de humor). A
+  cobrança entra como mais um tipo, com valor e situação do pagamento.
 - O contrato das consultas, próximo passo da fase 1, vai registrar se a
   consulta é teleconsulta ou presencial. Assim o botão de entrar na
   videochamada pode chegar depois sem mudar o formato dos dados.
@@ -91,5 +122,4 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 
 ## Ainda sem fase definida
 
-- Pagamentos pelo app.
 - IA na Patrícia (hoje ela não lê nem interpreta as mensagens).
