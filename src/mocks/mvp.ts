@@ -1,4 +1,4 @@
-import { MockAction, MvpArea } from '@/contracts/mvp';
+import { MvpArea } from '@/contracts/mvp';
 
 export const mvpAreas: MvpArea[] = [
   {
@@ -47,19 +47,3 @@ export const mvpAreas: MvpArea[] = [
     status: 'mock',
   },
 ];
-
-export const questionnaireActions: MockAction[] = [
-  {
-    label: 'Check-in semanal',
-    detail: 'Rascunho visual para questionário curto de acompanhamento.',
-  },
-  {
-    label: 'Escala de humor',
-    detail: 'Placeholder sem pontuação, interpretação ou recomendação clínica.',
-  },
-  {
-    label: 'Sono e rotina',
-    detail: 'Contrato futuro deve separar resposta, consentimento e auditoria.',
-  },
-];
-

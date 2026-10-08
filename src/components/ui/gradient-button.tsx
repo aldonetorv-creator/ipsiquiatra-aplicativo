@@ -11,6 +11,7 @@ type Props = {
   size?: 'regular' | 'small';
   disabled?: boolean;
   chevron?: boolean;
+  accessibilityLabel?: string;
 };
 
 // Botão principal em degradê azul → roxo, como nos mockups.
@@ -20,12 +21,13 @@ export function GradientButton({
   size = 'regular',
   disabled = false,
   chevron = true,
+  accessibilityLabel,
 }: Props) {
   const small = size === 'small';
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}

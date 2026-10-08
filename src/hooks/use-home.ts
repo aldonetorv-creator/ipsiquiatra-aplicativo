@@ -17,6 +17,8 @@ export type HomeState =
       // Dias de calendário desde a última consulta realizada.
       daysSinceLastAppointment: number | null;
       carePlanReady: boolean;
+      // Tempo estimado dos questionários que faltam para a próxima consulta.
+      pendingQuestionnaireMinutes: number;
     }
   | { status: 'error'; error: string };
 
@@ -35,13 +37,17 @@ export function useHome() {
       gateway.listMoodEntries(),
       gateway.listAppointments(),
       gateway.listDocuments(),
+      gateway.listQuestionnaires(),
     ])
-      .then(([conversation, moods, appointments, documents]) => {
+      .then(([conversation, moods, appointments, documents, questionnaires]) => {
         if (!active) return;
         if (!conversation.ok) return setState({ status: 'error', error: conversation.error.message });
         if (!moods.ok) return setState({ status: 'error', error: moods.error.message });
         if (!appointments.ok) return setState({ status: 'error', error: appointments.error.message });
         if (!documents.ok) return setState({ status: 'error', error: documents.error.message });
+        if (!questionnaires.ok) {
+          return setState({ status: 'error', error: questionnaires.error.message });
+        }
         const fromPatricia = conversation.data.filter((message) => message.author === 'patricia');
         setPendingMoodCheck(
           conversation.data.some((message) => message.kind === 'mood_check' && message.answer === null)
@@ -68,6 +74,9 @@ export function useHome() {
                 doc.appointmentId === last.id &&
                 (doc.availability === 'available' || doc.availability === 'mock_only')
             ),
+          pendingQuestionnaireMinutes: questionnaires.data
+            .filter((item) => item.answeredAt === null && next && item.appointmentId === next.id)
+            .reduce((total, item) => total + item.estimatedMinutes, 0),
         });
       })
       .catch(() => {

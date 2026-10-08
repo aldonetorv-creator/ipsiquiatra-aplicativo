@@ -7,7 +7,7 @@ Aplicativo do paciente iPsiquiatra, iniciado como Sprint 0 em React Native, Expo
 - Projeto Expo com Expo Router e TypeScript.
 - Navegação mockada para Home, Patrícia, Consultas, Questionários e Cofre.
 - Design system inicial em `src/constants/theme.ts`.
-- Componentes visuais reutilizáveis em `src/components/mvp`.
+- Componentes visuais reutilizáveis em `src/components`.
 - Contratos e mocks locais em `src/contracts` e `src/mocks`.
 - Ícone visual roxo `iP` aplicado como referência de marca inicial.
 
@@ -53,9 +53,9 @@ As telas não importam mocks de dados: leem pela interface `PatientAppGateway`
 (`src/services/patient-app-gateway.tsx`). Hoje a implementação padrão é o mock
 local (`src/mocks/patient-app-gateway.ts`); uma API real substitui o mock nesse
 provider, sem mudar as telas. A Início (`useHome`), as Consultas
-(`useAppointments`), o Cofre (`useDocuments`, agrupado por consulta) e a
-conversa com a Patrícia (`useConversation`) estão ligados ao contrato, com
-testes em `src/__tests__`.
+(`useAppointments`), o Cofre (`useDocuments`, agrupado por consulta), os
+Questionários (`useQuestionnaires`) e a conversa com a Patrícia
+(`useConversation`) estão ligados ao contrato, com testes em `src/__tests__`.
 
 ## Patrícia nesta versão
 

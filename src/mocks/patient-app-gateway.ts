@@ -12,8 +12,12 @@ import {
   MoodEntry,
   PatientAppGateway,
   PatientService,
+  QUESTIONNAIRE_TEXT_MAX_LENGTH,
+  Questionnaire,
+  QuestionnaireAnswers,
   TextMessage,
 } from '@/contracts/platform';
+import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
 import { dayKey } from '@/utils/time';
 
@@ -172,6 +176,26 @@ type MockOptions = {
 };
 
 export const HISTORY_STORAGE_KEY = 'ipsiquiatra:patient-history';
+export const QUESTIONNAIRES_STORAGE_KEY = 'ipsiquiatra:questionnaires';
+
+// Respostas salvas no aparelho, por questionário. Na fase 2 vão para o
+// prontuário (docs/fases.md, "Contexto e prontuário").
+type PersistedResponses = {
+  version: 1;
+  responses: Record<string, { answers: QuestionnaireAnswers; answeredAt: string }>;
+};
+
+function parseResponses(raw: string | null): PersistedResponses {
+  try {
+    const data = raw ? (JSON.parse(raw) as Partial<PersistedResponses>) : null;
+    if (data?.version === 1 && data.responses && typeof data.responses === 'object') {
+      return data as PersistedResponses;
+    }
+  } catch {
+    // Dado corrompido: recomeça sem respostas.
+  }
+  return { version: 1, responses: {} };
+}
 
 // Formato salvo no aparelho. Mudou o formato? Suba a versão e trate a migração.
 type PersistedHistory = {
@@ -266,6 +290,25 @@ export function createMockPatientAppGateway({
 
   // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
   const appointments = mockAppointments(now());
+  // Os questionários são pedidos para a próxima consulta.
+  const nextAppointmentId =
+    appointments.find((item) => item.status === 'scheduled')?.id ?? null;
+
+  let responses: Promise<PersistedResponses> | null = null;
+  const loadResponses = () =>
+    (responses ??= store
+      .getItem(QUESTIONNAIRES_STORAGE_KEY)
+      .catch(() => null)
+      .then(parseResponses));
+
+  const questionnaire = (
+    definition: (typeof mockQuestionnaireDefinitions)[number],
+    saved: PersistedResponses
+  ): Questionnaire => ({
+    ...definition,
+    appointmentId: nextAppointmentId,
+    answeredAt: saved.responses[definition.id]?.answeredAt ?? null,
+  });
 
   return {
     async listAppointments() {
@@ -350,6 +393,53 @@ export function createMockPatientAppGateway({
       seed();
       await save();
       return mockResult([...history!.conversation]);
+    },
+    async listQuestionnaires() {
+      const saved = await loadResponses();
+      return mockResult(
+        mockQuestionnaireDefinitions.map((definition) => questionnaire(definition, saved))
+      );
+    },
+    async submitQuestionnaire({ questionnaireId, answers }) {
+      const definition = mockQuestionnaireDefinitions.find((item) => item.id === questionnaireId);
+      if (!definition) return validationFailure('Questionário não encontrado.');
+      const saved = await loadResponses();
+      if (saved.responses[questionnaireId]) {
+        return validationFailure('Este questionário já foi respondido.');
+      }
+
+      const cleaned: QuestionnaireAnswers = {};
+      let safetyTriggered = false;
+      for (const question of definition.questions) {
+        const answer = (answers[question.id] ?? '').trim();
+        if (!answer) {
+          if (question.required) return validationFailure('Responda todas as perguntas.');
+          continue;
+        }
+        if (question.type === 'scale') {
+          const index = question.options.indexOf(answer);
+          if (index === -1) return validationFailure('Escolha uma das opções em cada pergunta.');
+          // Qualquer resposta além de "Nunca ou quase nunca" no item de segurança.
+          if (question.safety && index > 0) safetyTriggered = true;
+        } else if (answer.length > QUESTIONNAIRE_TEXT_MAX_LENGTH) {
+          return validationFailure(
+            `Cada resposta pode ter até ${QUESTIONNAIRE_TEXT_MAX_LENGTH} caracteres.`
+          );
+        }
+        cleaned[question.id] = answer;
+      }
+
+      // Só marca como respondido depois de salvar no aparelho.
+      const next: PersistedResponses = {
+        ...saved,
+        responses: {
+          ...saved.responses,
+          [questionnaireId]: { answers: cleaned, answeredAt: now().toISOString() },
+        },
+      };
+      await store.setItem(QUESTIONNAIRES_STORAGE_KEY, JSON.stringify(next));
+      responses = Promise.resolve(next);
+      return mockResult({ questionnaire: questionnaire(definition, next), safetyTriggered });
     },
   };
 }
