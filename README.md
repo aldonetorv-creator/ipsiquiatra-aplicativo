@@ -52,9 +52,10 @@ As telas não importam mocks de dados: leem pela interface `PatientAppGateway`
 (`src/contracts/platform.ts`), entregue pelo `PatientAppGatewayProvider`
 (`src/services/patient-app-gateway.tsx`). Hoje a implementação padrão é o mock
 local (`src/mocks/patient-app-gateway.ts`); uma API real substitui o mock nesse
-provider, sem mudar as telas. O Cofre (`useDocuments`) e a conversa com a
-Patrícia (`useConversation`) estão ligados ao contrato, com testes em
-`src/__tests__`.
+provider, sem mudar as telas. A Início (`useHome`), as Consultas
+(`useAppointments`), o Cofre (`useDocuments`, agrupado por consulta) e a
+conversa com a Patrícia (`useConversation`) estão ligados ao contrato, com
+testes em `src/__tests__`.
 
 ## Patrícia nesta versão
 
