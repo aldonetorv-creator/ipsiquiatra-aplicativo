@@ -48,6 +48,12 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 | `react-native-reanimated` | Peer **obrigatório** de `react-native-drawer-layout`, dependência do `expo-router`. Fora do `package.json`, o npm instalaria uma versão qualquer (≥ 2.0.0) e o autolinking a embutiria no app mesmo assim. Fica fixado na versão do SDK. O app não o importa mais. |
 | `react-native-worklets` | Peer obrigatório do `react-native-reanimated` 4. |
 
+## Adicionadas
+
+| Pacote | Para quê | Observação |
+|---|---|---|
+| `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. Lembretes locais funcionam no Expo Go; notificação push no Android exige build de desenvolvimento, e por isso o Expo Go mostra um aviso ao abrir. Na fase 2 o lembrete passa a vir da plataforma por push. |
+
 ## Removidas
 
 | Pacote | Motivo |

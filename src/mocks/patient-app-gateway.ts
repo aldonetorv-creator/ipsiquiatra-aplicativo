@@ -19,6 +19,7 @@ import {
 } from '@/contracts/platform';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
+import { EVENING_HOUR } from '@/utils/evening';
 import { dayKey } from '@/utils/time';
 
 const REQUEST_ID = 'local-sprint-zero';
@@ -147,6 +148,7 @@ export const patriciaScript = {
     'Oi! Eu sou a Patrícia, assistente do Dr. Aldo. Estou aqui para ajudar com consultas, documentos e lembretes.',
   moodCheck: 'Como você está se sentindo hoje?',
   moodCheckAgain: 'Como você está se sentindo agora?',
+  eveningCheck: 'Boa noite! Como foi o seu dia? Se quiser, me conte no diário de humor como você está.',
   afterMood: 'Obrigada por me contar como você está. Estou aqui com você. 💙',
   afterMessage:
     'Recebi sua mensagem. Nesta versão de demonstração eu ainda não consigo ler nem responder o que você escreve.',
@@ -280,13 +282,21 @@ export function createMockPatientAppGateway({
     return messages;
   };
 
-  // Diário: a cada novo dia, a Patrícia pergunta de novo como o paciente está.
-  const ensureTodayMoodCheck = async () => {
-    const today = dayKey(now());
-    const askedToday = history!.conversation.some(
-      (message) => message.kind === 'mood_check' && dayKey(new Date(message.sentAt)) === today
+  // Diário: todo dia, a partir das 20h, a Patrícia pergunta como foi o dia.
+  // Não repete se o paciente já registrou o humor hoje ou se ainda há um
+  // cartão de hoje em aberto.
+  const ensureEveningMoodCheck = async () => {
+    const current = now();
+    if (current.getHours() < EVENING_HOUR) return;
+    const isToday = (iso: string) => dayKey(new Date(iso)) === dayKey(current);
+    const recordedToday = history!.moodEntries.some((entry) => isToday(entry.recordedAt));
+    const askedTonight = history!.conversation.some(
+      (message) =>
+        message.kind === 'mood_check' &&
+        isToday(message.sentAt) &&
+        (message.answer === null || new Date(message.sentAt).getHours() >= EVENING_HOUR)
     );
-    if (!askedToday) await append(moodCheck(patriciaScript.moodCheck));
+    if (!recordedToday && !askedTonight) await append(moodCheck(patriciaScript.eveningCheck));
   };
 
   // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
@@ -327,7 +337,7 @@ export function createMockPatientAppGateway({
     },
     async listConversation() {
       await load();
-      await ensureTodayMoodCheck();
+      await ensureEveningMoodCheck();
       return mockResult([...history!.conversation]);
     },
     async sendMessage(body) {

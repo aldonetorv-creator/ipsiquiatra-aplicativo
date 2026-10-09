@@ -30,7 +30,8 @@
           "image": "./assets/images/ip-icon.png",
           "imageWidth": 96
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
