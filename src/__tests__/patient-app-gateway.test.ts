@@ -216,7 +216,6 @@ describe('conversa simulada com a Patrícia', () => {
 
 describe('histórico salvo no aparelho', () => {
   const day1 = new Date(2026, 2, 9, 20, 0);
-  const day2 = new Date(2026, 2, 10, 9, 0);
 
   async function answerOpenCheck(gateway: PatientAppGateway, level: MoodLevel) {
     const result = await gateway.listConversation();
@@ -253,20 +252,57 @@ describe('histórico salvo no aparelho', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('abre um novo cartão de humor a cada dia, mantendo os anteriores', async () => {
+  const checksOf = async (gateway: PatientAppGateway) => {
+    const result = await gateway.listConversation();
+    if (!result.ok) throw new Error('listConversation falhou');
+    return result.data.filter((message) => message.kind === 'mood_check');
+  };
+
+  it('às 20h a Patrícia pergunta como foi o dia, mantendo os cartões anteriores', async () => {
     const store = createMemoryStore();
     await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 2);
+    const morning = new Date(2026, 2, 10, 9, 0);
+    const evening = new Date(2026, 2, 10, 20, 5);
 
-    const nextDay = createMockPatientAppGateway({ store, now: () => day2 });
-    const result = await nextDay.listConversation();
+    // De manhã, ainda não.
+    expect(await checksOf(createMockPatientAppGateway({ store, now: () => morning }))).toHaveLength(1);
 
-    const checks = result.ok ? result.data.filter((message) => message.kind === 'mood_check') : [];
-    expect(checks).toEqual([
+    const tonight = createMockPatientAppGateway({ store, now: () => evening });
+    expect(await checksOf(tonight)).toEqual([
       expect.objectContaining({ answer: 2, sentAt: day1.toISOString() }),
-      expect.objectContaining({ answer: null, sentAt: day2.toISOString() }),
+      expect.objectContaining({
+        answer: null,
+        text: patriciaScript.eveningCheck,
+        sentAt: evening.toISOString(),
+      }),
     ]);
-    const again = await nextDay.listConversation();
-    expect(again.ok && again.data).toHaveLength(result.ok ? result.data.length : -1);
+    // Só uma vez por noite.
+    expect(await checksOf(tonight)).toHaveLength(2);
+  });
+
+  it('não pergunta à noite se o paciente já registrou o humor hoje', async () => {
+    const store = createMemoryStore();
+    await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 2);
+    const morning = new Date(2026, 2, 10, 9, 0);
+    const daytime = createMockPatientAppGateway({ store, now: () => morning });
+    await daytime.requestMoodCheck();
+    await answerOpenCheck(daytime, 4);
+
+    const tonight = createMockPatientAppGateway({ store, now: () => new Date(2026, 2, 10, 21, 0) });
+
+    expect(await checksOf(tonight)).toHaveLength(2);
+  });
+
+  it('não abre outro cartão à noite se o de hoje ainda está em aberto', async () => {
+    const store = createMemoryStore();
+    await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 2);
+    await createMockPatientAppGateway({ store, now: () => new Date(2026, 2, 10, 9, 0) }).requestMoodCheck();
+
+    const tonight = createMockPatientAppGateway({ store, now: () => new Date(2026, 2, 10, 21, 0) });
+
+    const checks = await checksOf(tonight);
+    expect(checks).toHaveLength(2);
+    expect(checks[1]).toEqual(expect.objectContaining({ answer: null, text: patriciaScript.moodCheckAgain }));
   });
 
   it('recomeça do zero se o histórico salvo estiver corrompido ou noutro formato', async () => {

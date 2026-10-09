@@ -44,12 +44,36 @@ vira contexto para a Patrícia e alimenta o prontuário.
   guardado. Como hoje, só as últimas mensagens seguem com a consulta marcada,
   para o médico conferir.
 
+**Mensagem diária das 20h (decisão do Dr. Aldo):** todo dia, por volta das 20h,
+a Patrícia pergunta ao paciente como foi o dia e oferece o diário de humor. Não
+repete se o humor de hoje já foi registrado.
+
+- **Na fase 1:** a mensagem aparece na conversa a partir das 20h, e o celular
+  avisa com uma notificação local às 20h. Tocar na notificação abre a conversa.
+- **Na fase 2:** quem manda é a Patrícia da plataforma, por notificação push e
+  na conversa, no fuso do paciente. As notificações locais do app saem.
+
+**O que vai para o prontuário (decisão do Dr. Aldo):**
+
+- os registros do diário de humor (o humor e o texto);
+- as respostas dos questionários e escalas;
+- as outras interações relevantes com a Patrícia, por exemplo:
+  - pedidos de agendar, remarcar ou cancelar e de nota fiscal;
+  - o que o paciente contar sobre sintomas, sono, medicação, efeitos
+    colaterais ou acontecimentos importantes;
+  - os alertas de risco do protocolo de crise.
+
 Isso segue a regra central da plataforma (`iPsiquiatra_Visao_Produto_MVP_2_0_revisado.md`,
 seção 1.2, no repositório `aldonetorv-creator/ipsiquiatra`): o prontuário é a
 única fonte de verdade clínica, e as funções de IA não guardam contexto
 próprio. Elas leem o prontuário e o atualizam quando apropriado.
 
 A definir antes de implementar:
+
+- **O que conta como interação relevante:** se a plataforma decide por regras
+  ou com IA, sempre com o trecho da conversa como evidência (como já faz no
+  Panorama do dia). Nada vira conclusão clínica sem o médico.
+- **Lembrete das 20h:** se o paciente pode mudar o horário ou desligar.
 
 - **Consentimento explícito** do paciente para a conversa, o humor e as escalas
   entrarem no prontuário (dado sensível de saúde, LGPD art. 11).
@@ -72,7 +96,7 @@ sem backend, seguindo as regras da
 | Área | Situação |
 |---|---|
 | Início | Feito: última mensagem da Patrícia, "Sua próxima consulta", "Antes da sua consulta", diário de humor da semana, "Seu plano de cuidados está pronto" e "Agora: Acompanhamento · X dias desde sua última consulta". |
-| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
+| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, mensagem diária às 20h com notificação no celular, registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
 | Consultas | Feito: próxima consulta (teleconsulta ou presencial) e todas as consultas anteriores numa roleta animada; tocar numa consulta abre o Cofre só com os documentos dela. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
 | Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
 | Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |
