@@ -44,14 +44,20 @@ vira contexto para a Patrícia e alimenta o prontuário.
   guardado. Como hoje, só as últimas mensagens seguem com a consulta marcada,
   para o médico conferir.
 
-**Mensagem diária das 20h (decisão do Dr. Aldo):** todo dia, por volta das 20h,
-a Patrícia pergunta ao paciente como foi o dia e oferece o diário de humor. Não
+**Mensagem diária (decisão do Dr. Aldo):** todo dia, por volta das 20h, a
+Patrícia pergunta ao paciente como foi o dia e oferece o diário de humor. Não
 repete se o humor de hoje já foi registrado.
 
-- **Na fase 1:** a mensagem aparece na conversa a partir das 20h, e o celular
-  avisa com uma notificação local às 20h. Tocar na notificação abre a conversa.
+- **O paciente escolhe o horário ou desliga (decisão do Dr. Aldo):** 20h é o
+  padrão. Na Início, o cartão do diário de humor mostra o horário e "Alterar",
+  com passos de 30 minutos, das 06:00 às 23:30. Desligado, não há mensagem nem
+  notificação.
+- **Na fase 1:** a mensagem aparece na conversa a partir do horário escolhido, e
+  o celular avisa com uma notificação local nesse horário. Tocar na notificação
+  abre a conversa. O horário fica salvo no aparelho.
 - **Na fase 2:** quem manda é a Patrícia da plataforma, por notificação push e
-  na conversa, no fuso do paciente. As notificações locais do app saem.
+  na conversa, no fuso do paciente e no horário que ele escolheu (a escolha passa
+  a ficar na plataforma). As notificações locais do app saem.
 
 **O que vai para o prontuário (decisão do Dr. Aldo):**
 
@@ -63,17 +69,17 @@ repete se o humor de hoje já foi registrado.
     colaterais ou acontecimentos importantes;
   - os alertas de risco do protocolo de crise.
 
+**Quem decide o que é relevante (decisão do Dr. Aldo):** a IA da plataforma.
+O trecho da conversa que levou à decisão é salvo junto, como prova (como a
+plataforma já faz no Panorama do dia). Nada vira conclusão clínica sem o
+médico.
+
 Isso segue a regra central da plataforma (`iPsiquiatra_Visao_Produto_MVP_2_0_revisado.md`,
 seção 1.2, no repositório `aldonetorv-creator/ipsiquiatra`): o prontuário é a
 única fonte de verdade clínica, e as funções de IA não guardam contexto
 próprio. Elas leem o prontuário e o atualizam quando apropriado.
 
 A definir antes de implementar:
-
-- **O que conta como interação relevante:** se a plataforma decide por regras
-  ou com IA, sempre com o trecho da conversa como evidência (como já faz no
-  Panorama do dia). Nada vira conclusão clínica sem o médico.
-- **Lembrete das 20h:** se o paciente pode mudar o horário ou desligar.
 
 - **Consentimento explícito** do paciente para a conversa, o humor e as escalas
   entrarem no prontuário (dado sensível de saúde, LGPD art. 11).
@@ -96,7 +102,7 @@ sem backend, seguindo as regras da
 | Área | Situação |
 |---|---|
 | Início | Feito: última mensagem da Patrícia, "Sua próxima consulta", "Antes da sua consulta", diário de humor da semana, "Seu plano de cuidados está pronto" e "Agora: Acompanhamento · X dias desde sua última consulta". |
-| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, mensagem diária às 20h com notificação no celular, registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
+| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, mensagem diária às 20h com notificação no celular (o paciente muda o horário ou desliga na Início), registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
 | Consultas | Feito: próxima consulta (teleconsulta ou presencial) e todas as consultas anteriores numa roleta animada; tocar numa consulta abre o Cofre só com os documentos dela. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
 | Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
 | Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |

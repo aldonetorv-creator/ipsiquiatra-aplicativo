@@ -8,6 +8,7 @@ import {
   RecordMoodInput,
 } from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
+import { notifyReminderChange } from '@/services/reminder-events';
 
 export type ConversationState =
   | { status: 'loading'; messages: ConversationMessage[] }
@@ -85,8 +86,13 @@ export function useConversation() {
     (text: string) => apply(() => gateway.sendMessage(text), (messages) => messages),
     [apply, gateway]
   );
+  // Registrado o humor, o lembrete de hoje deixa de ser necessário.
   const recordMood = useCallback(
-    (input: RecordMoodInput) => apply(() => gateway.recordMood(input), (data) => data.messages),
+    async (input: RecordMoodInput) => {
+      const failure = await apply(() => gateway.recordMood(input), (data) => data.messages);
+      if (!failure) notifyReminderChange();
+      return failure;
+    },
     [apply, gateway]
   );
 
