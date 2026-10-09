@@ -3,8 +3,9 @@ import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
+import { scheduleDailyReminders } from '@/services/daily-reminders';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
-import { scheduleEveningReminders } from '@/services/evening-reminders';
+import { onReminderChange } from '@/services/reminder-events';
 import { dayKey } from '@/utils/time';
 
 // Com o app aberto, a notificação também aparece no topo da tela.
@@ -17,20 +18,24 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Mantém os lembretes das 20h agendados e, ao tocar num deles, abre a conversa
-// com a Patrícia.
-export function useEveningReminders() {
+// Mantém os lembretes diários agendados no horário escolhido e, ao tocar num
+// deles, abre a conversa com a Patrícia.
+export function useDailyReminders() {
   const gateway = usePatientAppGateway();
   const response = Notifications.useLastNotificationResponse();
 
   useEffect(() => {
     const refresh = async () => {
       try {
-        const moods = await gateway.listMoodEntries();
+        const [settings, moods] = await Promise.all([
+          gateway.getReminderSettings(),
+          gateway.listMoodEntries(),
+        ]);
+        if (!settings.ok) return;
         const today = dayKey(new Date());
         const recordedToday =
           moods.ok && moods.data.some((entry) => dayKey(new Date(entry.recordedAt)) === today);
-        await scheduleEveningReminders(recordedToday);
+        await scheduleDailyReminders(settings.data, recordedToday);
       } catch {
         // Sem lembrete o app continua funcionando; tenta de novo na próxima abertura.
       }
@@ -39,7 +44,11 @@ export function useEveningReminders() {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') refresh();
     });
-    return () => subscription.remove();
+    const unsubscribe = onReminderChange(refresh);
+    return () => {
+      subscription.remove();
+      unsubscribe();
+    };
   }, [gateway]);
 
   useEffect(() => {

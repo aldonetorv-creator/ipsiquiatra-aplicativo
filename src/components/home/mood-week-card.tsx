@@ -1,5 +1,6 @@
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import { moodOption } from '@/components/patricia/mood-options';
@@ -8,7 +9,8 @@ import { Card } from '@/components/ui/card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { IconBadge } from '@/components/ui/icon-badge';
 import { Tokens } from '@/constants/theme';
-import { MoodEntry, MoodLevel } from '@/contracts/platform';
+import { MoodEntry, MoodLevel, ReminderSettings } from '@/contracts/platform';
+import { formatReminderTime } from '@/utils/daily-reminder';
 import { dayKey, lastSevenDays } from '@/utils/time';
 
 // Geometria do gráfico: o ponto de cada dia sobe com o humor (1 embaixo,
@@ -22,9 +24,11 @@ const dotY = (level: MoodLevel) => BOTTOM_DOT - ((level - 1) * (BOTTOM_DOT - TOP
 type Props = {
   entries: MoodEntry[];
   onRegister: () => void;
+  reminder: ReminderSettings;
+  onEditReminder: () => void;
 };
 
-export function MoodWeekCard({ entries, onRegister }: Props) {
+export function MoodWeekCard({ entries, onRegister, reminder, onEditReminder }: Props) {
   const [width, setWidth] = useState(0);
   // Último registro de cada dia.
   const byDay = new Map(entries.map((entry) => [dayKey(new Date(entry.recordedAt)), entry]));
@@ -135,11 +139,55 @@ export function MoodWeekCard({ entries, onRegister }: Props) {
       </View>
 
       <GradientButton label="Registrar como me senti hoje" onPress={onRegister} />
+
+      {/* Lembrete diário da Patrícia: o paciente muda o horário ou desliga. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Lembrete diário: ${reminderLabel(reminder)}. Alterar`}
+        onPress={onEditReminder}
+        style={({ pressed }) => [styles.reminder, pressed && styles.pressed]}>
+        <SymbolView
+          name={
+            reminder.enabled
+              ? { ios: 'bell.fill', android: 'notifications', web: 'notifications' }
+              : { ios: 'bell.slash', android: 'notifications_off', web: 'notifications_off' }
+          }
+          tintColor={reminder.enabled ? Tokens.color.brand : Tokens.color.muted}
+          size={18}
+        />
+        <ThemedText type="small" style={styles.reminderText}>
+          {reminderLabel(reminder)}
+        </ThemedText>
+        <ThemedText type="smallBold" style={styles.reminderLink}>
+          Alterar
+        </ThemedText>
+      </Pressable>
     </Card>
   );
 }
 
+const reminderLabel = (reminder: ReminderSettings) =>
+  reminder.enabled
+    ? `Lembrete da Patrícia todo dia às ${formatReminderTime(reminder)}`
+    : 'Lembrete da Patrícia desligado';
+
 const styles = StyleSheet.create({
+  reminder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: -2,
+  },
+  pressed: {
+    opacity: 0.6,
+  },
+  reminderText: {
+    flex: 1,
+    color: Tokens.color.muted,
+  },
+  reminderLink: {
+    color: Tokens.color.brand,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

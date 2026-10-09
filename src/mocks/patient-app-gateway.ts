@@ -12,14 +12,16 @@ import {
   MoodEntry,
   PatientAppGateway,
   PatientService,
+  DEFAULT_REMINDER_SETTINGS,
   QUESTIONNAIRE_TEXT_MAX_LENGTH,
   Questionnaire,
   QuestionnaireAnswers,
+  ReminderSettings,
   TextMessage,
 } from '@/contracts/platform';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
-import { EVENING_HOUR } from '@/utils/evening';
+import { dailyCheckText, reminderTimeOn } from '@/utils/daily-reminder';
 import { dayKey } from '@/utils/time';
 
 const REQUEST_ID = 'local-sprint-zero';
@@ -148,7 +150,6 @@ export const patriciaScript = {
     'Oi! Eu sou a Patrícia, assistente do Dr. Aldo. Estou aqui para ajudar com consultas, documentos e lembretes.',
   moodCheck: 'Como você está se sentindo hoje?',
   moodCheckAgain: 'Como você está se sentindo agora?',
-  eveningCheck: 'Boa noite! Como foi o seu dia? Se quiser, me conte no diário de humor como você está.',
   afterMood: 'Obrigada por me contar como você está. Estou aqui com você. 💙',
   afterMessage:
     'Recebi sua mensagem. Nesta versão de demonstração eu ainda não consigo ler nem responder o que você escreve.',
@@ -180,6 +181,26 @@ type MockOptions = {
 
 export const HISTORY_STORAGE_KEY = 'ipsiquiatra:patient-history';
 export const QUESTIONNAIRES_STORAGE_KEY = 'ipsiquiatra:questionnaires';
+export const REMINDER_STORAGE_KEY = 'ipsiquiatra:reminder-settings';
+
+function parseReminderSettings(raw: string | null): ReminderSettings {
+  try {
+    const data = raw ? (JSON.parse(raw) as Partial<ReminderSettings>) : null;
+    if (data && isValidReminder(data)) return data as ReminderSettings;
+  } catch {
+    // Dado corrompido: volta ao padrão.
+  }
+  return { ...DEFAULT_REMINDER_SETTINGS };
+}
+
+const isValidReminder = (data: Partial<ReminderSettings>) =>
+  typeof data.enabled === 'boolean' &&
+  Number.isInteger(data.hour) &&
+  Number.isInteger(data.minute) &&
+  data.hour! >= 0 &&
+  data.hour! <= 23 &&
+  data.minute! >= 0 &&
+  data.minute! <= 59;
 
 // Respostas salvas no aparelho, por questionário. Na fase 2 vão para o
 // prontuário (docs/fases.md, "Contexto e prontuário").
@@ -282,21 +303,31 @@ export function createMockPatientAppGateway({
     return messages;
   };
 
-  // Diário: todo dia, a partir das 20h, a Patrícia pergunta como foi o dia.
-  // Não repete se o paciente já registrou o humor hoje ou se ainda há um
-  // cartão de hoje em aberto.
-  const ensureEveningMoodCheck = async () => {
+  let reminder: Promise<ReminderSettings> | null = null;
+  const loadReminder = () =>
+    (reminder ??= store
+      .getItem(REMINDER_STORAGE_KEY)
+      .catch(() => null)
+      .then(parseReminderSettings));
+
+  // Diário: todo dia, no horário do lembrete (20h por padrão), a Patrícia
+  // pergunta como o paciente está. Não repete se ele já registrou o humor
+  // hoje ou se ainda há um cartão de hoje em aberto; desligado, não pergunta.
+  const ensureDailyMoodCheck = async () => {
+    const settings = await loadReminder();
+    if (!settings.enabled) return;
     const current = now();
-    if (current.getHours() < EVENING_HOUR) return;
+    const due = reminderTimeOn(current, settings).getTime();
+    if (current.getTime() < due) return;
     const isToday = (iso: string) => dayKey(new Date(iso)) === dayKey(current);
     const recordedToday = history!.moodEntries.some((entry) => isToday(entry.recordedAt));
-    const askedTonight = history!.conversation.some(
+    const askedToday = history!.conversation.some(
       (message) =>
         message.kind === 'mood_check' &&
         isToday(message.sentAt) &&
-        (message.answer === null || new Date(message.sentAt).getHours() >= EVENING_HOUR)
+        (message.answer === null || new Date(message.sentAt).getTime() >= due)
     );
-    if (!recordedToday && !askedTonight) await append(moodCheck(patriciaScript.eveningCheck));
+    if (!recordedToday && !askedToday) await append(moodCheck(dailyCheckText(settings.hour)));
   };
 
   // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
@@ -337,7 +368,7 @@ export function createMockPatientAppGateway({
     },
     async listConversation() {
       await load();
-      await ensureEveningMoodCheck();
+      await ensureDailyMoodCheck();
       return mockResult([...history!.conversation]);
     },
     async sendMessage(body) {
@@ -404,6 +435,20 @@ export function createMockPatientAppGateway({
       seed();
       await save();
       return mockResult([...history!.conversation]);
+    },
+    async getReminderSettings() {
+      return mockResult({ ...(await loadReminder()) });
+    },
+    async updateReminderSettings(settings) {
+      if (!isValidReminder(settings)) return validationFailure('Horário de lembrete inválido.');
+      const next: ReminderSettings = {
+        enabled: settings.enabled,
+        hour: settings.hour,
+        minute: settings.minute,
+      };
+      await store.setItem(REMINDER_STORAGE_KEY, JSON.stringify(next));
+      reminder = Promise.resolve(next);
+      return mockResult({ ...next });
     },
     async listQuestionnaires() {
       const saved = await loadResponses();

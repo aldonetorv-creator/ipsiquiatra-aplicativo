@@ -9,6 +9,7 @@ import { CarePlanCard } from '@/components/home/care-plan-card';
 import { FollowUpCard } from '@/components/home/follow-up-card';
 import { MoodWeekCard } from '@/components/home/mood-week-card';
 import { PatriciaCard } from '@/components/home/patricia-card';
+import { ReminderSheet } from '@/components/home/reminder-sheet';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientButton } from '@/components/ui/gradient-button';
@@ -18,8 +19,9 @@ import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
 
 export default function HomeScreen() {
-  const { state, ensureMoodCheck, requestService } = useHome();
+  const { state, ensureMoodCheck, requestService, updateReminder } = useHome();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [editingReminder, setEditingReminder] = useState(false);
 
   const registerMood = async () => {
     const failure = await ensureMoodCheck();
@@ -83,7 +85,18 @@ export default function HomeScreen() {
                 <BeforeAppointmentCard minutes={state.pendingQuestionnaireMinutes} />
               ) : null}
 
-              <MoodWeekCard entries={state.moodEntries} onRegister={registerMood} />
+              <MoodWeekCard
+                entries={state.moodEntries}
+                onRegister={registerMood}
+                reminder={state.reminder}
+                onEditReminder={() => setEditingReminder(true)}
+              />
+              <ReminderSheet
+                visible={editingReminder}
+                settings={state.reminder}
+                onSave={updateReminder}
+                onClose={() => setEditingReminder(false)}
+              />
 
               <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/cofre')} />
 

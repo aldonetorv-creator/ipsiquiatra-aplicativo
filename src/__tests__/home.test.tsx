@@ -192,6 +192,76 @@ describe('Início', () => {
     expect(screen.queryByRole('button', { name: 'Abrir plano de cuidados' })).toBeNull();
   });
 
+  it('mostra o horário do lembrete diário e deixa mudar para mais tarde', async () => {
+    const gateway = createMockPatientAppGateway();
+    const updateReminderSettings = jest.spyOn(gateway, 'updateReminderSettings');
+    await renderWith(gateway);
+
+    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20:00')).toBeOnTheScreen();
+    await fireEvent.press(
+      screen.getByRole('button', {
+        name: 'Lembrete diário: Lembrete da Patrícia todo dia às 20:00. Alterar',
+      })
+    );
+    await fireEvent.press(screen.getByRole('button', { name: '30 minutos mais tarde' }));
+    expect(screen.getByLabelText('Horário do lembrete: 20:30')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(updateReminderSettings).toHaveBeenCalledWith({ enabled: true, hour: 20, minute: 30 });
+    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20:30')).toBeOnTheScreen();
+    expect(screen.queryByText('Receber o lembrete')).toBeNull();
+  });
+
+  it('deixa desligar o lembrete diário', async () => {
+    const gateway = createMockPatientAppGateway();
+    await renderWith(gateway);
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
+    );
+    await fireEvent(screen.getByLabelText('Receber o lembrete diário'), 'valueChange', false);
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(await screen.findByText('Lembrete da Patrícia desligado')).toBeOnTheScreen();
+    expect(await gateway.getReminderSettings()).toMatchObject({
+      ok: true,
+      data: { enabled: false, hour: 20, minute: 0 },
+    });
+  });
+
+  it('cancelar não muda o lembrete diário', async () => {
+    const gateway = createMockPatientAppGateway();
+    const updateReminderSettings = jest.spyOn(gateway, 'updateReminderSettings');
+    await renderWith(gateway);
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
+    );
+    await fireEvent.press(screen.getByRole('button', { name: '30 minutos mais cedo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(updateReminderSettings).not.toHaveBeenCalled();
+    expect(screen.getByText('Lembrete da Patrícia todo dia às 20:00')).toBeOnTheScreen();
+  });
+
+  it('mostra o erro ao salvar o lembrete e mantém a folha aberta', async () => {
+    const gateway = createMockPatientAppGateway();
+    jest.spyOn(gateway, 'updateReminderSettings').mockResolvedValue({
+      ok: false,
+      requestId: 'test',
+      error: { code: 'not_available', message: 'Lembrete indisponível no momento.' },
+    });
+    await renderWith(gateway);
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
+
+    expect(await screen.findByText('Lembrete indisponível no momento.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Receber o lembrete diário')).toBeOnTheScreen();
+  });
+
   it('mostra o erro do contrato', async () => {
     await renderWith({
       ...createMockPatientAppGateway(),

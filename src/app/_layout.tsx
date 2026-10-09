@@ -4,7 +4,7 @@ import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-import { useEveningReminders } from '@/hooks/use-evening-reminders';
+import { useDailyReminders } from '@/hooks/use-daily-reminders';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 
 SplashScreen.preventAutoHideAsync();
@@ -15,7 +15,7 @@ export default function TabLayout() {
     <PatientAppGatewayProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
-        <EveningReminders />
+        <DailyReminders />
         <AppTabs />
       </ThemeProvider>
     </PatientAppGatewayProvider>
@@ -23,7 +23,7 @@ export default function TabLayout() {
 }
 
 // Precisa estar dentro do provider para ler o diário de humor pelo gateway.
-function EveningReminders() {
-  useEveningReminders();
+function DailyReminders() {
+  useDailyReminders();
   return null;
 }

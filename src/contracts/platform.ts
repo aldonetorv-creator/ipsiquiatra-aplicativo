@@ -134,6 +134,16 @@ export type SubmitQuestionnaireInput = {
   answers: QuestionnaireAnswers;
 };
 
+// Lembrete diário da Patrícia para o diário de humor. O paciente escolhe o
+// horário ou desliga (decisão do Dr. Aldo; ver docs/fases.md).
+export type ReminderSettings = {
+  enabled: boolean;
+  hour: number;
+  minute: number;
+};
+
+export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = { enabled: true, hour: 20, minute: 0 };
+
 // Pedidos que a Patrícia vai atender de verdade na fase 2 (agenda e NFS-e).
 export type PatientService = 'schedule_appointment' | 'reschedule_appointment' | 'request_invoice';
 
@@ -161,6 +171,10 @@ export interface PatientAppGateway {
   listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
   // Apaga a conversa e os registros de humor e recomeça a conversa.
   clearHistory(): Promise<ApiResult<ConversationMessage[]>>;
+  // Horário do lembrete diário, ou desligado. Na fase 2 fica nas preferências
+  // de comunicação do paciente, na plataforma.
+  getReminderSettings(): Promise<ApiResult<ReminderSettings>>;
+  updateReminderSettings(settings: ReminderSettings): Promise<ApiResult<ReminderSettings>>;
   // Questionários pedidos pelo médico, na ordem em que devem ser respondidos.
   listQuestionnaires(): Promise<ApiResult<Questionnaire[]>>;
   // `safetyTriggered`: a resposta de segurança pede as orientações de
