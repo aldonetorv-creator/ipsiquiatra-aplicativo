@@ -10,9 +10,17 @@ import { MESSAGE_MAX_LENGTH } from '@/contracts/platform';
 type Props = {
   onSend: (text: string) => Promise<string | null>;
   onFocusChange?: (focused: boolean) => void;
+  // Botão "+" à esquerda: mostra ou esconde os atalhos "Posso ajudar você com".
+  shortcutsOpen?: boolean;
+  onToggleShortcuts?: () => void;
 };
 
-export function Composer({ onSend, onFocusChange }: Props) {
+export function Composer({
+  onSend,
+  onFocusChange,
+  shortcutsOpen = false,
+  onToggleShortcuts,
+}: Props) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +48,29 @@ export function Composer({ onSend, onFocusChange }: Props) {
         </ThemedText>
       ) : null}
       <View style={styles.row}>
+        {onToggleShortcuts ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={shortcutsOpen ? 'Esconder atalhos' : 'Mostrar atalhos'}
+            accessibilityState={{ expanded: shortcutsOpen }}
+            onPress={onToggleShortcuts}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.plus,
+              shortcutsOpen && styles.plusOpen,
+              pressed && styles.pressed,
+            ]}>
+            <SymbolView
+              name={
+                shortcutsOpen
+                  ? { ios: 'xmark', android: 'close', web: 'close' }
+                  : { ios: 'plus', android: 'add', web: 'add' }
+              }
+              tintColor={shortcutsOpen ? Tokens.color.onBrand : Tokens.color.brand}
+              size={22}
+            />
+          </Pressable>
+        ) : null}
         <TextInput
           value={text}
           onChangeText={setText}
@@ -98,6 +129,23 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     color: Tokens.color.text,
     fontSize: 16,
+  },
+  plus: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Tokens.color.brandBorder,
+    backgroundColor: Tokens.color.brandSoft,
+  },
+  plusOpen: {
+    borderColor: Tokens.color.brand,
+    backgroundColor: Tokens.color.brand,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   send: {
     width: 46,

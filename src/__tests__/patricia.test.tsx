@@ -65,6 +65,63 @@ describe('Conversa com a Patrícia', () => {
     expect(screen.getByRole('radio', { name: 'Bem' })).toBeSelected();
   });
 
+  it('escreve no diário numa janela própria, onde dá para corrigir e apagar o texto', async () => {
+    const gateway = createMockPatientAppGateway();
+    const recordMood = jest.spyOn(gateway, 'recordMood');
+    await render(
+      <PatientAppGatewayProvider gateway={gateway}>
+        <PatriciaScreen />
+      </PatientAppGatewayProvider>
+    );
+    await screen.findByText(patriciaScript.greeting);
+    await fireEvent.press(screen.getByRole('radio', { name: 'Mal' }));
+
+    // Escreve, corrige e conclui.
+    await fireEvent.press(screen.getByRole('button', { name: 'Escrever no diário de humor' }));
+    const input = screen.getByLabelText('Texto do diário de humor');
+    expect(screen.getByText('Hoje: Mal')).toBeOnTheScreen();
+    await fireEvent.changeText(input, 'Dormi mau');
+    await fireEvent.changeText(input, 'Dormi mal');
+    await fireEvent.press(screen.getByRole('button', { name: 'Concluir' }));
+    expect(screen.queryByLabelText('Texto do diário de humor')).toBeNull();
+    expect(screen.getByText('Dormi mal')).toBeOnTheScreen();
+
+    // Reabre com o texto, apaga tudo e cancela: o texto anterior continua.
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar o texto do diário' }));
+    expect(screen.getByLabelText('Texto do diário de humor').props.value).toBe('Dormi mal');
+    await fireEvent.changeText(screen.getByLabelText('Texto do diário de humor'), '');
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.getByText('Dormi mal')).toBeOnTheScreen();
+
+    // Reabre, completa e registra junto com o humor.
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar o texto do diário' }));
+    await fireEvent.changeText(
+      screen.getByLabelText('Texto do diário de humor'),
+      'Dormi mal, mas a tarde foi boa.'
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Concluir' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Registrar' }));
+
+    expect(await screen.findByText(patriciaScript.afterMood)).toBeOnTheScreen();
+    expect(recordMood).toHaveBeenCalledWith(
+      expect.objectContaining({ level: 2, note: 'Dormi mal, mas a tarde foi boa.' })
+    );
+  });
+
+  it('apagar todo o texto do diário volta ao campo vazio', async () => {
+    await renderWith();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Escrever no diário de humor' }));
+    await fireEvent.changeText(screen.getByLabelText('Texto do diário de humor'), 'Rascunho');
+    await fireEvent.press(screen.getByRole('button', { name: 'Concluir' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Editar o texto do diário' }));
+    await fireEvent.changeText(screen.getByLabelText('Texto do diário de humor'), '');
+    await fireEvent.press(screen.getByRole('button', { name: 'Concluir' }));
+
+    expect(screen.queryByText('Rascunho')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Escrever no diário de humor' })).toBeOnTheScreen();
+  });
+
   it.each([
     ['Agendar consulta', 'schedule_appointment'],
     ['Remarcar', 'reschedule_appointment'],
@@ -72,29 +129,37 @@ describe('Conversa com a Patrícia', () => {
   ] as const)('"%s" mostra o pedido e a resposta de que chega em breve', async (label, service) => {
     await renderWith();
 
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar atalhos' }));
     await fireEvent.press(screen.getByRole('button', { name: label }));
 
     expect(await screen.findByText(patriciaScript.services[service].request)).toBeOnTheScreen();
     expect(screen.getByText(patriciaScript.services[service].reply)).toBeOnTheScreen();
+    // Escolhido o atalho, o painel volta a ficar escondido.
+    expect(screen.queryByText('Posso ajudar você com:')).toBeNull();
   });
 
   it('"Encontrar documento" leva ao Cofre', async () => {
     await renderWith();
 
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar atalhos' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Encontrar documento' }));
 
     expect(router.push).toHaveBeenCalledWith('/cofre');
   });
 
-  it('recolhe o painel de ajuda enquanto o paciente digita', async () => {
+  it('esconde os atalhos até tocar no +, e de novo ao digitar', async () => {
     await renderWith();
-    const input = screen.getByLabelText('Mensagem para a Patrícia');
-
-    await fireEvent(input, 'focus');
     expect(screen.queryByText('Posso ajudar você com:')).toBeNull();
 
-    await fireEvent(input, 'blur');
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar atalhos' }));
     expect(screen.getByText('Posso ajudar você com:')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Esconder atalhos' }));
+    expect(screen.queryByText('Posso ajudar você com:')).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar atalhos' }));
+    await fireEvent(screen.getByLabelText('Mensagem para a Patrícia'), 'focus');
+    expect(screen.queryByText('Posso ajudar você com:')).toBeNull();
   });
 
   it('separa a conversa por dia', async () => {

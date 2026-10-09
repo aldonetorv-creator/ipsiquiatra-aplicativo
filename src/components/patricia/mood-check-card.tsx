@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { SymbolView } from 'expo-symbols';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { MoodNoteSheet } from './mood-note-sheet';
 import { moodOptions } from './mood-options';
 
 import { ThemedText } from '@/components/themed-text';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Tokens } from '@/constants/theme';
-import { MOOD_NOTE_MAX_LENGTH, MoodCheckMessage, MoodLevel } from '@/contracts/platform';
+import { MoodCheckMessage, MoodLevel } from '@/contracts/platform';
 import { formatTime } from '@/utils/time';
 
 type Props = {
@@ -17,6 +19,7 @@ type Props = {
 export function MoodCheckCard({ message, onSubmit }: Props) {
   const [selected, setSelected] = useState<MoodLevel | null>(null);
   const [note, setNote] = useState('');
+  const [writing, setWriting] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,21 +85,34 @@ export function MoodCheckCard({ message, onSubmit }: Props) {
         </ThemedText>
       ) : (
         <>
-          <View style={styles.noteBox}>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="Quer me contar um pouco mais? (opcional)"
-              placeholderTextColor={Tokens.color.muted}
-              maxLength={MOOD_NOTE_MAX_LENGTH}
-              multiline
-              style={styles.noteInput}
-              accessibilityLabel="Nota opcional sobre o seu humor"
-            />
-            <ThemedText type="small" style={styles.counter}>
-              {note.length}/{MOOD_NOTE_MAX_LENGTH}
+          {/* Abre o diário numa janela própria, onde o texto pode ser corrigido à vontade. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={note ? 'Editar o texto do diário' : 'Escrever no diário de humor'}
+            onPress={() => setWriting(true)}
+            style={({ pressed }) => [styles.noteBox, pressed && styles.pressed]}>
+            <ThemedText
+              type="small"
+              style={note ? styles.noteText : styles.notePlaceholder}
+              numberOfLines={3}>
+              {note || 'Quer me contar um pouco mais? (opcional)'}
             </ThemedText>
-          </View>
+            <SymbolView
+              name={{ ios: 'square.and.pencil', android: 'edit', web: 'edit' }}
+              tintColor={Tokens.color.brand}
+              size={18}
+            />
+          </Pressable>
+          <MoodNoteSheet
+            visible={writing}
+            level={selected}
+            note={note}
+            onCancel={() => setWriting(false)}
+            onDone={(text) => {
+              setNote(text);
+              setWriting(false);
+            }}
+          />
           {error ? (
             <ThemedText type="small" style={styles.error}>
               {error}
@@ -183,23 +199,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   noteBox: {
-    gap: 4,
-  },
-  noteInput: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
     minHeight: 56,
     borderWidth: 1,
     borderColor: Tokens.color.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+  noteText: {
+    flex: 1,
     color: Tokens.color.text,
     fontSize: 15,
   },
-  counter: {
-    alignSelf: 'flex-end',
+  notePlaceholder: {
+    flex: 1,
     color: Tokens.color.muted,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 15,
   },
   error: {
     color: Tokens.color.brandDeep,

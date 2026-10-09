@@ -72,8 +72,8 @@ sem backend, seguindo as regras da
 | Área | Situação |
 |---|---|
 | Início | Feito: última mensagem da Patrícia, "Sua próxima consulta", "Antes da sua consulta", diário de humor da semana, "Seu plano de cuidados está pronto" e "Agora: Acompanhamento · X dias desde sua última consulta". |
-| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor e atalhos "Posso ajudar você com". |
-| Consultas | Feito: próxima consulta (teleconsulta ou presencial) e consultas anteriores, pelo contrato. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
+| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
+| Consultas | Feito: próxima consulta (teleconsulta ou presencial) e todas as consultas anteriores numa roleta animada; tocar numa consulta abre o Cofre só com os documentos dela. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
 | Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
 | Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |
 

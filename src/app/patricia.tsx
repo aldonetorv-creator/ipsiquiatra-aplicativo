@@ -38,7 +38,8 @@ function withDaySeparators(messages: ConversationMessage[]): Row[] {
 export default function PatriciaScreen() {
   const { state, sendMessage, recordMood, requestService, clearHistory } = useConversation();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [composing, setComposing] = useState(false);
+  // Os atalhos ficam escondidos até o paciente tocar no "+".
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
 
   const renderItem = ({ item }: { item: Row }) => {
@@ -62,6 +63,12 @@ export default function PatriciaScreen() {
     ) : (
       <MessageBubble message={message} />
     );
+  };
+
+  // Escolhido um atalho, o painel fecha e o pedido aparece na conversa.
+  const runShortcut = async (request: () => Promise<string | null>) => {
+    setShortcutsOpen(false);
+    setActionError(await request());
   };
 
   const confirmClear = async () => {
@@ -167,8 +174,7 @@ export default function PatriciaScreen() {
                 {actionError}
               </ThemedText>
             ) : null}
-            {/* Recolhido enquanto o paciente digita, para sobrar espaço à conversa. */}
-            {composing ? null : (
+            {shortcutsOpen ? (
               <HelpPanel
                 items={[
                   {
@@ -179,8 +185,7 @@ export default function PatriciaScreen() {
                       web: 'calendar_add_on',
                     },
                     tone: 'blue',
-                    onPress: async () =>
-                      setActionError(await requestService('schedule_appointment')),
+                    onPress: () => runShortcut(() => requestService('schedule_appointment')),
                   },
                   {
                     label: 'Remarcar',
@@ -190,25 +195,33 @@ export default function PatriciaScreen() {
                       web: 'event_repeat',
                     },
                     tone: 'purple',
-                    onPress: async () =>
-                      setActionError(await requestService('reschedule_appointment')),
+                    onPress: () => runShortcut(() => requestService('reschedule_appointment')),
                   },
                   {
                     label: 'Pedir nota fiscal',
                     icon: { ios: 'doc.plaintext', android: 'receipt_long', web: 'receipt_long' },
                     tone: 'purple',
-                    onPress: async () => setActionError(await requestService('request_invoice')),
+                    onPress: () => runShortcut(() => requestService('request_invoice')),
                   },
                   {
                     label: 'Encontrar documento',
                     icon: { ios: 'folder', android: 'folder_open', web: 'folder_open' },
                     tone: 'blue',
-                    onPress: () => router.push('/cofre'),
+                    onPress: () => {
+                      setShortcutsOpen(false);
+                      router.push('/cofre');
+                    },
                   },
                 ]}
               />
-            )}
-            <Composer onSend={sendMessage} onFocusChange={setComposing} />
+            ) : null}
+            <Composer
+              onSend={sendMessage}
+              // Ao começar a digitar, os atalhos saem do caminho.
+              onFocusChange={(focused) => focused && setShortcutsOpen(false)}
+              shortcutsOpen={shortcutsOpen}
+              onToggleShortcuts={() => setShortcutsOpen((open) => !open)}
+            />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
