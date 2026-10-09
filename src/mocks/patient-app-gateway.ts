@@ -54,25 +54,27 @@ export function mockAppointments(now: Date): Appointment[] {
       hour,
       minute
     ).toISOString();
+  // Acompanhamento mensal: seis consultas realizadas e a próxima marcada.
+  const schedule: [number, number, number, Appointment['modality']][] = [
+    [-160, 10, 0, 'in_person'],
+    [-127, 15, 0, 'in_person'],
+    [-95, 10, 0, 'telemedicine'],
+    [-64, 14, 30, 'telemedicine'],
+    [-36, 9, 30, 'in_person'],
+    [-8, 14, 30, 'telemedicine'],
+  ];
+  const past: Appointment[] = schedule.map(([days, hour, minute, modality], index) => ({
+    id: `appt-${index + 1}`,
+    startsAt: at(days, hour, minute),
+    durationMinutes: 60,
+    modality,
+    status: 'completed',
+    doctor: mockDoctor,
+  }));
   return [
+    ...past,
     {
-      id: 'appt-1',
-      startsAt: at(-60, 10),
-      durationMinutes: 60,
-      modality: 'in_person',
-      status: 'completed',
-      doctor: mockDoctor,
-    },
-    {
-      id: 'appt-2',
-      startsAt: at(-8, 14, 30),
-      durationMinutes: 60,
-      modality: 'telemedicine',
-      status: 'completed',
-      doctor: mockDoctor,
-    },
-    {
-      id: 'appt-3',
+      id: `appt-${past.length + 1}`,
       startsAt: at(7, 14, 30),
       durationMinutes: 60,
       modality: 'telemedicine',
@@ -112,29 +114,28 @@ export function mockDocuments(appointments: Appointment[], now: Date): DocumentM
       availability: 'mock_only',
     });
 
-  const [first, last] = appointments.filter((item) => item.status === 'completed');
-  if (first) {
-    add(first, 'doc-report-1', 'report', 'Relatório da consulta');
-    add(first, 'doc-prescription-1', 'prescription', 'Receita');
-    add(first, 'doc-certificate-1', 'certificate', 'Atestado de comparecimento');
-  }
-  if (last) {
-    add(last, 'doc-care-plan-2', 'care_plan', 'Plano de cuidados');
-    add(last, 'doc-prescription-2', 'prescription', 'Receita');
-    add(last, 'doc-exams-2', 'exam_request', 'Solicitação de exames');
-  }
-  for (const appointment of [first, last]) {
-    if (!appointment) continue;
+  const completed = appointments.filter((item) => item.status === 'completed');
+  completed.forEach((appointment, index) => {
+    const isFirst = index === 0;
+    const isLast = index === completed.length - 1;
+    const id = (name: string) => `doc-${name}-${appointment.id}`;
+    add(appointment, id('report'), 'report', 'Relatório da consulta');
+    add(appointment, id('prescription'), 'prescription', 'Receita');
+    if (isFirst) add(appointment, id('certificate'), 'certificate', 'Atestado de comparecimento');
+    if (isLast) {
+      add(appointment, id('care-plan'), 'care_plan', 'Plano de cuidados');
+      add(appointment, id('exams'), 'exam_request', 'Solicitação de exames');
+    }
     const due = invoiceIsDue(appointment, now);
     documents.push({
-      id: `doc-invoice-${appointment.id}`,
+      id: id('invoice'),
       displayName: 'Nota fiscal',
       kind: 'invoice',
       createdAt: due ? new Date(invoiceIssueTime(appointment)).toISOString() : appointment.startsAt,
       appointmentId: appointment.id,
       availability: due ? 'mock_only' : 'pending',
     });
-  }
+  });
   add(null, 'doc-guidance', 'guidance', 'Orientações gerais');
   return documents;
 }

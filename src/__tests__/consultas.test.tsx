@@ -26,7 +26,7 @@ async function renderWith(gateway: PatientAppGateway) {
 describe('Consultas', () => {
   beforeEach(() => jest.mocked(router.push).mockClear());
 
-  it('mostra a próxima consulta e as anteriores, da mais recente', async () => {
+  it('mostra a próxima consulta e a roleta das anteriores, da mais recente', async () => {
     const gateway = createMockPatientAppGateway();
     const appointments = await gateway.listAppointments();
     if (!appointments.ok) throw new Error('listAppointments falhou');
@@ -42,8 +42,13 @@ describe('Consultas', () => {
       past.map((item) => `Ver documentos da consulta de ${formatLongDate(item.startsAt)}`)
     );
 
-    await fireEvent.press(rows[0]);
-    expect(router.push).toHaveBeenCalledWith('/cofre');
+    // Tocar numa consulta da roleta abre o Cofre só com os documentos dela.
+    await fireEvent.press(rows[2]);
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/cofre',
+      params: { consulta: past[2].id },
+    });
+    expect(screen.getByText(new RegExp(`^${past.length} consultas com o Dr\\. Aldo\\.`))).toBeOnTheScreen();
   });
 
   it.each([

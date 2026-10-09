@@ -1,12 +1,18 @@
 /// <reference types="jest" />
 
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import CofreScreen from '@/app/cofre';
 import { Appointment, DocumentMetadata, PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, mockDoctor } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { formatDate, formatLongDate } from '@/utils/time';
+
+jest.mock('expo-router', () => ({
+  router: { setParams: jest.fn() },
+  useLocalSearchParams: jest.fn(() => ({})),
+}));
 
 // Parte do mock completo e troca só o que cada teste controla.
 async function renderWith(overrides: Partial<PatientAppGateway>) {
@@ -38,23 +44,56 @@ const invoice = (availability: DocumentMetadata['availability']): DocumentMetada
   availability,
 });
 
+async function completedAppointments() {
+  const appointments = await createMockPatientAppGateway().listAppointments();
+  if (!appointments.ok) throw new Error('listAppointments falhou');
+  return appointments.data.filter((item) => item.status === 'completed');
+}
+
 describe('Cofre', () => {
+  beforeEach(() => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({});
+    jest.mocked(router.setParams).mockClear();
+  });
+
   it('agrupa os documentos por consulta, da mais recente para a mais antiga', async () => {
-    const gateway = createMockPatientAppGateway();
-    const appointments = await gateway.listAppointments();
-    if (!appointments.ok) throw new Error('listAppointments falhou');
-    const [older, recent] = appointments.data.filter((item) => item.status === 'completed');
-    await renderWith(gateway);
+    const completed = await completedAppointments();
+    await renderWith({});
 
     const groups = await screen.findAllByText(/^Consulta com Dr\. Aldo Araújo$/);
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(completed.length);
     const dates = screen.getAllByText(/ · \d{2}:\d{2} · (Teleconsulta|Presencial)$/);
-    expect(dates.map((node) => node.props.children)).toEqual([
-      expect.stringContaining(formatLongDate(recent.startsAt)),
-      expect.stringContaining(formatLongDate(older.startsAt)),
-    ]);
+    expect(dates.map((node) => node.props.children)).toEqual(
+      [...completed].reverse().map((item) => expect.stringContaining(formatLongDate(item.startsAt)))
+    );
     expect(screen.getByText('Plano de cuidados')).toBeOnTheScreen();
     expect(screen.getByText('Outros documentos')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Ver todos os documentos' })).toBeNull();
+  });
+
+  it('vindo da roleta, mostra só os documentos daquela consulta', async () => {
+    const completed = await completedAppointments();
+    const chosen = completed[1];
+    jest.mocked(useLocalSearchParams).mockReturnValue({ consulta: chosen.id });
+    await renderWith({});
+
+    expect(
+      await screen.findByText(
+        `Nota fiscal referente à consulta do dia ${formatDate(chosen.startsAt)}`
+      )
+    ).toBeOnTheScreen();
+    expect(screen.getAllByText(/^Consulta com Dr\. Aldo Araújo$/)).toHaveLength(1);
+    expect(screen.queryByText('Outros documentos')).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver todos os documentos' }));
+    expect(router.setParams).toHaveBeenCalledWith({ consulta: undefined });
+  });
+
+  it('avisa quando a consulta escolhida não tem documentos', async () => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({ consulta: 'sem-documentos' });
+    await renderWith({});
+
+    expect(await screen.findByText('Nenhum documento desta consulta.')).toBeOnTheScreen();
   });
 
   it('identifica cada nota fiscal pela consulta do dia', async () => {

@@ -1,19 +1,16 @@
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { DateBadge } from '@/components/appointments/date-badge';
+import { AppointmentWheel } from '@/components/appointments/appointment-wheel';
 import { NextAppointmentCard } from '@/components/appointments/next-appointment-card';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { PageScreen, SectionLabel } from '@/components/ui/page-screen';
-import { Shadows, Tokens } from '@/constants/theme';
-import { Appointment, PatientService } from '@/contracts/platform';
+import { Tokens } from '@/constants/theme';
+import { PatientService } from '@/contracts/platform';
 import { useAppointments } from '@/hooks/use-appointments';
-import { modalityLabel } from '@/utils/appointments';
-import { formatLongDate, formatTime } from '@/utils/time';
 
 export default function ConsultasScreen() {
   const { state, requestService } = useAppointments();
@@ -67,13 +64,19 @@ export default function ConsultasScreen() {
               Suas consultas realizadas vão aparecer aqui.
             </ThemedText>
           ) : (
-            state.past.map((appointment) => (
-              <PastAppointmentRow
-                key={appointment.id}
-                appointment={appointment}
-                onPress={() => router.push('/cofre')}
+            <>
+              <AppointmentWheel
+                appointments={state.past}
+                onSelect={(appointment) =>
+                  router.push({ pathname: '/cofre', params: { consulta: appointment.id } })
+                }
               />
-            ))
+              <ThemedText type="small" style={styles.hint}>
+                {`${state.past.length} ${
+                  state.past.length === 1 ? 'consulta' : 'consultas'
+                } com o Dr. Aldo. Gire para ver todas e toque numa consulta para abrir os documentos dela no Cofre.`}
+              </ThemedText>
+            </>
           )}
         </>
       )}
@@ -81,70 +84,15 @@ export default function ConsultasScreen() {
   );
 }
 
-function PastAppointmentRow({
-  appointment,
-  onPress,
-}: {
-  appointment: Appointment;
-  onPress: () => void;
-}) {
-  const when = formatLongDate(appointment.startsAt);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Ver documentos da consulta de ${when}`}
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
-      <DateBadge iso={appointment.startsAt} />
-      <View style={styles.rowCopy}>
-        <ThemedText type="smallBold" style={styles.rowTitle}>
-          {`Consulta com ${appointment.doctor.name}`}
-        </ThemedText>
-        <ThemedText type="small" style={styles.muted}>
-          {`${when} · ${formatTime(appointment.startsAt)}`}
-        </ThemedText>
-        <ThemedText type="small" style={styles.link}>
-          {`${modalityLabel[appointment.modality]} · Ver documentos`}
-        </ThemedText>
-      </View>
-      <SymbolView
-        name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
-        tintColor={Tokens.color.brand}
-        size={20}
-      />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   muted: {
     color: Tokens.color.muted,
   },
+  hint: {
+    color: Tokens.color.muted,
+    textAlign: 'center',
+  },
   error: {
     color: Tokens.color.brandDeep,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    padding: 14,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(225, 228, 242, 0.7)',
-    backgroundColor: Tokens.color.surface,
-    boxShadow: Shadows.card,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  rowCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  rowTitle: {
-    color: Tokens.color.text,
-  },
-  link: {
-    color: Tokens.color.brand,
   },
 });

@@ -1,9 +1,11 @@
+import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { IconBadge } from '@/components/ui/icon-badge';
+import { OutlineButton } from '@/components/ui/outline-button';
 import { PageScreen } from '@/components/ui/page-screen';
 import { Tokens } from '@/constants/theme';
 import { Appointment, DocumentMetadata } from '@/contracts/platform';
@@ -18,6 +20,14 @@ import { dateBadge, formatDate, formatLongDate, formatTime } from '@/utils/time'
 
 export default function CofreScreen() {
   const documents = useDocuments();
+  // Vindo da roleta de Consultas: mostra só os documentos daquela consulta.
+  const { consulta } = useLocalSearchParams<{ consulta?: string }>();
+  const groups =
+    documents.status !== 'ready'
+      ? []
+      : consulta
+        ? documents.groups.filter((group) => group.appointment?.id === consulta)
+        : documents.groups;
 
   return (
     <PageScreen title="Cofre" subtitle="Tudo o que foi entregue a você.">
@@ -40,14 +50,22 @@ export default function CofreScreen() {
         <ThemedText type="default" style={styles.muted}>
           {documents.error}
         </ThemedText>
-      ) : documents.groups.length === 0 ? (
-        <ThemedText type="default" style={styles.muted}>
-          Nenhum documento por aqui ainda.
-        </ThemedText>
       ) : (
-        documents.groups.map((group) => (
-          <Group key={group.appointment?.id ?? 'loose'} group={group} />
-        ))
+        <>
+          {consulta ? (
+            <OutlineButton
+              label="Ver todos os documentos"
+              onPress={() => router.setParams({ consulta: undefined })}
+            />
+          ) : null}
+          {groups.length === 0 ? (
+            <ThemedText type="default" style={styles.muted}>
+              {consulta ? 'Nenhum documento desta consulta.' : 'Nenhum documento por aqui ainda.'}
+            </ThemedText>
+          ) : (
+            groups.map((group) => <Group key={group.appointment?.id ?? 'loose'} group={group} />)
+          )}
+        </>
       )}
     </PageScreen>
   );
