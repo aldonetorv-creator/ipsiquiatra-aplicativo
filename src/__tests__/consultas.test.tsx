@@ -41,6 +41,10 @@ describe('Consultas', () => {
     expect(rows.map((row) => row.props.accessibilityLabel)).toEqual(
       past.map((item) => `Ver documentos da consulta de ${formatLongDate(item.startsAt)}`)
     );
+    // A mais recente começa no centro da roleta, em destaque.
+    expect(rows.map((row) => row.props.accessibilityState?.selected)).toEqual(
+      past.map((_, index) => index === 0)
+    );
 
     // Tocar numa consulta da roleta abre o Cofre só com os documentos dela.
     await fireEvent.press(rows[2]);
@@ -49,6 +53,20 @@ describe('Consultas', () => {
       params: { consulta: past[2].id },
     });
     expect(screen.getByText(new RegExp(`^${past.length} consultas com o Dr\\. Aldo\\.`))).toBeOnTheScreen();
+  });
+
+  it('girar a roleta põe em destaque a consulta que chega ao centro', async () => {
+    await renderWith(createMockPatientAppGateway());
+    await screen.findByText('Sua próxima consulta');
+
+    await fireEvent.scroll(screen.getByTestId('appointment-wheel'), {
+      nativeEvent: { contentOffset: { x: 0, y: 72 * 2 } },
+    });
+
+    const rows = screen.getAllByRole('button', { name: /^Ver documentos da consulta de / });
+    expect(rows.map((row) => row.props.accessibilityState?.selected)).toEqual(
+      rows.map((_, index) => index === 2)
+    );
   });
 
   it.each([

@@ -1,6 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Animated,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { DateBadge } from '@/components/appointments/date-badge';
 import { ThemedText } from '@/components/themed-text';
@@ -8,27 +16,45 @@ import { Tokens } from '@/constants/theme';
 import { Appointment } from '@/contracts/platform';
 import { modalityLabel } from '@/utils/appointments';
 import { formatLongDate } from '@/utils/time';
+import { wheelIndexAt, wheelInterpolation } from '@/utils/wheel';
 
 const ITEM_HEIGHT = 72;
-// Itens visíveis: o do centro e dois de cada lado, como uma roleta.
-const VISIBLE = 5;
-const SIDE = (VISIBLE - 1) / 2;
+// Altura da janela: o item do centro e dois de cada lado, espremidos na curva
+// do cilindro.
+const FRAME_HEIGHT = 300;
+// Espaço para o primeiro e o último item também poderem ficar no centro.
+const EDGE = (FRAME_HEIGHT - ITEM_HEIGHT) / 2;
 
 type Props = {
   appointments: Appointment[];
   onSelect: (appointment: Appointment) => void;
 };
 
-// Roleta com as consultas já realizadas: gira com o dedo, o item do centro
-// fica em destaque e tocar numa consulta abre os documentos dela.
+// Roleta circular com as consultas já realizadas: gira com o dedo, a consulta
+// do centro fica grande e em destaque, e as de cima e de baixo diminuem e se
+// inclinam como na face de um cilindro. Tocar numa consulta abre os documentos.
 export function AppointmentWheel({ appointments, onSelect }: Props) {
   const [scrollY] = useState(() => new Animated.Value(0));
+  const [selected, setSelected] = useState(0);
+
+  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+    useNativeDriver: Platform.OS !== 'web',
+    listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const index = wheelIndexAt(
+        event.nativeEvent.contentOffset.y,
+        ITEM_HEIGHT,
+        appointments.length
+      );
+      setSelected((current) => (current === index ? current : index));
+    },
+  });
 
   return (
     <View style={styles.frame}>
       {/* Faixa de destaque do item do centro. */}
       <View pointerEvents="none" style={styles.highlight} />
       <Animated.ScrollView
+        testID="appointment-wheel"
         style={styles.wheel}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -36,51 +62,44 @@ export function AppointmentWheel({ appointments, onSelect }: Props) {
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
         scrollEventThrottle={16}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-          useNativeDriver: Platform.OS !== 'web',
-        })}>
+        onScroll={onScroll}>
         {appointments.map((appointment, index) => {
-          const center = index * ITEM_HEIGHT;
-          const inputRange = [-2, -1, 0, 1, 2].map((step) => center + step * ITEM_HEIGHT);
+          const curve = wheelInterpolation(index, ITEM_HEIGHT);
+          const along = (outputRange: number[] | string[]) =>
+            scrollY.interpolate({
+              inputRange: curve.inputRange,
+              outputRange,
+              extrapolate: 'clamp',
+            });
           const when = formatLongDate(appointment.startsAt);
+          const isSelected = index === selected;
           return (
             <Animated.View
               key={appointment.id}
               style={[
                 styles.item,
                 {
-                  opacity: scrollY.interpolate({
-                    inputRange,
-                    outputRange: [0.3, 0.6, 1, 0.6, 0.3],
-                    extrapolate: 'clamp',
-                  }),
+                  opacity: along(curve.opacity),
                   transform: [
-                    { perspective: 700 },
-                    {
-                      rotateX: scrollY.interpolate({
-                        inputRange,
-                        outputRange: ['55deg', '28deg', '0deg', '-28deg', '-55deg'],
-                        extrapolate: 'clamp',
-                      }),
-                    },
-                    {
-                      scale: scrollY.interpolate({
-                        inputRange,
-                        outputRange: [0.82, 0.92, 1, 0.92, 0.82],
-                        extrapolate: 'clamp',
-                      }),
-                    },
+                    { perspective: 400 },
+                    { translateY: along(curve.translateY) },
+                    { rotateX: along(curve.rotateX) },
+                    { scale: along(curve.scale) },
                   ],
                 },
               ]}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Ver documentos da consulta de ${when}`}
+                accessibilityState={{ selected: isSelected }}
                 onPress={() => onSelect(appointment)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
                 <DateBadge iso={appointment.startsAt} />
                 <View style={styles.copy}>
-                  <ThemedText type="smallBold" style={styles.title} numberOfLines={1}>
+                  <ThemedText
+                    type="smallBold"
+                    style={[styles.title, isSelected && styles.titleSelected]}
+                    numberOfLines={1}>
                     {when}
                   </ThemedText>
                   <ThemedText type="small" style={styles.muted} numberOfLines={1}>
@@ -109,7 +128,7 @@ export function AppointmentWheel({ appointments, onSelect }: Props) {
 
 const styles = StyleSheet.create({
   frame: {
-    height: ITEM_HEIGHT * VISIBLE,
+    height: FRAME_HEIGHT,
     overflow: 'hidden',
     borderRadius: 24,
     borderWidth: 1,
@@ -119,15 +138,14 @@ const styles = StyleSheet.create({
   wheel: {
     flex: 1,
   },
-  // Espaço antes do primeiro e depois do último, para os dois poderem ficar no centro.
   content: {
-    paddingVertical: ITEM_HEIGHT * SIDE,
+    paddingVertical: EDGE,
   },
   highlight: {
     position: 'absolute',
     left: 10,
     right: 10,
-    top: ITEM_HEIGHT * SIDE,
+    top: EDGE,
     height: ITEM_HEIGHT,
     borderRadius: 18,
     borderWidth: 1.5,
@@ -154,6 +172,9 @@ const styles = StyleSheet.create({
   title: {
     color: Tokens.color.text,
   },
+  titleSelected: {
+    color: Tokens.color.brand,
+  },
   muted: {
     color: Tokens.color.muted,
   },
@@ -161,7 +182,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    height: ITEM_HEIGHT * 1.4,
+    height: ITEM_HEIGHT,
   },
   fadeTop: {
     top: 0,
