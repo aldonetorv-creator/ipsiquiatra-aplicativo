@@ -6,7 +6,6 @@ import { AppState } from 'react-native';
 import { scheduleDailyReminders } from '@/services/daily-reminders';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
 import { onReminderChange } from '@/services/reminder-events';
-import { dayKey } from '@/utils/time';
 
 // Com o app aberto, a notificação também aparece no topo da tela.
 Notifications.setNotificationHandler({
@@ -18,8 +17,8 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Mantém os lembretes diários agendados no horário escolhido e, ao tocar num
-// deles, abre a conversa com a Patrícia.
+// Mantém agendados o lembrete diário e os contatos de cuidado da Patrícia e, ao
+// tocar numa notificação, abre a conversa com ela.
 export function useDailyReminders() {
   const gateway = usePatientAppGateway();
   const response = Notifications.useLastNotificationResponse();
@@ -32,10 +31,7 @@ export function useDailyReminders() {
           gateway.listMoodEntries(),
         ]);
         if (!settings.ok) return;
-        const today = dayKey(new Date());
-        const recordedToday =
-          moods.ok && moods.data.some((entry) => dayKey(new Date(entry.recordedAt)) === today);
-        await scheduleDailyReminders(settings.data, recordedToday);
+        await scheduleDailyReminders(settings.data, moods.ok ? moods.data : []);
       } catch {
         // Sem lembrete o app continua funcionando; tenta de novo na próxima abertura.
       }

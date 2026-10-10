@@ -102,7 +102,7 @@ describe('Conversa com a Patrícia', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Concluir' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Registrar' }));
 
-    expect(await screen.findByText(patriciaScript.afterMood)).toBeOnTheScreen();
+    expect(await screen.findByText(patriciaScript.afterHardMood)).toBeOnTheScreen();
     expect(recordMood).toHaveBeenCalledWith(
       expect.objectContaining({ level: 2, note: 'Dormi mal, mas a tarde foi boa.' })
     );

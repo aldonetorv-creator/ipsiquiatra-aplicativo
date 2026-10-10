@@ -21,6 +21,7 @@ import {
 } from '@/contracts/platform';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
+import { careContactsAfter, careMessage, isHardDay } from '@/utils/care-contacts';
 import { dailyCheckText, reminderTimeOn } from '@/utils/daily-reminder';
 import { dayKey } from '@/utils/time';
 
@@ -151,6 +152,8 @@ export const patriciaScript = {
   moodCheck: 'Como você está se sentindo hoje?',
   moodCheckAgain: 'Como você está se sentindo agora?',
   afterMood: 'Obrigada por me contar como você está. Estou aqui com você. 💙',
+  afterHardMood:
+    'Sinto muito que hoje não esteja fácil. Obrigada por me contar. Estou aqui com você, e amanhã eu volto para saber como você está. 💙',
   afterMessage:
     'Recebi sua mensagem. Nesta versão de demonstração eu ainda não consigo ler nem responder o que você escreve.',
   // Agenda e nota fiscal chegam na fase 2; por enquanto a Patrícia orienta.
@@ -256,20 +259,20 @@ export function createMockPatientAppGateway({
 
   const nextId = (prefix: string) => `${prefix}-${++history!.sequence}`;
 
-  const text = (author: TextMessage['author'], body: string): TextMessage => ({
+  const text = (author: TextMessage['author'], body: string, sentAt = now()): TextMessage => ({
     id: nextId('msg'),
     kind: 'text',
     author,
     text: body,
-    sentAt: now().toISOString(),
+    sentAt: sentAt.toISOString(),
   });
 
-  const moodCheck = (body: string): MoodCheckMessage => ({
+  const moodCheck = (body: string, sentAt = now()): MoodCheckMessage => ({
     id: nextId('mood-check'),
     kind: 'mood_check',
     author: 'patricia',
     text: body,
-    sentAt: now().toISOString(),
+    sentAt: sentAt.toISOString(),
     answer: null,
   });
 
@@ -330,6 +333,40 @@ export function createMockPatientAppGateway({
     if (!recordedToday && !askedToday) await append(moodCheck(dailyCheckText(settings.hour)));
   };
 
+  // Contatos de cuidado (utils/care-contacts.ts): entram na conversa com o
+  // horário em que a Patrícia procurou o paciente, mesmo que ele só abra o app
+  // depois; se já houver mensagem mais nova, entram com o horário dela, para a
+  // conversa não sair de ordem. O do dia difícil traz o cartão do diário,
+  // a não ser que já haja um em aberto.
+  const ensureCareContacts = async () => {
+    const current = now();
+    const { conversation } = history!;
+    const sent = (body: string, at: Date) =>
+      conversation.some(
+        (message) =>
+          message.author === 'patricia' &&
+          message.text === body &&
+          new Date(message.sentAt).getTime() >= at.getTime()
+      );
+    for (const contact of careContactsAfter(history!.moodEntries)) {
+      const body = careMessage[contact.reason];
+      if (contact.at.getTime() > current.getTime() || sent(body, contact.at)) continue;
+      const latest = conversation.at(-1);
+      const sentAt =
+        latest && new Date(latest.sentAt).getTime() > contact.at.getTime()
+          ? new Date(latest.sentAt)
+          : contact.at;
+      const openCheck = conversation.some(
+        (message) => message.kind === 'mood_check' && message.answer === null
+      );
+      await append(
+        contact.reason === 'hard_day' && !openCheck
+          ? moodCheck(body, sentAt)
+          : text('patricia', body, sentAt)
+      );
+    }
+  };
+
   // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
   const appointments = mockAppointments(now());
   // Os questionários são pedidos para a próxima consulta.
@@ -368,6 +405,7 @@ export function createMockPatientAppGateway({
     },
     async listConversation() {
       await load();
+      await ensureCareContacts();
       await ensureDailyMoodCheck();
       return mockResult([...history!.conversation]);
     },
@@ -415,7 +453,9 @@ export function createMockPatientAppGateway({
         recordedAt: now().toISOString(),
       };
       moodEntries.push(entry);
-      const reply = await append(text('patricia', patriciaScript.afterMood));
+      const reply = await append(
+        text('patricia', isHardDay(level) ? patriciaScript.afterHardMood : patriciaScript.afterMood)
+      );
       return mockResult({ entry, messages: [answered, ...reply] });
     },
     async requestService(service) {
