@@ -52,7 +52,7 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 
 | Pacote | Para quê | Observação |
 |---|---|---|
-| `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. Lembretes locais funcionam no Expo Go; notificação push no Android exige build de desenvolvimento, e por isso o Expo Go mostra um aviso ao abrir. Na fase 2 o lembrete passa a vir da plataforma por push. |
+| `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. No Expo Go do iPhone, os lembretes locais funcionam. No Expo Go do Android (SDK 53+), só carregar o pacote já dá erro e o app não abre; por isso o app carrega o pacote só onde ele funciona (`src/services/notifications-module.ts`) e, no Expo Go do Android, abre sem notificações e avisa na janela do lembrete. Para ver as notificações no Android é preciso o app instalado (build de desenvolvimento). Na fase 2 o lembrete passa a vir da plataforma por push. |
 
 ## Removidas
 

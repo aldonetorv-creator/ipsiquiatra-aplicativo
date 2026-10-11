@@ -1,14 +1,19 @@
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { scheduleDailyReminders } from '@/services/daily-reminders';
+import { notifications } from '@/services/notifications-module';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
 import { onReminderChange } from '@/services/reminder-events';
 
+// Onde não há notificação local (Expo Go do Android), o app segue sem ela.
+const Notifications = notifications();
+const noResponse = () => undefined;
+const useLastNotificationResponse = Notifications?.useLastNotificationResponse ?? noResponse;
+
 // Com o app aberto, a notificação também aparece no topo da tela.
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -21,7 +26,7 @@ Notifications.setNotificationHandler({
 // tocar numa notificação, abre a conversa com ela.
 export function useDailyReminders() {
   const gateway = usePatientAppGateway();
-  const response = Notifications.useLastNotificationResponse();
+  const response = useLastNotificationResponse();
 
   useEffect(() => {
     const refresh = async () => {
@@ -49,6 +54,7 @@ export function useDailyReminders() {
 
   useEffect(() => {
     if (
+      Notifications &&
       response &&
       response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER &&
       response.notification.request.content.data?.screen === 'patricia'

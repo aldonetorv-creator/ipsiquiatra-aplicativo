@@ -128,7 +128,16 @@ function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visib
           </View>
         ) : null}
 
-        {access !== 'unsupported' ? <OutlineButton label="Testar agora" onPress={test} /> : null}
+        {access === 'expo_go' ? (
+          <ThemedText type="small" style={styles.muted}>
+            No Expo Go do Android, as notificações não funcionam. O lembrete aparece na conversa com
+            a Patrícia, e a notificação vai funcionar no app instalado.
+          </ThemedText>
+        ) : null}
+
+        {access !== 'unsupported' && access !== 'expo_go' ? (
+          <OutlineButton label="Testar agora" onPress={test} />
+        ) : null}
         {testResult ? (
           <ThemedText type="small" style={styles.muted}>
             {testResult}
