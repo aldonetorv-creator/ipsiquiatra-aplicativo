@@ -12,11 +12,9 @@ import {
   MoodEntry,
   PatientAppGateway,
   PatientService,
-  DEFAULT_REMINDER_SETTINGS,
   QUESTIONNAIRE_TEXT_MAX_LENGTH,
   Questionnaire,
   QuestionnaireAnswers,
-  ReminderSettings,
   TextMessage,
 } from '@/contracts/platform';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
@@ -184,26 +182,6 @@ type MockOptions = {
 
 export const HISTORY_STORAGE_KEY = 'ipsiquiatra:patient-history';
 export const QUESTIONNAIRES_STORAGE_KEY = 'ipsiquiatra:questionnaires';
-export const REMINDER_STORAGE_KEY = 'ipsiquiatra:reminder-settings';
-
-function parseReminderSettings(raw: string | null): ReminderSettings {
-  try {
-    const data = raw ? (JSON.parse(raw) as Partial<ReminderSettings>) : null;
-    if (data && isValidReminder(data)) return data as ReminderSettings;
-  } catch {
-    // Dado corrompido: volta ao padrão.
-  }
-  return { ...DEFAULT_REMINDER_SETTINGS };
-}
-
-const isValidReminder = (data: Partial<ReminderSettings>) =>
-  typeof data.enabled === 'boolean' &&
-  Number.isInteger(data.hour) &&
-  Number.isInteger(data.minute) &&
-  data.hour! >= 0 &&
-  data.hour! <= 23 &&
-  data.minute! >= 0 &&
-  data.minute! <= 59;
 
 // Respostas salvas no aparelho, por questionário. Na fase 2 vão para o
 // prontuário (docs/fases.md, "Contexto e prontuário").
@@ -306,21 +284,12 @@ export function createMockPatientAppGateway({
     return messages;
   };
 
-  let reminder: Promise<ReminderSettings> | null = null;
-  const loadReminder = () =>
-    (reminder ??= store
-      .getItem(REMINDER_STORAGE_KEY)
-      .catch(() => null)
-      .then(parseReminderSettings));
-
-  // Diário: todo dia, no horário do lembrete (20h por padrão), a Patrícia
-  // pergunta como o paciente está. Não repete se ele já registrou o humor
-  // hoje ou se ainda há um cartão de hoje em aberto; desligado, não pergunta.
+  // Diário: todo dia às 20h, a Patrícia pergunta como o paciente está. Não
+  // repete se ele já registrou o humor hoje ou se ainda há um cartão de hoje
+  // em aberto.
   const ensureDailyMoodCheck = async () => {
-    const settings = await loadReminder();
-    if (!settings.enabled) return;
     const current = now();
-    const due = reminderTimeOn(current, settings).getTime();
+    const due = reminderTimeOn(current).getTime();
     if (current.getTime() < due) return;
     const isToday = (iso: string) => dayKey(new Date(iso)) === dayKey(current);
     const recordedToday = history!.moodEntries.some((entry) => isToday(entry.recordedAt));
@@ -330,7 +299,7 @@ export function createMockPatientAppGateway({
         isToday(message.sentAt) &&
         (message.answer === null || new Date(message.sentAt).getTime() >= due)
     );
-    if (!recordedToday && !askedToday) await append(moodCheck(dailyCheckText(settings.hour)));
+    if (!recordedToday && !askedToday) await append(moodCheck(dailyCheckText));
   };
 
   // Contatos de cuidado (utils/care-contacts.ts): entram na conversa com o
@@ -468,20 +437,6 @@ export function createMockPatientAppGateway({
       seed();
       await save();
       return mockResult([...history!.conversation]);
-    },
-    async getReminderSettings() {
-      return mockResult({ ...(await loadReminder()) });
-    },
-    async updateReminderSettings(settings) {
-      if (!isValidReminder(settings)) return validationFailure('Horário de lembrete inválido.');
-      const next: ReminderSettings = {
-        enabled: settings.enabled,
-        hour: settings.hour,
-        minute: settings.minute,
-      };
-      await store.setItem(REMINDER_STORAGE_KEY, JSON.stringify(next));
-      reminder = Promise.resolve(next);
-      return mockResult({ ...next });
     },
     async listQuestionnaires() {
       const saved = await loadResponses();

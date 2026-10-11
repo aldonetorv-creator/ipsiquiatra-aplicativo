@@ -1,6 +1,5 @@
 /// <reference types="jest" />
 
-import { DEFAULT_REMINDER_SETTINGS } from '@/contracts/platform';
 import { notificationsUnavailableOn } from '@/services/notifications-module';
 
 // No Expo Go do Android (SDK 53+), só carregar o expo-notifications já lança
@@ -37,12 +36,10 @@ describe('Expo Go no Android', () => {
     return loaded!;
   }
 
-  it('abre sem carregar as notificações e avisa que elas não funcionam ali', async () => {
+  it('abre sem carregar as notificações', async () => {
     const { service, loadedNotifications } = loadOnExpoGoAndroid();
 
-    await service.scheduleDailyReminders(DEFAULT_REMINDER_SETTINGS, []);
-    expect(await service.notificationAccess()).toBe('expo_go');
-    expect(await service.sendTestReminder(20)).toBe(false);
+    await service.scheduleDailyReminders([]);
     expect(loadedNotifications()).toBe(false);
   });
 

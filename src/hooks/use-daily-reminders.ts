@@ -31,12 +31,8 @@ export function useDailyReminders() {
   useEffect(() => {
     const refresh = async () => {
       try {
-        const [settings, moods] = await Promise.all([
-          gateway.getReminderSettings(),
-          gateway.listMoodEntries(),
-        ]);
-        if (!settings.ok) return;
-        await scheduleDailyReminders(settings.data, moods.ok ? moods.data : []);
+        const moods = await gateway.listMoodEntries();
+        await scheduleDailyReminders(moods.ok ? moods.data : []);
       } catch {
         // Sem lembrete o app continua funcionando; tenta de novo na próxima abertura.
       }
