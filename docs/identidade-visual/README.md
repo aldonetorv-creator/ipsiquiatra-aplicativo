@@ -47,7 +47,7 @@ circular roxa e livros com os temas "Saúde mental", "Bem-estar", "Ciência" e
 
 ## Princípios observados
 
-- **Tom acolhedor**: "Tem alguém acompanhando você.", "Como você está hoje?",
+- **Tom acolhedor**: "Tem alguém cuidando de você.", "Como você está hoje?",
   "Estou aqui com você." A Patrícia toma a iniciativa do contato.
 - **Navegação em 4 abas**: Início, Patrícia, Consultas, Cofre. Hoje o app tem
   também "Questionários"; nos mockups eles aparecem como cartões na Início.
