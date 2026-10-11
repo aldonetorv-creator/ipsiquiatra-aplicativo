@@ -1,4 +1,3 @@
-import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Linking, Modal, Pressable, StyleSheet, Switch, View } from 'react-native';
 
@@ -8,11 +7,8 @@ import { OutlineButton } from '@/components/ui/outline-button';
 import { Tokens } from '@/constants/theme';
 import { ReminderSettings } from '@/contracts/platform';
 import type { NotificationAccess } from '@/services/daily-reminders';
-import { formatReminderTime, TEST_DELAY_SECONDS } from '@/utils/daily-reminder';
-
-const STEP_MINUTES = 30;
-const EARLIEST = 6 * 60;
-const LATEST = 23 * 60 + 30;
+import { CARE_HOUR } from '@/utils/care-contacts';
+import { DAILY_REMINDER_HOUR, TEST_DELAY_SECONDS } from '@/utils/daily-reminder';
 
 type Props = {
   visible: boolean;
@@ -22,11 +18,11 @@ type Props = {
   onClose: () => void;
   // Situação das notificações no celular e o envio de um lembrete de teste.
   access: NotificationAccess;
-  onTest: (hour: number) => Promise<boolean>;
+  onTest: () => Promise<boolean>;
 };
 
-// O paciente escolhe o horário do lembrete diário ou desliga (decisão do
-// Dr. Aldo; ver docs/fases.md).
+// O horário é do produto (decisão do Dr. Aldo; ver docs/fases.md): o paciente
+// só liga ou desliga o lembrete diário e pode testar como ele chega.
 export function ReminderSheet({ visible, ...props }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={props.onClose}>
@@ -37,17 +33,12 @@ export function ReminderSheet({ visible, ...props }: Props) {
 
 function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visible'>) {
   const [enabled, setEnabled] = useState(settings.enabled);
-  const [minutes, setMinutes] = useState(settings.hour * 60 + settings.minute);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
 
-  const time = { hour: Math.floor(minutes / 60), minute: minutes % 60 };
-  const shift = (delta: number) =>
-    setMinutes((current) => Math.min(LATEST, Math.max(EARLIEST, current + delta)));
-
   const test = async () => {
-    const sent = await onTest(time.hour);
+    const sent = await onTest();
     setTestResult(
       sent
         ? `Pronto! Em ${TEST_DELAY_SECONDS} segundos chega um lembrete de teste.`
@@ -57,7 +48,7 @@ function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visib
 
   const save = async () => {
     setSaving(true);
-    const failure = await onSave({ enabled, ...time });
+    const failure = await onSave({ enabled });
     setSaving(false);
     if (failure) setError(failure);
     else onClose();
@@ -77,7 +68,9 @@ function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visib
           Lembrete da Patrícia
         </ThemedText>
         <ThemedText type="small" style={styles.muted}>
-          Todo dia, a Patrícia pergunta como você está e oferece o diário de humor.
+          Todo dia às {DAILY_REMINDER_HOUR}h, a Patrícia pergunta como você está e oferece o diário
+          de humor. Se o dia não estiver fácil, ela volta a falar com você às {CARE_HOUR}h do dia
+          seguinte.
         </ThemedText>
 
         <View style={styles.row}>
@@ -90,32 +83,6 @@ function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visib
             accessibilityLabel="Receber o lembrete diário"
             trackColor={{ true: Tokens.color.brand, false: Tokens.color.border }}
           />
-        </View>
-
-        <View style={[styles.row, !enabled && styles.disabled]}>
-          <ThemedText type="default" style={styles.label}>
-            Horário
-          </ThemedText>
-          <View style={styles.stepper}>
-            <StepButton
-              icon="minus"
-              label="30 minutos mais cedo"
-              disabled={!enabled || minutes <= EARLIEST}
-              onPress={() => shift(-STEP_MINUTES)}
-            />
-            <ThemedText
-              type="subtitle"
-              style={styles.time}
-              accessibilityLabel={`Horário do lembrete: ${formatReminderTime(time)}`}>
-              {formatReminderTime(time)}
-            </ThemedText>
-            <StepButton
-              icon="plus"
-              label="30 minutos mais tarde"
-              disabled={!enabled || minutes >= LATEST}
-              onPress={() => shift(STEP_MINUTES)}
-            />
-          </View>
         </View>
 
         {access === 'blocked' ? (
@@ -163,39 +130,6 @@ function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visib
   );
 }
 
-function StepButton({
-  icon,
-  label,
-  disabled,
-  onPress,
-}: {
-  icon: 'minus' | 'plus';
-  label: string;
-  disabled: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => [styles.step, (pressed || disabled) && styles.dimmed]}>
-      <SymbolView
-        name={
-          icon === 'plus'
-            ? { ios: 'plus', android: 'add', web: 'add' }
-            : { ios: 'minus', android: 'remove', web: 'remove' }
-        }
-        tintColor={Tokens.color.brand}
-        size={20}
-      />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
@@ -232,34 +166,8 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 4,
   },
-  disabled: {
-    opacity: 0.4,
-  },
   label: {
     color: Tokens.color.text,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  step: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Tokens.color.brandSoft,
-  },
-  dimmed: {
-    opacity: 0.5,
-  },
-  time: {
-    minWidth: 76,
-    textAlign: 'center',
-    color: Tokens.color.text,
-    fontSize: 26,
-    lineHeight: 32,
   },
   error: {
     color: Tokens.color.brandDeep,

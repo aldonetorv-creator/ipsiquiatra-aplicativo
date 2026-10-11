@@ -243,39 +243,34 @@ describe('lembrete diário', () => {
     expect(result.ok && result.data).toEqual(DEFAULT_REMINDER_SETTINGS);
   });
 
-  it('pergunta no horário escolhido pelo paciente, e o horário fica salvo', async () => {
+  it('o horário é do produto: ignora o horário salvo por versões anteriores', async () => {
     const store = await answered();
-    const gateway = createMockPatientAppGateway({ store, now: () => day1 });
-    expect(
-      await gateway.updateReminderSettings({ enabled: true, hour: 8, minute: 30 })
-    ).toMatchObject({ ok: true, data: { enabled: true, hour: 8, minute: 30 } });
+    await store.setItem(REMINDER_STORAGE_KEY, '{"enabled":true,"hour":8,"minute":30}');
 
-    expect(await checksAt(store, new Date(2026, 2, 10, 8, 0))).toHaveLength(1);
-    const checks = await checksAt(store, new Date(2026, 2, 10, 8, 45));
+    expect(
+      await createMockPatientAppGateway({ store, now: () => day1 }).getReminderSettings()
+    ).toMatchObject({ ok: true, data: { enabled: true } });
+    expect(await checksAt(store, new Date(2026, 2, 10, 8, 45))).toHaveLength(1);
+    const checks = await checksAt(store, new Date(2026, 2, 10, 20, 5));
     expect(checks).toHaveLength(2);
-    expect(checks[1]).toEqual(expect.objectContaining({ text: dailyCheckText(8) }));
+    expect(checks[1]).toEqual(expect.objectContaining({ text: dailyCheckText }));
   });
 
   it('desligado, a Patrícia não pergunta', async () => {
     const store = await answered();
     await createMockPatientAppGateway({ store, now: () => day1 }).updateReminderSettings({
       enabled: false,
-      hour: 20,
-      minute: 0,
     });
 
     expect(await checksAt(store, new Date(2026, 2, 10, 21, 0))).toHaveLength(1);
   });
 
-  it('recusa horário inválido', async () => {
+  it('recusa valor inválido', async () => {
     const gateway = createMockPatientAppGateway();
 
     expect(
-      await gateway.updateReminderSettings({ enabled: true, hour: 25, minute: 0 })
+      await gateway.updateReminderSettings({ enabled: 'sim' } as unknown as { enabled: boolean })
     ).toMatchObject({ ok: false, error: { code: 'validation_failed' } });
-    expect(
-      await gateway.updateReminderSettings({ enabled: true, hour: 20, minute: 7.5 })
-    ).toMatchObject({ ok: false });
   });
 
   it('volta ao padrão se o que está salvo estiver corrompido', async () => {
@@ -335,7 +330,7 @@ describe('contatos de cuidado da Patrícia', () => {
     const night = await conversationAt(store, new Date(2026, 2, 10, 21, 0));
     expect(careOf(night)).toHaveLength(1);
     expect(night.at(-1)).toEqual(
-      expect.objectContaining({ kind: 'mood_check', answer: null, text: dailyCheckText(20) })
+      expect.objectContaining({ kind: 'mood_check', answer: null, text: dailyCheckText })
     );
   });
 
@@ -388,8 +383,6 @@ describe('contatos de cuidado da Patrícia', () => {
     const { store } = await recorded(2);
     await createMockPatientAppGateway({ store, now: () => evening }).updateReminderSettings({
       enabled: false,
-      hour: 20,
-      minute: 0,
     });
 
     expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)))).toHaveLength(1);
@@ -461,7 +454,7 @@ describe('histórico salvo no aparelho', () => {
       expect.objectContaining({ answer: 3, sentAt: day1.toISOString() }),
       expect.objectContaining({
         answer: null,
-        text: dailyCheckText(20),
+        text: dailyCheckText,
         sentAt: evening.toISOString(),
       }),
     ]);

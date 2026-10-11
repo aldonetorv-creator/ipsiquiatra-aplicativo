@@ -1,36 +1,26 @@
 import { ReminderSettings } from '@/contracts/platform';
 
-// Lembrete diário da Patrícia para o diário de humor (pedido do Dr. Aldo; ver
-// docs/fases.md). Por padrão às 20h; o paciente pode mudar o horário ou desligar.
-
-const pad = (value: number) => String(value).padStart(2, '0');
-
-// "20:00".
-export const formatReminderTime = ({ hour, minute }: Pick<ReminderSettings, 'hour' | 'minute'>) =>
-  `${pad(hour)}:${pad(minute)}`;
+// Lembrete diário da Patrícia para o diário de humor. O horário é do produto,
+// não do paciente (decisão do Dr. Aldo; ver docs/fases.md): todo dia às 20h.
+// Depois de um dia difícil, ela volta às 10h do dia seguinte
+// (utils/care-contacts.ts).
+export const DAILY_REMINDER_HOUR = 20;
 
 // Momento do lembrete no dia de `date`.
-export const reminderTimeOn = (date: Date, { hour, minute }: ReminderSettings) =>
-  new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
-
-// Pergunta da Patrícia de acordo com a hora do lembrete.
-function dailyQuestion(hour: number) {
-  if (hour < 12) return 'Bom dia! Como você está hoje?';
-  if (hour < 18) return 'Boa tarde! Como está o seu dia?';
-  return 'Boa noite! Como foi o seu dia?';
-}
+export const reminderTimeOn = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAILY_REMINDER_HOUR);
 
 // Mensagem na conversa e texto da notificação.
-export const dailyCheckText = (hour: number) =>
-  `${dailyQuestion(hour)} Se quiser, me conte no diário de humor como você está.`;
-export const reminderNotificationBody = (hour: number) =>
-  `${dailyQuestion(hour)} Toque para registrar no diário de humor.`;
+export const dailyCheckText =
+  'Boa noite! Como foi o seu dia? Se quiser, me conte no diário de humor como você está.';
+export const reminderNotificationBody =
+  'Boa noite! Como foi o seu dia? Toque para registrar no diário de humor.';
 
 // O lembrete de teste chega alguns segundos depois de pedido.
 export const TEST_DELAY_SECONDS = 5;
 
-// Próximos lembretes no horário escolhido. Hoje só entra se o horário ainda
-// não passou e o paciente ainda não registrou o humor.
+// Próximos lembretes. Hoje só entra se ainda não deu 20h e o paciente ainda
+// não registrou o humor.
 export function reminderDates(
   now: Date,
   recordedToday: boolean,
@@ -40,8 +30,9 @@ export function reminderDates(
   if (!settings.enabled) return [];
   const dates: Date[] = [];
   for (let offset = 0; dates.length < count; offset++) {
-    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
-    const date = reminderTimeOn(day, settings);
+    const date = reminderTimeOn(
+      new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset)
+    );
     if (offset === 0 && (recordedToday || date.getTime() <= now.getTime())) continue;
     dates.push(date);
   }

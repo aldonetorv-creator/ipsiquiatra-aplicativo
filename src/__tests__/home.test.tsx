@@ -210,24 +210,21 @@ describe('Início', () => {
     expect(screen.queryByRole('button', { name: 'Abrir plano de cuidados' })).toBeNull();
   });
 
-  it('mostra o horário do lembrete diário e deixa mudar para mais tarde', async () => {
-    const gateway = createMockPatientAppGateway();
-    const updateReminderSettings = jest.spyOn(gateway, 'updateReminderSettings');
-    await renderWith(gateway);
+  it('mostra o lembrete das 20h, sem escolha de horário', async () => {
+    await renderWith(createMockPatientAppGateway());
 
-    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20:00')).toBeOnTheScreen();
+    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20h')).toBeOnTheScreen();
     await fireEvent.press(
       screen.getByRole('button', {
-        name: 'Lembrete diário: Lembrete da Patrícia todo dia às 20:00. Alterar',
+        name: 'Lembrete diário: Lembrete da Patrícia todo dia às 20h. Alterar',
       })
     );
-    await fireEvent.press(screen.getByRole('button', { name: '30 minutos mais tarde' }));
-    expect(screen.getByLabelText('Horário do lembrete: 20:30')).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
 
-    expect(updateReminderSettings).toHaveBeenCalledWith({ enabled: true, hour: 20, minute: 30 });
-    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20:30')).toBeOnTheScreen();
-    expect(screen.queryByText('Receber o lembrete')).toBeNull();
+    // O horário é do produto: 20h, e 10h do dia seguinte a um dia difícil.
+    expect(screen.getByText(/^Todo dia às 20h, a Patrícia pergunta/)).toBeOnTheScreen();
+    expect(screen.getByText(/às 10h do dia seguinte\.$/)).toBeOnTheScreen();
+    expect(screen.queryByText('Horário')).toBeNull();
+    expect(screen.queryByRole('button', { name: /minutos mais/ })).toBeNull();
   });
 
   it('deixa desligar o lembrete diário', async () => {
@@ -243,7 +240,7 @@ describe('Início', () => {
     expect(await screen.findByText('Lembrete da Patrícia desligado')).toBeOnTheScreen();
     expect(await gateway.getReminderSettings()).toMatchObject({
       ok: true,
-      data: { enabled: false, hour: 20, minute: 0 },
+      data: { enabled: false },
     });
   });
 
@@ -255,11 +252,11 @@ describe('Início', () => {
     await fireEvent.press(
       await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
     );
-    await fireEvent.press(screen.getByRole('button', { name: '30 minutos mais cedo' }));
+    await fireEvent(screen.getByLabelText('Receber o lembrete diário'), 'valueChange', false);
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
 
     expect(updateReminderSettings).not.toHaveBeenCalled();
-    expect(screen.getByText('Lembrete da Patrícia todo dia às 20:00')).toBeOnTheScreen();
+    expect(screen.getByText('Lembrete da Patrícia todo dia às 20h')).toBeOnTheScreen();
   });
 
   it('mostra o erro ao salvar o lembrete e mantém a folha aberta', async () => {

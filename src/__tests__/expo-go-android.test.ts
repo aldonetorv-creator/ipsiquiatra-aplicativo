@@ -42,7 +42,7 @@ describe('Expo Go no Android', () => {
 
     await service.scheduleDailyReminders(DEFAULT_REMINDER_SETTINGS, []);
     expect(await service.notificationAccess()).toBe('expo_go');
-    expect(await service.sendTestReminder(20)).toBe(false);
+    expect(await service.sendTestReminder()).toBe(false);
     expect(loadedNotifications()).toBe(false);
   });
 

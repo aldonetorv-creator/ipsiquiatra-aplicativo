@@ -134,15 +134,14 @@ export type SubmitQuestionnaireInput = {
   answers: QuestionnaireAnswers;
 };
 
-// Lembrete diário da Patrícia para o diário de humor. O paciente escolhe o
-// horário ou desliga (decisão do Dr. Aldo; ver docs/fases.md).
+// Lembrete diário da Patrícia para o diário de humor. O horário é do produto,
+// não do paciente: todo dia às 20h (decisão do Dr. Aldo; ver docs/fases.md).
+// O paciente só liga ou desliga.
 export type ReminderSettings = {
   enabled: boolean;
-  hour: number;
-  minute: number;
 };
 
-export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = { enabled: true, hour: 20, minute: 0 };
+export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = { enabled: true };
 
 // Pedidos que a Patrícia vai atender de verdade na fase 2 (agenda e NFS-e).
 export type PatientService = 'schedule_appointment' | 'reschedule_appointment' | 'request_invoice';

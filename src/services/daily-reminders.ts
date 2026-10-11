@@ -18,13 +18,13 @@ const content = (body: string) => ({
   data: { screen: 'patricia' },
 });
 
-export const reminderContent = (hour: number) => content(reminderNotificationBody(hour));
+export const reminderContent = () => content(reminderNotificationBody);
 export const careContent = (reason: CareReason) => content(careNotificationBody[reason]);
 
-// Notificações locais enquanto não há servidor: o lembrete diário no horário
-// escolhido pelo paciente e os contatos de cuidado (utils/care-contacts.ts). Na
+// Notificações locais enquanto não há servidor: o lembrete diário das 20h e os
+// contatos de cuidado (utils/care-contacts.ts). Na
 // fase 2 quem manda é a Patrícia da plataforma (docs/fases.md). Refaz a agenda
-// inteira a cada vez, para seguir o horário atual e o último registro de humor.
+// inteira a cada vez, para seguir o último registro de humor.
 // Desligar o lembrete diário não desliga os contatos de cuidado.
 export async function scheduleDailyReminders(
   settings: ReminderSettings,
@@ -39,7 +39,7 @@ export async function scheduleDailyReminders(
   const planned = [
     ...reminderDates(now, recordedToday, settings).map((date) => ({
       date,
-      content: reminderContent(settings.hour),
+      content: reminderContent(),
     })),
     ...careContactsAfter(moodEntries)
       .filter((contact) => contact.at.getTime() > now.getTime())
@@ -92,11 +92,11 @@ export async function notificationAccess(): Promise<NotificationAccess> {
 
 // Lembrete de teste em alguns segundos, para o paciente ver como chega sem
 // esperar o horário. Devolve false se não houver permissão.
-export async function sendTestReminder(hour: number) {
+export async function sendTestReminder() {
   const Notifications = notifications();
   if (!Notifications || !(await ensurePermission(Notifications))) return false;
   await Notifications.scheduleNotificationAsync({
-    content: reminderContent(hour),
+    content: reminderContent(),
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
       seconds: TEST_DELAY_SECONDS,

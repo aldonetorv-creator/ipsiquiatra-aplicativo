@@ -10,7 +10,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { IconBadge } from '@/components/ui/icon-badge';
 import { Tokens } from '@/constants/theme';
 import { MoodEntry, MoodLevel, ReminderSettings } from '@/contracts/platform';
-import { formatReminderTime } from '@/utils/daily-reminder';
+import { DAILY_REMINDER_HOUR } from '@/utils/daily-reminder';
 import { dayKey, lastSevenDays } from '@/utils/time';
 
 // Geometria do gráfico: o ponto de cada dia sobe com o humor (1 embaixo,
@@ -140,7 +140,7 @@ export function MoodWeekCard({ entries, onRegister, reminder, onEditReminder }: 
 
       <GradientButton label="Registrar como me senti hoje" onPress={onRegister} />
 
-      {/* Lembrete diário da Patrícia: o paciente muda o horário ou desliga. */}
+      {/* Lembrete diário da Patrícia: horário fixo; o paciente liga ou desliga. */}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Lembrete diário: ${reminderLabel(reminder)}. Alterar`}
@@ -168,7 +168,7 @@ export function MoodWeekCard({ entries, onRegister, reminder, onEditReminder }: 
 
 const reminderLabel = (reminder: ReminderSettings) =>
   reminder.enabled
-    ? `Lembrete da Patrícia todo dia às ${formatReminderTime(reminder)}`
+    ? `Lembrete da Patrícia todo dia às ${DAILY_REMINDER_HOUR}h`
     : 'Lembrete da Patrícia desligado';
 
 const styles = StyleSheet.create({

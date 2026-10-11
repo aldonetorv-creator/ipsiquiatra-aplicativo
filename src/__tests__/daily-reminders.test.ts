@@ -50,23 +50,23 @@ describe('scheduleDailyReminders', () => {
     const calls = mocked.scheduleNotificationAsync.mock.calls.map(([request]) => request);
     expect(calls).toHaveLength(14);
     expect(calls[0]).toEqual({
-      content: reminderContent(20),
+      content: reminderContent(),
       trigger: expect.objectContaining({ type: 'date', date: new Date(2026, 9, 9, 20) }),
     });
   });
 
-  it('usa o horário escolhido e pula hoje se o humor já foi registrado', async () => {
+  it('pula hoje se o humor já foi registrado', async () => {
     mocked.getPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: true } as never);
 
     await scheduleDailyReminders(
-      { enabled: true, hour: 21, minute: 30 },
+      DEFAULT_REMINDER_SETTINGS,
       [mood(4, new Date(2026, 9, 9, 8, 0))],
       morning
     );
 
     expect(mocked.requestPermissionsAsync).not.toHaveBeenCalled();
     const first = mocked.scheduleNotificationAsync.mock.calls[0][0];
-    expect(first.trigger).toEqual(expect.objectContaining({ date: new Date(2026, 9, 10, 21, 30) }));
+    expect(first.trigger).toEqual(expect.objectContaining({ date: new Date(2026, 9, 10, 20, 0) }));
   });
 
   it('desligado e sem contatos de cuidado, cancela tudo sem pedir permissão', async () => {
@@ -96,7 +96,7 @@ describe('scheduleDailyReminders', () => {
       morning
     );
 
-    const care = scheduled().filter((item) => item.body !== reminderContent(20).body);
+    const care = scheduled().filter((item) => item.body !== reminderContent().body);
     expect(care).toEqual([
       { body: careContent('hard_day').body, date: new Date(2026, 9, 10, 10) },
       { body: careContent('quiet_days').body, date: new Date(2026, 9, 12, 10) },
@@ -150,9 +150,9 @@ describe('teste do lembrete e permissão', () => {
   it('manda um lembrete de teste em 5 segundos', async () => {
     mocked.getPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: true } as never);
 
-    expect(await sendTestReminder(20)).toBe(true);
+    expect(await sendTestReminder()).toBe(true);
     expect(mocked.scheduleNotificationAsync).toHaveBeenCalledWith({
-      content: reminderContent(20),
+      content: reminderContent(),
       trigger: expect.objectContaining({ type: 'timeInterval', seconds: 5 }),
     });
     // O teste não mexe nos lembretes já agendados.
@@ -162,7 +162,7 @@ describe('teste do lembrete e permissão', () => {
   it('sem permissão, não manda o teste', async () => {
     mocked.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: false } as never);
 
-    expect(await sendTestReminder(20)).toBe(false);
+    expect(await sendTestReminder()).toBe(false);
     expect(mocked.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 });

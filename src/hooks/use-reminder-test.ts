@@ -26,18 +26,15 @@ export function useReminderTest() {
     return () => subscription.remove();
   }, [refresh]);
 
-  const test = useCallback(
-    async (hour: number) => {
-      try {
-        return await sendTestReminder(hour);
-      } catch {
-        return false;
-      } finally {
-        refresh();
-      }
-    },
-    [refresh]
-  );
+  const test = useCallback(async () => {
+    try {
+      return await sendTestReminder();
+    } catch {
+      return false;
+    } finally {
+      refresh();
+    }
+  }, [refresh]);
 
   return { access, test };
 }
