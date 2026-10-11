@@ -1,30 +1,24 @@
 /// <reference types="jest" />
 
-import { DEFAULT_REMINDER_SETTINGS } from '@/contracts/platform';
 import { dailyCheckText, reminderDates, reminderNotificationBody } from '@/utils/daily-reminder';
 
 const at = (day: number, hour: number, minute = 0) => new Date(2026, 9, day, hour, minute);
-const at20 = DEFAULT_REMINDER_SETTINGS;
 
 describe('reminderDates', () => {
   it('agenda os próximos dias às 20h, começando hoje se ainda der tempo', () => {
-    expect(reminderDates(at(9, 10), false, at20, 3)).toEqual([at(9, 20), at(10, 20), at(11, 20)]);
+    expect(reminderDates(at(9, 10), false, 3)).toEqual([at(9, 20), at(10, 20), at(11, 20)]);
   });
 
   it('pula hoje se o horário já passou', () => {
-    expect(reminderDates(at(9, 20, 30), false, at20, 2)).toEqual([at(10, 20), at(11, 20)]);
+    expect(reminderDates(at(9, 20, 30), false, 2)).toEqual([at(10, 20), at(11, 20)]);
   });
 
   it('pula hoje se o paciente já registrou o humor', () => {
-    expect(reminderDates(at(9, 10), true, at20, 2)).toEqual([at(10, 20), at(11, 20)]);
-  });
-
-  it('desligado, não agenda nada', () => {
-    expect(reminderDates(at(9, 10), false, { ...at20, enabled: false })).toEqual([]);
+    expect(reminderDates(at(9, 10), true, 2)).toEqual([at(10, 20), at(11, 20)]);
   });
 
   it('atravessa a virada do mês', () => {
-    expect(reminderDates(new Date(2026, 9, 31, 21), false, at20, 2)).toEqual([
+    expect(reminderDates(new Date(2026, 9, 31, 21), false, 2)).toEqual([
       new Date(2026, 10, 1, 20),
       new Date(2026, 10, 2, 20),
     ]);

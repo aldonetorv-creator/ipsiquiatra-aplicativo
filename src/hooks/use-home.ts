@@ -1,15 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 
-import {
-  Appointment,
-  ConversationMessage,
-  MoodEntry,
-  PatientService,
-  ReminderSettings,
-} from '@/contracts/platform';
+import { Appointment, ConversationMessage, MoodEntry, PatientService } from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
-import { notifyReminderChange } from '@/services/reminder-events';
 import { splitAppointments } from '@/utils/appointments';
 import { calendarDaysBetween, greetingFor } from '@/utils/time';
 
@@ -26,7 +19,6 @@ export type HomeState =
       carePlanReady: boolean;
       // Tempo estimado dos questionários que faltam para a próxima consulta.
       pendingQuestionnaireMinutes: number;
-      reminder: ReminderSettings;
     }
   | { status: 'error'; error: string };
 
@@ -46,9 +38,8 @@ export function useHome() {
       gateway.listAppointments(),
       gateway.listDocuments(),
       gateway.listQuestionnaires(),
-      gateway.getReminderSettings(),
     ])
-      .then(([conversation, moods, appointments, documents, questionnaires, reminder]) => {
+      .then(([conversation, moods, appointments, documents, questionnaires]) => {
         if (!active) return;
         if (!conversation.ok) return setState({ status: 'error', error: conversation.error.message });
         if (!moods.ok) return setState({ status: 'error', error: moods.error.message });
@@ -57,7 +48,6 @@ export function useHome() {
         if (!questionnaires.ok) {
           return setState({ status: 'error', error: questionnaires.error.message });
         }
-        if (!reminder.ok) return setState({ status: 'error', error: reminder.error.message });
         const fromPatricia = conversation.data.filter((message) => message.author === 'patricia');
         setPendingMoodCheck(
           conversation.data.some((message) => message.kind === 'mood_check' && message.answer === null)
@@ -87,7 +77,6 @@ export function useHome() {
           pendingQuestionnaireMinutes: questionnaires.data
             .filter((item) => item.answeredAt === null && next && item.appointmentId === next.id)
             .reduce((total, item) => total + item.estimatedMinutes, 0),
-          reminder: reminder.data,
         });
       })
       .catch(() => {
@@ -125,24 +114,5 @@ export function useHome() {
     [gateway]
   );
 
-  // Muda o horário do lembrete diário ou desliga. Devolve a mensagem de erro,
-  // ou null se salvou.
-  const updateReminder = useCallback(
-    async (settings: ReminderSettings): Promise<string | null> => {
-      try {
-        const result = await gateway.updateReminderSettings(settings);
-        if (!result.ok) return result.error.message;
-        setState((current) =>
-          current.status === 'ready' ? { ...current, reminder: result.data } : current
-        );
-        notifyReminderChange();
-        return null;
-      } catch {
-        return 'Não foi possível salvar o lembrete agora.';
-      }
-    },
-    [gateway]
-  );
-
-  return { state, ensureMoodCheck, requestService, updateReminder };
+  return { state, ensureMoodCheck, requestService };
 }

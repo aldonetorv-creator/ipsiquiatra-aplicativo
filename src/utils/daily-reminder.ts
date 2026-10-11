@@ -1,9 +1,7 @@
-import { ReminderSettings } from '@/contracts/platform';
-
-// Lembrete diário da Patrícia para o diário de humor. O horário é do produto,
-// não do paciente (decisão do Dr. Aldo; ver docs/fases.md): todo dia às 20h.
-// Depois de um dia difícil, ela volta às 10h do dia seguinte
-// (utils/care-contacts.ts).
+// Lembrete diário da Patrícia para o diário de humor, todo dia às 20h. O
+// horário é do produto: o paciente não muda nem desliga (decisão do Dr. Aldo;
+// ver docs/fases.md). Depois de um dia difícil, ela volta às 10h do dia
+// seguinte (utils/care-contacts.ts).
 export const DAILY_REMINDER_HOUR = 20;
 
 // Momento do lembrete no dia de `date`.
@@ -16,18 +14,9 @@ export const dailyCheckText =
 export const reminderNotificationBody =
   'Boa noite! Como foi o seu dia? Toque para registrar no diário de humor.';
 
-// O lembrete de teste chega alguns segundos depois de pedido.
-export const TEST_DELAY_SECONDS = 5;
-
 // Próximos lembretes. Hoje só entra se ainda não deu 20h e o paciente ainda
 // não registrou o humor.
-export function reminderDates(
-  now: Date,
-  recordedToday: boolean,
-  settings: ReminderSettings,
-  count = 14
-): Date[] {
-  if (!settings.enabled) return [];
+export function reminderDates(now: Date, recordedToday: boolean, count = 14): Date[] {
   const dates: Date[] = [];
   for (let offset = 0; dates.length < count; offset++) {
     const date = reminderTimeOn(

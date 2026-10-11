@@ -1,24 +1,13 @@
 /// <reference types="jest" />
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
-import { Linking } from 'react-native';
 
 import HomeScreen from '@/app/index';
 import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { formatDayMonth, formatTime } from '@/utils/time';
-
-jest.mock('expo-notifications', () => ({
-  AndroidImportance: { HIGH: 6 },
-  SchedulableTriggerInputTypes: { DATE: 'date', TIME_INTERVAL: 'timeInterval' },
-  setNotificationChannelAsync: jest.fn(async () => null),
-  getPermissionsAsync: jest.fn(async () => ({ granted: true, canAskAgain: true })),
-  requestPermissionsAsync: jest.fn(),
-  scheduleNotificationAsync: jest.fn(async () => 'id'),
-}));
 
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
@@ -42,19 +31,15 @@ async function answerFirstMoodCheck(gateway: PatientAppGateway, level: 1 | 2 | 3
 }
 
 describe('Início', () => {
-  beforeEach(() => {
-    jest.mocked(router.push).mockClear();
-    jest.mocked(Notifications.scheduleNotificationAsync).mockClear();
-    jest
-      .mocked(Notifications.getPermissionsAsync)
-      .mockResolvedValue({ granted: true, canAskAgain: true } as never);
-  });
+  beforeEach(() => jest.mocked(router.push).mockClear());
 
   it('mostra a saudação e a última mensagem da Patrícia, que abre a conversa', async () => {
     await renderWith(createMockPatientAppGateway());
 
     expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite)!$/)).toBeOnTheScreen();
     expect(screen.getByText('Tem alguém cuidando de você.')).toBeOnTheScreen();
+    // O horário do lembrete é do produto: a Início não tem opção de lembrete.
+    expect(screen.queryByText(/Lembrete da Patrícia/)).toBeNull();
     expect(screen.getByText(patriciaScript.moodCheck)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir conversa com a Patrícia' }));
@@ -208,117 +193,6 @@ describe('Início', () => {
     expect(screen.queryByText('Antes da sua consulta')).toBeNull();
     expect(screen.queryByText(/desde sua última consulta/)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Abrir plano de cuidados' })).toBeNull();
-  });
-
-  it('mostra o lembrete das 20h, sem escolha de horário', async () => {
-    await renderWith(createMockPatientAppGateway());
-
-    expect(await screen.findByText('Lembrete da Patrícia todo dia às 20h')).toBeOnTheScreen();
-    await fireEvent.press(
-      screen.getByRole('button', {
-        name: 'Lembrete diário: Lembrete da Patrícia todo dia às 20h. Alterar',
-      })
-    );
-
-    // O horário é do produto: 20h, e 10h do dia seguinte a um dia difícil.
-    expect(screen.getByText(/^Todo dia às 20h, a Patrícia pergunta/)).toBeOnTheScreen();
-    expect(screen.getByText(/às 10h do dia seguinte\.$/)).toBeOnTheScreen();
-    expect(screen.queryByText('Horário')).toBeNull();
-    expect(screen.queryByRole('button', { name: /minutos mais/ })).toBeNull();
-  });
-
-  it('deixa desligar o lembrete diário', async () => {
-    const gateway = createMockPatientAppGateway();
-    await renderWith(gateway);
-
-    await fireEvent.press(
-      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
-    );
-    await fireEvent(screen.getByLabelText('Receber o lembrete diário'), 'valueChange', false);
-    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
-
-    expect(await screen.findByText('Lembrete da Patrícia desligado')).toBeOnTheScreen();
-    expect(await gateway.getReminderSettings()).toMatchObject({
-      ok: true,
-      data: { enabled: false },
-    });
-  });
-
-  it('cancelar não muda o lembrete diário', async () => {
-    const gateway = createMockPatientAppGateway();
-    const updateReminderSettings = jest.spyOn(gateway, 'updateReminderSettings');
-    await renderWith(gateway);
-
-    await fireEvent.press(
-      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
-    );
-    await fireEvent(screen.getByLabelText('Receber o lembrete diário'), 'valueChange', false);
-    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
-
-    expect(updateReminderSettings).not.toHaveBeenCalled();
-    expect(screen.getByText('Lembrete da Patrícia todo dia às 20h')).toBeOnTheScreen();
-  });
-
-  it('mostra o erro ao salvar o lembrete e mantém a folha aberta', async () => {
-    const gateway = createMockPatientAppGateway();
-    jest.spyOn(gateway, 'updateReminderSettings').mockResolvedValue({
-      ok: false,
-      requestId: 'test',
-      error: { code: 'not_available', message: 'Lembrete indisponível no momento.' },
-    });
-    await renderWith(gateway);
-
-    await fireEvent.press(
-      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
-    );
-    await fireEvent.press(screen.getByRole('button', { name: 'Salvar' }));
-
-    expect(await screen.findByText('Lembrete indisponível no momento.')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Receber o lembrete diário')).toBeOnTheScreen();
-  });
-
-  it('"Testar agora" manda um lembrete de teste em alguns segundos', async () => {
-    await renderWith(createMockPatientAppGateway());
-
-    await fireEvent.press(
-      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
-    );
-    await fireEvent.press(screen.getByRole('button', { name: 'Testar agora' }));
-
-    expect(
-      await screen.findByText('Pronto! Em 5 segundos chega um lembrete de teste.')
-    ).toBeOnTheScreen();
-    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(
-      expect.objectContaining({ trigger: expect.objectContaining({ seconds: 5 }) })
-    );
-    expect(screen.queryByText(/bloqueadas neste celular/)).toBeNull();
-  });
-
-  it('avisa quando as notificações estão bloqueadas e leva às configurações', async () => {
-    jest
-      .mocked(Notifications.getPermissionsAsync)
-      .mockResolvedValue({ granted: false, canAskAgain: false } as never);
-    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined);
-    await renderWith(createMockPatientAppGateway());
-
-    await fireEvent.press(
-      await screen.findByRole('button', { name: /^Lembrete diário: .*Alterar$/ })
-    );
-    expect(
-      screen.getByText(
-        'As notificações do app estão bloqueadas neste celular. Sem elas, o lembrete não aparece.'
-      )
-    ).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole('button', { name: 'Abrir configurações' }));
-    expect(openSettings).toHaveBeenCalled();
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Testar agora' }));
-    expect(
-      await screen.findByText(
-        'Não deu para testar: as notificações do app estão bloqueadas neste celular.'
-      )
-    ).toBeOnTheScreen();
-    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
   it('mostra o erro do contrato', async () => {
