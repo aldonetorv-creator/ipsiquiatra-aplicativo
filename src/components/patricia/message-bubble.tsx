@@ -1,28 +1,70 @@
 import { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PatriciaAvatar } from './patricia-avatar';
 
+import { EmergencyCard } from '@/components/questionnaires/emergency-card';
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
 import { TextMessage } from '@/contracts/platform';
 import { formatTime } from '@/utils/time';
 
-export function MessageBubble({ message }: { message: TextMessage }) {
-  const fromPatient = message.author === 'patient';
+type Props = {
+  message: TextMessage;
+  // Toque num horário oferecido pela Patrícia real.
+  onPickSlot?: (slotId: string) => void;
+  busy?: boolean;
+};
 
-  return (
-    <View style={[styles.row, fromPatient && styles.rowPatient]}>
-      {fromPatient ? null : <PatriciaAvatar size={36} zoomable />}
-      <View style={[styles.bubble, fromPatient ? styles.bubblePatient : styles.bubblePatricia]}>
-        <ThemedText type="default" style={styles.text}>
-          {message.text}
-        </ThemedText>
-        <ThemedText type="small" style={styles.time}>
-          {formatTime(message.sentAt)}
-        </ThemedText>
-      </View>
+export function MessageBubble({ message, onPickSlot, busy = false }: Props) {
+  const fromPatient = message.author === 'patient';
+  const slots = !fromPatient && onPickSlot ? (message.slots ?? []) : [];
+
+  const bubble = (
+    <View style={[styles.bubble, fromPatient ? styles.bubblePatient : styles.bubblePatricia]}>
+      <ThemedText type="default" style={styles.text}>
+        {message.text}
+      </ThemedText>
+      <ThemedText type="small" style={styles.time}>
+        {formatTime(message.sentAt)}
+      </ThemedText>
     </View>
+  );
+
+  if (fromPatient) return <View style={[styles.row, styles.rowPatient]}>{bubble}</View>;
+  if (!slots.length && !message.crisis) {
+    return (
+      <View style={styles.row}>
+        <PatriciaAvatar size={36} zoomable />
+        {bubble}
+      </View>
+    );
+  }
+  return (
+    <PatriciaRow>
+      <View style={styles.stack}>
+        {bubble}
+        {slots.length ? (
+          <View style={styles.slots}>
+            {slots.map((slot) => (
+              <Pressable
+                key={slot.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Escolher ${slot.label}`}
+                accessibilityState={{ disabled: busy }}
+                disabled={busy}
+                onPress={() => onPickSlot?.(slot.id)}
+                style={({ pressed }) => [styles.slot, (pressed || busy) && styles.pressed]}>
+                <ThemedText type="smallBold" style={styles.slotText}>
+                  {slot.label}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        {message.crisis ? <EmergencyCard demo={false} /> : null}
+      </View>
+    </PatriciaRow>
   );
 }
 
@@ -46,6 +88,9 @@ const styles = StyleSheet.create({
   },
   fill: {
     flex: 1,
+  },
+  stack: {
+    gap: 8,
   },
   bubble: {
     maxWidth: '80%',
@@ -72,5 +117,24 @@ const styles = StyleSheet.create({
     color: Tokens.color.muted,
     fontSize: 12,
     lineHeight: 16,
+  },
+  slots: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  slot: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: Tokens.color.brandBorder,
+    backgroundColor: Tokens.color.brandSoft,
+  },
+  slotText: {
+    color: Tokens.color.brandDeep,
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });

@@ -1,3 +1,14 @@
+import type {
+  BookingConfirm,
+  BookingData,
+  BookingPath,
+  CancelConfirm,
+  IdentifyData,
+  NoAiReportData,
+  PatriciaSlot,
+  RescheduleConfirm,
+} from '@/contracts/patricia';
+
 export type ApiSuccess<T> = {
   ok: true;
   data: T;
@@ -74,6 +85,10 @@ export type TextMessage = {
   author: 'patricia' | 'patient';
   text: string;
   sentAt: string;
+  // Respostas da Patrícia real: horários para o paciente tocar e o bloco de
+  // emergência (o servidor detectou um sinal de crise).
+  slots?: PatriciaSlot[];
+  crisis?: boolean;
 };
 
 // Cartão "Diário de humor" enviado pela Patrícia; `answer` fica null até o
@@ -87,7 +102,49 @@ export type MoodCheckMessage = {
   answer: MoodLevel | null;
 };
 
-export type ConversationMessage = TextMessage | MoodCheckMessage;
+// Cartões da Patrícia real (os mesmos do chat do site). `open`: esperando o
+// paciente; `done`: concluído; `closed`: expirou ou foi deixado de lado.
+export type PatriciaCard =
+  | { type: 'consent' }
+  | { type: 'booking'; confirm: BookingConfirm }
+  | { type: 'reschedule'; confirm: RescheduleConfirm }
+  | { type: 'cancel'; confirm: CancelConfirm }
+  | { type: 'identify'; action: 'cancelar' | 'remarcar' }
+  | { type: 'report' };
+
+export type PatriciaCardMessage = {
+  id: string;
+  kind: 'patricia_card';
+  author: 'patricia';
+  // Título do cartão (aparece também na Início).
+  text: string;
+  sentAt: string;
+  card: PatriciaCard;
+  status: 'open' | 'done' | 'closed';
+  // Resumo do que aconteceu, depois de concluído ou fechado.
+  note?: string;
+};
+
+export type ConversationMessage = TextMessage | MoodCheckMessage | PatriciaCardMessage;
+
+// O que o paciente fez num cartão da Patrícia.
+export type PatriciaCardAction =
+  | { type: 'confirm' }
+  | { type: 'confirm_booking'; declared: BookingPath; data: BookingData }
+  | { type: 'release' }
+  | { type: 'keep' }
+  | { type: 'identify'; data: IdentifyData }
+  | { type: 'report'; data: NoAiReportData };
+
+// Resultado de um cartão: mensagens a inserir ou atualizar e, quando o cartão
+// continua aberto, os avisos dos campos ou um aviso geral.
+export type PatriciaCardOutcome = {
+  messages: ConversationMessage[];
+  fieldErrors?: Record<string, string>;
+  notice?: string;
+  // "Já sou paciente" sem cadastro encontrado: oferecer um cadastro novo.
+  offerNewRecord?: boolean;
+};
 
 export type MoodEntry = {
   id: string;
@@ -161,6 +218,19 @@ export interface PatientAppGateway {
   listMoodEntries(): Promise<ApiResult<MoodEntry[]>>;
   // Apaga a conversa e os registros de humor e recomeça a conversa.
   clearHistory(): Promise<ApiResult<ConversationMessage[]>>;
+  // Patrícia de verdade (a mesma do site): 'live' quando o app está ligado à
+  // plataforma; 'demo', com respostas fixas, quando não está.
+  patriciaMode(): 'live' | 'demo';
+  // Termo da conversa com IA: concordar abre a conversa; recusar oferece o
+  // relato sem IA.
+  answerPatriciaTerms(accept: boolean): Promise<ApiResult<ConversationMessage[]>>;
+  pickSlot(messageId: string, slotId: string): Promise<ApiResult<ConversationMessage[]>>;
+  submitPatriciaCard(
+    cardId: string,
+    action: PatriciaCardAction
+  ): Promise<ApiResult<PatriciaCardOutcome>>;
+  // O paciente saiu do app (triagem pela metade vira SMS com o link).
+  leavePatricia(): Promise<void>;
   // Questionários pedidos pelo médico, na ordem em que devem ser respondidos.
   listQuestionnaires(): Promise<ApiResult<Questionnaire[]>>;
   // `safetyTriggered`: a resposta de segurança pede as orientações de

@@ -1,7 +1,14 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  AppState,
+  FlatList,
+  KeyboardAvoidingView,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Composer } from '@/components/patricia/composer';
@@ -9,17 +16,21 @@ import { HelpPanel } from '@/components/patricia/help-panel';
 import { MessageBubble, PatriciaRow } from '@/components/patricia/message-bubble';
 import { MoodCheckCard } from '@/components/patricia/mood-check-card';
 import { PatriciaAvatar } from '@/components/patricia/patricia-avatar';
+import { PatriciaCard } from '@/components/patricia/patricia-card';
 import { ThemedText } from '@/components/themed-text';
 import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { ConversationMessage } from '@/contracts/platform';
 import { useConversation } from '@/hooks/use-conversation';
+import { usePatientAppGateway } from '@/services/patient-app-gateway';
 import { dayKey, formatDayLabel } from '@/utils/time';
 
-// Linhas da conversa: mensagens com um separador sempre que o dia muda.
+// Linhas da conversa: mensagens com um separador sempre que o dia muda, e o
+// "digitando" enquanto a Patrícia responde.
 type Row =
   | { kind: 'day'; key: string; label: string }
-  | { kind: 'message'; key: string; message: ConversationMessage };
+  | { kind: 'message'; key: string; message: ConversationMessage }
+  | { kind: 'typing'; key: string };
 
 function withDaySeparators(messages: ConversationMessage[]): Row[] {
   const rows: Row[] = [];
@@ -36,7 +47,29 @@ function withDaySeparators(messages: ConversationMessage[]): Row[] {
 }
 
 export default function PatriciaScreen() {
-  const { state, sendMessage, recordMood, requestService, clearHistory } = useConversation();
+  const {
+    state,
+    waiting,
+    mode,
+    sendMessage,
+    recordMood,
+    requestService,
+    clearHistory,
+    answerTerms,
+    pickSlot,
+    submitCard,
+  } = useConversation();
+  const gateway = usePatientAppGateway();
+  const live = mode === 'live';
+
+  // Saindo do app depois de marcar com a triagem pela metade, o servidor manda
+  // o link do que falta por SMS (como no site).
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (next) => {
+      if (next === 'background') gateway.leavePatricia().catch(() => undefined);
+    });
+    return () => subscription.remove();
+  }, [gateway]);
   const [actionError, setActionError] = useState<string | null>(null);
   // Os atalhos ficam escondidos até o paciente tocar no "+".
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -52,16 +85,48 @@ export default function PatriciaScreen() {
         </View>
       );
     }
+    if (item.kind === 'typing') {
+      return (
+        <PatriciaRow>
+          <View style={styles.typing} accessibilityLabel="Patrícia está digitando">
+            <ThemedText type="small" style={styles.role}>
+              digitando…
+            </ThemedText>
+          </View>
+        </PatriciaRow>
+      );
+    }
     const message = item.message;
-    return message.kind === 'mood_check' ? (
-      <PatriciaRow>
-        <MoodCheckCard
-          message={message}
-          onSubmit={(level, note) => recordMood({ checkId: message.id, level, note })}
-        />
-      </PatriciaRow>
-    ) : (
-      <MessageBubble message={message} />
+    if (message.kind === 'mood_check') {
+      return (
+        <PatriciaRow>
+          <MoodCheckCard
+            message={message}
+            onSubmit={(level, note) => recordMood({ checkId: message.id, level, note })}
+          />
+        </PatriciaRow>
+      );
+    }
+    if (message.kind === 'patricia_card') {
+      return (
+        <PatriciaRow>
+          <PatriciaCard
+            message={message}
+            busy={waiting}
+            onAnswerTerms={answerTerms}
+            onAction={(action) => submitCard(message.id, action)}
+          />
+        </PatriciaRow>
+      );
+    }
+    return (
+      <MessageBubble
+        message={message}
+        busy={waiting}
+        onPickSlot={
+          live ? async (slotId) => setActionError(await pickSlot(message.id, slotId)) : undefined
+        }
+      />
     );
   };
 
@@ -144,8 +209,9 @@ export default function PatriciaScreen() {
               size={18}
             />
             <ThemedText type="small" style={styles.noticeText}>
-              Versão de demonstração: a Patrícia ainda não lê suas mensagens. O histórico fica salvo
-              só neste aparelho. Em emergência, ligue 188 (CVV) ou 192 (SAMU).
+              {live
+                ? 'A Patrícia é a secretária virtual do Dr. Aldo, com apoio de inteligência artificial. Não faz diagnóstico nem orienta tratamento. Em emergência, ligue 188 (CVV) ou 192 (SAMU).'
+                : 'Versão de demonstração: a Patrícia ainda não lê suas mensagens. O histórico fica salvo só neste aparelho. Em emergência, ligue 188 (CVV) ou 192 (SAMU).'}
             </ThemedText>
           </View>
 
@@ -160,7 +226,10 @@ export default function PatriciaScreen() {
             // recentes, e as novas entram embaixo sem precisar rolar.
             <FlatList
               inverted
-              data={withDaySeparators(state.messages).reverse()}
+              data={[
+                ...(waiting ? [{ kind: 'typing', key: 'typing' } as Row] : []),
+                ...withDaySeparators(state.messages).reverse(),
+              ]}
               keyExtractor={(row) => row.key}
               renderItem={renderItem}
               contentContainerStyle={styles.messages}
@@ -335,6 +404,16 @@ const styles = StyleSheet.create({
     color: Tokens.color.brandDeep,
     fontSize: 13,
     lineHeight: 18,
+  },
+  typing: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 18,
+    borderTopLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: Tokens.color.border,
+    backgroundColor: Tokens.color.surface,
   },
   centered: {
     flex: 1,

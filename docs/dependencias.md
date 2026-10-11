@@ -65,8 +65,18 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 
 `@react-native-async-storage/async-storage` (versão fixada pelo SDK 57, no Expo
 Go) guarda no aparelho o histórico da conversa com a Patrícia e os registros
-de humor (chave `ipsiquiatra:patient-history`; na web, `localStorage`). Nada vai
-para a nuvem. O paciente pode apagar tudo pelo botão "Apagar histórico".
+de humor (chave `ipsiquiatra:patient-history`; na web, `localStorage`). O
+paciente pode apagar tudo pelo botão "Apagar histórico".
+
+Na demonstração, nada vai para a nuvem. Com a Patrícia real ligada
+(`docs/integracao-plataforma.md`), o que o paciente escreve na conversa e os
+dados dos cartões vão para a plataforma do iPsiquiatra, como no chat do site.
+No celular ficam a conversa (com o CPF escrito trocado por "[CPF omitido]") e
+o aceite do termo, com a versão (chave `ipsiquiatra:patricia-consent`), que
+continua valendo depois de "Apagar histórico". Os
+dados dos formulários (CPF, nascimento, celular, responsável) não ficam no
+celular. A integração não acrescenta pacotes: usa o `fetch` do React
+Native.
 
 Foi escolhido em vez de `expo-sqlite` porque funciona igual em iOS, Android e
 web; o suporte web do `expo-sqlite` ainda é experimental.

@@ -17,7 +17,9 @@ import {
   QuestionnaireAnswers,
   TextMessage,
 } from '@/contracts/platform';
+import { PatriciaApi } from '@/contracts/patricia';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
+import { createPatriciaLive } from '@/services/patricia-live';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
 import { careContactsAfter, careMessage, isHardDay } from '@/utils/care-contacts';
 import { dailyCheckText, reminderTimeOn } from '@/utils/daily-reminder';
@@ -178,6 +180,9 @@ type MockOptions = {
   now?: () => Date;
   // Onde o histórico fica salvo; por padrão, só em memória (testes).
   store?: KeyValueStore;
+  // Patrícia real (as rotas do chat do site). Sem ela, a conversa é a
+  // demonstração com respostas fixas.
+  patricia?: PatriciaApi;
 };
 
 export const HISTORY_STORAGE_KEY = 'ipsiquiatra:patient-history';
@@ -231,6 +236,7 @@ function parseHistory(raw: string | null): PersistedHistory | null {
 export function createMockPatientAppGateway({
   now = () => new Date(),
   store = createMemoryStore(),
+  patricia,
 }: MockOptions = {}): PatientAppGateway {
   let history: PersistedHistory | null = null;
   let loading: Promise<PersistedHistory> | null = null;
@@ -277,6 +283,25 @@ export function createMockPatientAppGateway({
   const save = async () => {
     await store.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history));
   };
+
+  const live = patricia
+    ? createPatriciaLive({
+        api: patricia,
+        store,
+        now,
+        nextId,
+        messages: () => history!.conversation,
+        save: () => save(),
+      })
+    : null;
+  const demoOnly = (): ApiFailure => ({
+    ok: false,
+    error: {
+      code: 'not_available',
+      message: 'A Patrícia de verdade aparece quando o app estiver ligado à plataforma.',
+    },
+    requestId: REQUEST_ID,
+  });
 
   const append = async (...messages: ConversationMessage[]) => {
     history!.conversation.push(...messages);
@@ -332,8 +357,7 @@ export function createMockPatientAppGateway({
   // Fixas desde a criação do gateway; a situação da nota fiscal segue o relógio.
   const appointments = mockAppointments(now());
   // Os questionários são pedidos para a próxima consulta.
-  const nextAppointmentId =
-    appointments.find((item) => item.status === 'scheduled')?.id ?? null;
+  const nextAppointmentId = appointments.find((item) => item.status === 'scheduled')?.id ?? null;
 
   let responses: Promise<PersistedResponses> | null = null;
   const loadResponses = () =>
@@ -367,6 +391,7 @@ export function createMockPatientAppGateway({
     },
     async listConversation() {
       await load();
+      await live?.onLoad();
       await ensureCareContacts();
       await ensureDailyMoodCheck();
       return mockResult([...history!.conversation]);
@@ -380,6 +405,7 @@ export function createMockPatientAppGateway({
         return validationFailure(`A mensagem pode ter até ${MESSAGE_MAX_LENGTH} caracteres.`);
       }
       await load();
+      if (live) return live.send(trimmed);
       return mockResult(
         await append(text('patient', trimmed), text('patricia', patriciaScript.afterMessage))
       );
@@ -424,6 +450,8 @@ export function createMockPatientAppGateway({
       const script = patriciaScript.services[service];
       if (!script) return validationFailure('Serviço desconhecido.');
       await load();
+      // Com a Patrícia real, o atalho vira o pedido na conversa e ela responde.
+      if (live) return live.send(script.request);
       return mockResult(
         await append(text('patient', script.request), text('patricia', script.reply))
       );
@@ -434,9 +462,31 @@ export function createMockPatientAppGateway({
     },
     async clearHistory() {
       await store.removeItem(HISTORY_STORAGE_KEY);
+      live?.reset();
       seed();
       await save();
       return mockResult([...history!.conversation]);
+    },
+    patriciaMode() {
+      return live ? 'live' : 'demo';
+    },
+    async answerPatriciaTerms(accept) {
+      if (!live) return demoOnly();
+      await load();
+      return live.answerTerms(accept);
+    },
+    async pickSlot(messageId, slotId) {
+      if (!live) return demoOnly();
+      await load();
+      return live.pickSlot(messageId, slotId);
+    },
+    async submitPatriciaCard(cardId, action) {
+      if (!live) return demoOnly();
+      await load();
+      return live.submitCard(cardId, action);
+    },
+    async leavePatricia() {
+      await live?.leave();
     },
     async listQuestionnaires() {
       const saved = await loadResponses();
