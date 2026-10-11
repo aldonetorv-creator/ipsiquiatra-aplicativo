@@ -3,11 +3,17 @@
 import * as Notifications from 'expo-notifications';
 
 import { DEFAULT_REMINDER_SETTINGS, MoodEntry, MoodLevel } from '@/contracts/platform';
-import { careContent, reminderContent, scheduleDailyReminders } from '@/services/daily-reminders';
+import {
+  careContent,
+  notificationAccess,
+  reminderContent,
+  scheduleDailyReminders,
+  sendTestReminder,
+} from '@/services/daily-reminders';
 
 jest.mock('expo-notifications', () => ({
   AndroidImportance: { HIGH: 6 },
-  SchedulableTriggerInputTypes: { DATE: 'date' },
+  SchedulableTriggerInputTypes: { DATE: 'date', TIME_INTERVAL: 'timeInterval' },
   setNotificationChannelAsync: jest.fn(async () => null),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
@@ -124,5 +130,39 @@ describe('scheduleDailyReminders', () => {
     expect(scheduled()).toEqual([
       { body: careContent('quiet_days').body, date: new Date(2026, 9, 10, 10) },
     ]);
+  });
+});
+
+describe('teste do lembrete e permissão', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it.each([
+    [{ granted: true, canAskAgain: true }, 'granted'],
+    [{ granted: false, canAskAgain: true }, 'ask'],
+    [{ granted: false, canAskAgain: false }, 'blocked'],
+  ] as const)('diz se as notificações estão liberadas (%o → %s)', async (permission, access) => {
+    mocked.getPermissionsAsync.mockResolvedValue(permission as never);
+
+    expect(await notificationAccess()).toBe(access);
+    expect(mocked.requestPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  it('manda um lembrete de teste em 5 segundos', async () => {
+    mocked.getPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: true } as never);
+
+    expect(await sendTestReminder(20)).toBe(true);
+    expect(mocked.scheduleNotificationAsync).toHaveBeenCalledWith({
+      content: reminderContent(20),
+      trigger: expect.objectContaining({ type: 'timeInterval', seconds: 5 }),
+    });
+    // O teste não mexe nos lembretes já agendados.
+    expect(mocked.cancelAllScheduledNotificationsAsync).not.toHaveBeenCalled();
+  });
+
+  it('sem permissão, não manda o teste', async () => {
+    mocked.getPermissionsAsync.mockResolvedValue({ granted: false, canAskAgain: false } as never);
+
+    expect(await sendTestReminder(20)).toBe(false);
+    expect(mocked.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 });

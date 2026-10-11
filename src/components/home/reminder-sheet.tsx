@@ -1,13 +1,14 @@
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { Linking, Modal, Pressable, StyleSheet, Switch, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { OutlineButton } from '@/components/ui/outline-button';
 import { Tokens } from '@/constants/theme';
 import { ReminderSettings } from '@/contracts/platform';
-import { formatReminderTime } from '@/utils/daily-reminder';
+import type { NotificationAccess } from '@/services/daily-reminders';
+import { formatReminderTime, TEST_DELAY_SECONDS } from '@/utils/daily-reminder';
 
 const STEP_MINUTES = 30;
 const EARLIEST = 6 * 60;
@@ -19,27 +20,40 @@ type Props = {
   // Devolve a mensagem de erro, ou null se salvou.
   onSave: (settings: ReminderSettings) => Promise<string | null>;
   onClose: () => void;
+  // Situação das notificações no celular e o envio de um lembrete de teste.
+  access: NotificationAccess;
+  onTest: (hour: number) => Promise<boolean>;
 };
 
 // O paciente escolhe o horário do lembrete diário ou desliga (decisão do
 // Dr. Aldo; ver docs/fases.md).
-export function ReminderSheet({ visible, settings, onSave, onClose }: Props) {
+export function ReminderSheet({ visible, ...props }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {visible ? <Sheet settings={settings} onSave={onSave} onClose={onClose} /> : null}
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={props.onClose}>
+      {visible ? <Sheet {...props} /> : null}
     </Modal>
   );
 }
 
-function Sheet({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
+function Sheet({ settings, onSave, onClose, access, onTest }: Omit<Props, 'visible'>) {
   const [enabled, setEnabled] = useState(settings.enabled);
   const [minutes, setMinutes] = useState(settings.hour * 60 + settings.minute);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   const time = { hour: Math.floor(minutes / 60), minute: minutes % 60 };
   const shift = (delta: number) =>
     setMinutes((current) => Math.min(LATEST, Math.max(EARLIEST, current + delta)));
+
+  const test = async () => {
+    const sent = await onTest(time.hour);
+    setTestResult(
+      sent
+        ? `Pronto! Em ${TEST_DELAY_SECONDS} segundos chega um lembrete de teste.`
+        : 'Não deu para testar: as notificações do app estão bloqueadas neste celular.'
+    );
+  };
 
   const save = async () => {
     setSaving(true);
@@ -103,6 +117,23 @@ function Sheet({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
             />
           </View>
         </View>
+
+        {access === 'blocked' ? (
+          <View style={styles.warning}>
+            <ThemedText type="small" style={styles.warningText}>
+              As notificações do app estão bloqueadas neste celular. Sem elas, o lembrete não
+              aparece.
+            </ThemedText>
+            <OutlineButton label="Abrir configurações" onPress={() => Linking.openSettings()} />
+          </View>
+        ) : null}
+
+        {access !== 'unsupported' ? <OutlineButton label="Testar agora" onPress={test} /> : null}
+        {testResult ? (
+          <ThemedText type="small" style={styles.muted}>
+            {testResult}
+          </ThemedText>
+        ) : null}
 
         {error ? (
           <ThemedText type="small" style={styles.error}>
@@ -223,6 +254,15 @@ const styles = StyleSheet.create({
   },
   error: {
     color: Tokens.color.brandDeep,
+  },
+  warning: {
+    gap: 10,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: Tokens.color.brandSoft,
+  },
+  warningText: {
+    color: Tokens.color.text,
   },
   actions: {
     flexDirection: 'row',

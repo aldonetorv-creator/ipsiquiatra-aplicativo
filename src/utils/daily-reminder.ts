@@ -26,6 +26,9 @@ export const dailyCheckText = (hour: number) =>
 export const reminderNotificationBody = (hour: number) =>
   `${dailyQuestion(hour)} Toque para registrar no diário de humor.`;
 
+// O lembrete de teste chega alguns segundos depois de pedido.
+export const TEST_DELAY_SECONDS = 5;
+
 // Próximos lembretes no horário escolhido. Hoje só entra se o horário ainda
 // não passou e o paciente ainda não registrou o humor.
 export function reminderDates(
