@@ -63,22 +63,27 @@ repete se o humor de hoje já foi registrado.
 Patrícia procura o paciente quando o quadro pede, como uma pessoa que pergunta
 se ele está bem. O objetivo é que o paciente se sinta cuidado e acompanhado.
 
-- **Na fase 2:** quem decide quando e como procurar é a IA da Patrícia da
-  plataforma, a partir do prontuário e da conversa. Por exemplo: depois de um
-  dia difícil, depois de dias sem contato, depois de uma mudança de medicação ou
-  perto da consulta. A IA só acolhe e pergunta como o paciente está: não
-  diagnostica, não orienta medicamento e não muda o tratamento. Cada contato
-  fica no prontuário com o motivo, e o protocolo de crise continua com regras
-  fora da IA.
+- **Quem abre e quem responde (decisão do Dr. Aldo):** a mensagem que abre o
+  contato pode ser pré-definida, escolhida pela resposta do diário de humor do
+  dia anterior. Quando o paciente responder, quem responde é sempre a IA da
+  Patrícia, com o contexto do prontuário e da conversa.
+- **Na fase 2:** além das mensagens pré-definidas, a IA da plataforma pode
+  decidir outros contatos a partir do prontuário. Por exemplo: depois de dias
+  sem contato, depois de uma mudança de medicação ou perto da consulta. A IA só
+  acolhe e pergunta como o paciente está: não diagnostica, não orienta
+  medicamento e não muda o tratamento. Cada contato fica no prontuário com o
+  motivo, e o protocolo de crise continua com regras fora da IA.
 - **Na fase 1 (sem IA):** duas regras fixas simulam a ideia a partir do último
   registro de humor:
   - depois de um dia "Mal" ou "Muito mal", a Patrícia acolhe na hora e, no dia
-    seguinte às 10h, procura o paciente com o diário de humor;
+    seguinte às 10h, procura o paciente para saber como ele está;
   - depois de 3 dias sem registro, às 10h, ela pergunta se está tudo bem.
 
-  Os contatos aparecem na conversa e com notificação no celular. Um registro
-  novo recomeça a contagem. Desligar o lembrete diário não desliga os contatos
-  de cuidado.
+  Os contatos são mensagens de conversa, sem o seletor de humor (decisão do
+  Dr. Aldo): o paciente responde escrevendo, como faria com uma pessoa. Na fase
+  2, quem responde é a IA da Patrícia. Os contatos aparecem na conversa e com
+  notificação no celular. Um registro novo recomeça a contagem. Desligar o
+  lembrete diário não desliga os contatos de cuidado.
 - **A definir:**
   - o máximo de contatos por dia ou por semana, para não cansar o paciente;
   - se o paciente pode pausar os contatos de cuidado (hoje, só desativando as
@@ -296,8 +301,9 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
   medicamento. Valem as travas da plataforma: a IA não escreve na agenda
   sozinha (o paciente confirma) e a detecção de crise é feita por regras fora
   da IA.
-- **Contatos de cuidado (fase 2):** a IA da plataforma decide quando procurar o
-  paciente (ver "Contatos de cuidado"), só para acolher e perguntar como ele
-  está.
+- **Contatos de cuidado (fase 2):** a mensagem que abre o contato pode ser
+  pré-definida, mas a resposta ao paciente é sempre da IA, que também pode
+  decidir outros contatos (ver "Contatos de cuidado"), só para acolher e
+  perguntar como ele está.
 - **IA clínica** (diagnóstico, conduta, interpretação de sintomas) continua
   fora do escopo.

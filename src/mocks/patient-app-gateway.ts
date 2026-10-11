@@ -336,8 +336,8 @@ export function createMockPatientAppGateway({
   // Contatos de cuidado (utils/care-contacts.ts): entram na conversa com o
   // horário em que a Patrícia procurou o paciente, mesmo que ele só abra o app
   // depois; se já houver mensagem mais nova, entram com o horário dela, para a
-  // conversa não sair de ordem. O do dia difícil traz o cartão do diário,
-  // a não ser que já haja um em aberto.
+  // conversa não sair de ordem. São mensagens de conversa, sem o cartão do
+  // diário: o paciente responde escrevendo (na fase 2, a IA responde).
   const ensureCareContacts = async () => {
     const current = now();
     const { conversation } = history!;
@@ -356,14 +356,7 @@ export function createMockPatientAppGateway({
         latest && new Date(latest.sentAt).getTime() > contact.at.getTime()
           ? new Date(latest.sentAt)
           : contact.at;
-      const openCheck = conversation.some(
-        (message) => message.kind === 'mood_check' && message.answer === null
-      );
-      await append(
-        contact.reason === 'hard_day' && !openCheck
-          ? moodCheck(body, sentAt)
-          : text('patricia', body, sentAt)
-      );
+      await append(text('patricia', body, sentAt));
     }
   };
 

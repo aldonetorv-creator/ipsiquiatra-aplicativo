@@ -18,7 +18,9 @@ export const CARE_HOUR = 10;
 export const QUIET_DAYS = 3;
 const HARD_DAY_MAX_LEVEL = 2;
 
-// Mensagem na conversa: no dia difícil, com o cartão do diário de humor.
+// Mensagem de conversa, sem o seletor de humor: o paciente responde
+// escrevendo, como com uma pessoa (pedido do Dr. Aldo). Na fase 2, quem
+// responde é a IA da Patrícia.
 export const careMessage: Record<CareReason, string> = {
   hard_day:
     'Bom dia. Ontem você me contou que o dia não estava fácil, e fiquei pensando em você. Como você está hoje?',

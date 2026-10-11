@@ -310,7 +310,7 @@ describe('contatos de cuidado da Patrícia', () => {
   const careOf = (messages: ConversationMessage[]) =>
     messages.filter((message) => Object.values(careMessage).includes(message.text));
 
-  it('acolhe o dia difícil e, no dia seguinte, procura o paciente com o diário', async () => {
+  it('acolhe o dia difícil e, no dia seguinte, procura o paciente numa conversa', async () => {
     const { store, reply } = await recorded(2);
     expect(reply).toEqual(expect.objectContaining({ text: patriciaScript.afterHardMood }));
 
@@ -320,17 +320,23 @@ describe('contatos de cuidado da Patrícia', () => {
     const later = await conversationAt(store, new Date(2026, 2, 10, 15, 0));
     expect(careOf(later)).toEqual([
       expect.objectContaining({
-        kind: 'mood_check',
-        answer: null,
+        kind: 'text',
+        author: 'patricia',
         text: careMessage.hard_day,
         // Fica com o horário em que a Patrícia procurou, mesmo abrindo depois.
         sentAt: new Date(2026, 2, 10, 10, 0).toISOString(),
       }),
     ]);
-    // Só uma vez, e à noite não abre outro cartão.
+    // Mensagem de conversa, sem o seletor de humor.
+    expect(later.filter((message) => message.kind === 'mood_check' && !message.answer)).toEqual(
+      []
+    );
+    // Só uma vez; à noite, o diário de humor segue no horário de sempre.
     const night = await conversationAt(store, new Date(2026, 2, 10, 21, 0));
     expect(careOf(night)).toHaveLength(1);
-    expect(night.filter((message) => message.kind === 'mood_check')).toHaveLength(2);
+    expect(night.at(-1)).toEqual(
+      expect.objectContaining({ kind: 'mood_check', answer: null, text: dailyCheckText(20) })
+    );
   });
 
   it('num dia bom, a Patrícia agradece e não volta no dia seguinte', async () => {
@@ -347,17 +353,6 @@ describe('contatos de cuidado da Patrícia', () => {
     await recorded(4, morning, store);
 
     expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)))).toEqual([]);
-  });
-
-  it('com um cartão já em aberto, procura o paciente só com a mensagem', async () => {
-    const { store } = await recorded(2);
-    await createMockPatientAppGateway({
-      store,
-      now: () => new Date(2026, 2, 10, 9, 0),
-    }).requestMoodCheck();
-
-    const care = careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)));
-    expect(care).toEqual([expect.objectContaining({ kind: 'text', text: careMessage.hard_day })]);
   });
 
   it('depois de 3 dias sem registro, pergunta se está tudo bem, uma vez só', async () => {
