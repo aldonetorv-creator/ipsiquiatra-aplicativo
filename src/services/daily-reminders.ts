@@ -3,7 +3,11 @@ import { Platform } from 'react-native';
 
 import { MoodEntry, ReminderSettings } from '@/contracts/platform';
 import { CareReason, careContactsAfter, careNotificationBody } from '@/utils/care-contacts';
-import { reminderDates, reminderNotificationBody } from '@/utils/daily-reminder';
+import {
+  reminderDates,
+  reminderNotificationBody,
+  TEST_DELAY_SECONDS,
+} from '@/utils/daily-reminder';
 import { dayKey } from '@/utils/time';
 
 const CHANNEL_ID = 'diario-de-humor';
@@ -45,7 +49,20 @@ export async function scheduleDailyReminders(
     await Notifications.cancelAllScheduledNotificationsAsync();
     return;
   }
-  // No Android 13+, o pedido de permissão só aparece depois de existir um canal.
+  if (!(await ensurePermission())) return;
+
+  await Notifications.cancelAllScheduledNotificationsAsync();
+  for (const { date, content } of planned) {
+    await Notifications.scheduleNotificationAsync({
+      content,
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date, channelId: CHANNEL_ID },
+    });
+  }
+}
+
+// Pede a permissão quando o celular ainda deixa pedir. No Android 13+, o pedido
+// só aparece depois de existir um canal.
+async function ensurePermission() {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Diário de humor',
@@ -56,13 +73,31 @@ export async function scheduleDailyReminders(
   if (!granted && canAskAgain) {
     ({ granted } = await Notifications.requestPermissionsAsync());
   }
-  if (!granted) return;
+  return granted;
+}
 
-  await Notifications.cancelAllScheduledNotificationsAsync();
-  for (const { date, content } of planned) {
-    await Notifications.scheduleNotificationAsync({
-      content,
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date, channelId: CHANNEL_ID },
-    });
-  }
+// "blocked": o paciente negou e o celular não deixa pedir de novo; só nas
+// configurações do celular. "unsupported": na web não há notificação local.
+export type NotificationAccess = 'granted' | 'ask' | 'blocked' | 'unsupported';
+
+export async function notificationAccess(): Promise<NotificationAccess> {
+  if (Platform.OS === 'web') return 'unsupported';
+  const { granted, canAskAgain } = await Notifications.getPermissionsAsync();
+  if (granted) return 'granted';
+  return canAskAgain ? 'ask' : 'blocked';
+}
+
+// Lembrete de teste em alguns segundos, para o paciente ver como chega sem
+// esperar o horário. Devolve false se não houver permissão.
+export async function sendTestReminder(hour: number) {
+  if (Platform.OS === 'web' || !(await ensurePermission())) return false;
+  await Notifications.scheduleNotificationAsync({
+    content: reminderContent(hour),
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: TEST_DELAY_SECONDS,
+      channelId: CHANNEL_ID,
+    },
+  });
+  return true;
 }

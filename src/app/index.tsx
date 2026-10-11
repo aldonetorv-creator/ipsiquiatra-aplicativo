@@ -17,11 +17,13 @@ import { IconBadge } from '@/components/ui/icon-badge';
 import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
+import { useReminderTest } from '@/hooks/use-reminder-test';
 
 export default function HomeScreen() {
   const { state, ensureMoodCheck, requestService, updateReminder } = useHome();
   const [actionError, setActionError] = useState<string | null>(null);
   const [editingReminder, setEditingReminder] = useState(false);
+  const reminderTest = useReminderTest();
 
   const registerMood = async () => {
     const failure = await ensureMoodCheck();
@@ -96,6 +98,8 @@ export default function HomeScreen() {
                 settings={state.reminder}
                 onSave={updateReminder}
                 onClose={() => setEditingReminder(false)}
+                access={reminderTest.access}
+                onTest={reminderTest.test}
               />
 
               <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/cofre')} />

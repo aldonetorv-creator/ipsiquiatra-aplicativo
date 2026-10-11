@@ -51,7 +51,9 @@ repete se o humor de hoje já foi registrado.
 - **O paciente escolhe o horário ou desliga (decisão do Dr. Aldo):** 20h é o
   padrão. Na Início, o cartão do diário de humor mostra o horário e "Alterar",
   com passos de 30 minutos, das 06:00 às 23:30. Desligado, não há mensagem nem
-  notificação.
+  notificação. Na mesma janela, "Testar agora" manda um lembrete de teste em 5
+  segundos e, se as notificações do app estiverem bloqueadas no celular, um
+  aviso leva às configurações.
 - **Na fase 1:** a mensagem aparece na conversa a partir do horário escolhido, e
   o celular avisa com uma notificação local nesse horário. Tocar na notificação
   abre a conversa. O horário fica salvo no aparelho.
