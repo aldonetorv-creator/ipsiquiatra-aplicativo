@@ -54,7 +54,7 @@ export default function HomeScreen() {
               {state.status === 'ready' ? `${state.greeting}!` : 'Olá!'}
             </ThemedText>
             <ThemedText type="default" style={styles.greetingSubtitle}>
-              Tem alguém acompanhando você.
+              Tem alguém cuidando de você.
             </ThemedText>
           </View>
 

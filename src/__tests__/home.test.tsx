@@ -37,6 +37,7 @@ describe('Início', () => {
     await renderWith(createMockPatientAppGateway());
 
     expect(await screen.findByText(/^(Bom dia|Boa tarde|Boa noite)!$/)).toBeOnTheScreen();
+    expect(screen.getByText('Tem alguém cuidando de você.')).toBeOnTheScreen();
     expect(screen.getByText(patriciaScript.moodCheck)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir conversa com a Patrícia' }));
