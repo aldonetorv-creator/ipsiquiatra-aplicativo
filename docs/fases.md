@@ -18,12 +18,15 @@ app.
   configuração própria (valor, modalidade, convênios, regras de remarcação) e
   endereço próprio no site (`/patricia/<slug>`).
 - **Site e app são portas para a mesma Patrícia.** O app não terá uma Patrícia
-  própria: na fase 2, a conversa do app chama o serviço da Patrícia na
-  plataforma, pelo contrato `PatientAppGateway`.
+  própria: a conversa do app chama o serviço da Patrícia na plataforma, pelo
+  contrato `PatientAppGateway`. A primeira parte já existe: com o endereço da
+  Patrícia configurado, o app usa as mesmas rotas públicas do chat do site
+  para conversar, agendar, remarcar e cancelar (ver
+  `docs/integracao-plataforma.md`).
 - **Regra nova entra uma vez, na plataforma,** e vale no site e no app (por
   exemplo, prazo de remarcação, cobrança e nota fiscal).
-- **Na fase 1,** a Patrícia do app é só um roteiro de demonstração, sem IA, e
-  não deve ganhar lógica própria além disso.
+- **Sem o endereço configurado,** a Patrícia do app continua um roteiro de
+  demonstração, sem IA, e não deve ganhar lógica própria além disso.
 
 ### Contexto e prontuário
 
@@ -139,12 +142,22 @@ sem backend, seguindo as regras da
 | Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
-conversa, mas nesta fase a Patrícia só avisa que o serviço chega em breve.
+conversa. Na demonstração, a Patrícia só avisa que o serviço chega em breve.
+
+**Patrícia real (frente 1, decisão do Dr. Aldo):** com o endereço da Patrícia
+configurado, a conversa passa a ser com a Patrícia da plataforma, com IA: o
+mesmo termo do site, horários em botões, cartões para confirmar consulta,
+remarcação e cancelamento, identificação, relato sem IA para quem não aceita o
+termo e as orientações de crise. Os atalhos vão para ela como mensagem. O
+resto do app (Início, Consultas, Cofre, Questionários, diário e contatos de
+cuidado) continua simulado até o login do paciente. Detalhes e limitações em
+`docs/integracao-plataforma.md`.
 
 ## Fase 2 — atendimento pelo app
 
-**Nada desta fase está implementado.** Ela faz parte do escopo do MVP e entra
-depois da fase 1.
+**Desta fase, só a conversa com a Patrícia real está implementada** (frente 1,
+acima): agendar, remarcar e cancelar pela conversa. O resto faz parte do escopo
+do MVP e entra depois.
 
 ### Jornada de uma consulta
 
@@ -219,7 +232,9 @@ credenciais bancárias não podem ir no aplicativo do paciente.
 A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
 
 - a API da plataforma do iPsiquiatra no lugar do mock, a mesma que atende o
-  site (o contrato `PatientAppGateway` já permite a troca sem mudar as telas);
+  site (o contrato `PatientAppGateway` já permite a troca sem mudar as telas).
+  A conversa com a Patrícia já usa as rotas públicas da plataforma; consultas,
+  documentos, questionários e diário ainda dependem do login;
 - login do paciente;
 - criptografia em repouso do histórico no aparelho, consentimento explícito e
   política de retenção (ver `docs/dependencias.md`, seção de privacidade);
@@ -292,13 +307,15 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 
 ## IA
 
-- **Fase 1:** a Patrícia do app não usa IA; ela não lê nem interpreta as
-  mensagens.
-- **Fase 2:** o app passa a usar a Patrícia da plataforma, que já conversa com
-  IA como secretária virtual: agendamento, dúvidas sobre o atendimento e as
-  perguntas de preparação para a consulta, sem diagnóstico e sem orientar
-  medicamento. Valem as travas da plataforma: a IA não escreve na agenda
-  sozinha (o paciente confirma) e a detecção de crise é feita por regras fora
+- **Demonstração:** sem o endereço da Patrícia configurado, a Patrícia do app
+  não usa IA; ela não lê nem interpreta as mensagens.
+- **Patrícia real (frente 1, já no app):** o app usa a Patrícia da plataforma,
+  que conversa com IA como secretária virtual. O app não tem IA própria: a IA,
+  as regras e as travas são as da plataforma. Ela atende agendamento,
+  remarcação, cancelamento, dúvidas sobre o atendimento e as perguntas de
+  preparação para a consulta, sem diagnóstico e sem orientar medicamento.
+  Valem as travas da plataforma: a IA não escreve na agenda sozinha (o
+  paciente confirma no cartão) e a detecção de crise é feita por regras fora
   da IA.
 - **Contatos de cuidado (fase 2):** a mensagem que abre o contato pode ser
   pré-definida, mas a resposta ao paciente é sempre da IA, que também pode

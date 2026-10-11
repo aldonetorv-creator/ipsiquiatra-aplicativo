@@ -14,8 +14,10 @@ Aplicativo do paciente iPsiquiatra, iniciado como Sprint 0 em React Native, Expo
 ## Fora do escopo por enquanto
 
 - Autenticação real.
-- Dados reais de paciente, PHI ou prontuário.
-- Backend, pagamentos, NFS-e, telemedicina e fluxos clínicos reais.
+- Dados reais de paciente, PHI ou prontuário guardados pelo app. A única
+  exceção é a conversa com a Patrícia real, que vai para a plataforma do
+  iPsiquiatra como no chat do site (ver `docs/integracao-plataforma.md`).
+- Backend próprio, pagamentos, NFS-e, telemedicina e fluxos clínicos reais.
 - IA clínica ou tomada de decisão automatizada.
 
 ## Fases
@@ -24,7 +26,8 @@ O plano está em [`docs/fases.md`](docs/fases.md). A fase 1 é o MVP de
 demonstração, com dados simulados. A fase 2 traz a jornada completa da
 consulta pelo app: agendamento, cobrança pela Patrícia, pagamento confirmado
 pela integração com o Nubank, teleconsulta por videochamada e nota fiscal
-(NFS-e) emitida 24 horas depois da consulta. Nada dela está implementado ainda.
+(NFS-e) emitida 24 horas depois da consulta. Dela, só a conversa com a
+Patrícia real (agendar, remarcar e cancelar) já existe.
 
 ## Comandos
 
@@ -59,7 +62,7 @@ Questionários (`useQuestionnaires`) e a conversa com a Patrícia
 
 ## Patrícia nesta versão
 
-A conversa com a Patrícia é **simulada**: as respostas são textos fixos e não
+Por padrão, a conversa com a Patrícia é **simulada**: as respostas são textos fixos e não
 clínicos, e ela não lê nem interpreta o que o paciente escreve (sem IA, conforme
 a issue #1). O histórico da conversa e do humor fica salvo **só no aparelho**
 (AsyncStorage) e pode ser apagado em "Apagar histórico"; a cada novo dia a
@@ -67,16 +70,20 @@ Patrícia abre um novo registro de humor. Ver privacidade em
 `docs/dependencias.md`. A tela mostra esse aviso e os
 contatos de emergência (CVV 188 e SAMU 192).
 
-Esse roteiro é provisório. A Patrícia é uma só, a mesma do site: na fase 2, o
-app conversa com o serviço da Patrícia na plataforma do iPsiquiatra (uma
-Patrícia por médico), sem lógica própria no app. A conversa, o diário de humor
-e as escalas passam a ser guardados na plataforma e entram no prontuário,
-como contexto para a Patrícia e para o médico. Ver `docs/fases.md`.
+Esse roteiro é provisório. A Patrícia é uma só, a mesma do site. Com
+`EXPO_PUBLIC_PATRICIA_SLUG` configurado, o app já conversa com a Patrícia da
+plataforma do iPsiquiatra, com IA, pelas mesmas rotas públicas do chat do site:
+termo, agendamento, remarcação, cancelamento e orientações de crise (ver
+[`docs/integracao-plataforma.md`](docs/integracao-plataforma.md)). Sem essa
+configuração, continua a demonstração. Com o login do paciente (fase 2), a
+conversa, o diário de humor e as escalas passam a ser guardados na plataforma e
+entram no prontuário, como contexto para a Patrícia e para o médico. Ver
+`docs/fases.md`.
 
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
-passam pelo contrato (`requestService`), mas nesta fase a Patrícia só avisa que
-o serviço chega em breve: agenda e NFS-e são da fase 2 (ver `docs/fases.md`). "Encontrar documento"
-abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
+passam pelo contrato (`requestService`). Na demonstração, a Patrícia só avisa
+que o serviço chega em breve; com a Patrícia real, o pedido vai para ela.
+"Encontrar documento" abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
 
 ## Princípio de evolução
 

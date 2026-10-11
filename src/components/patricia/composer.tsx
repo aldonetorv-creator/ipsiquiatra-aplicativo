@@ -27,16 +27,19 @@ export function Composer({
 
   const canSend = text.trim().length > 0 && !sending;
 
+  // O campo esvazia na hora (a mensagem já aparece na conversa); se não der
+  // para enviar, o texto volta.
   const send = async () => {
     if (!canSend) return;
+    const draft = text;
     setSending(true);
     setError(null);
-    const failure = await onSend(text);
+    setText('');
+    const failure = await onSend(draft);
     setSending(false);
     if (failure) {
       setError(failure);
-    } else {
-      setText('');
+      setText(draft);
     }
   };
 

@@ -10,8 +10,8 @@ const colors = {
 };
 
 // Orientações de emergência, as mesmas da Patrícia da plataforma: SAMU 192,
-// pronto-socorro e CVV 188.
-export function EmergencyCard() {
+// pronto-socorro e CVV 188. `demo`: avisa que a demonstração não chega ao médico.
+export function EmergencyCard({ demo = true }: { demo?: boolean }) {
   return (
     <View style={styles.card} accessibilityRole="alert">
       <View style={styles.header}>
@@ -29,9 +29,11 @@ export function EmergencyCard() {
         pronto-socorro mais próximo. O CVV atende 24 horas pelo 188, com ligação gratuita, ou pelo
         chat em cvv.org.br.
       </ThemedText>
-      <ThemedText type="small" style={styles.text}>
-        Esta versão de demonstração ainda não avisa o Dr. Aldo.
-      </ThemedText>
+      {demo ? (
+        <ThemedText type="small" style={styles.text}>
+          Esta versão de demonstração ainda não avisa o Dr. Aldo.
+        </ThemedText>
+      ) : null}
       <View style={styles.actions}>
         <CallButton label="Ligar para o SAMU (192)" phone="192" />
         <CallButton label="Ligar para o CVV (188)" phone="188" />
