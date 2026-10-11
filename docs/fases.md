@@ -59,6 +59,38 @@ repete se o humor de hoje já foi registrado.
   na conversa, no fuso do paciente e no horário que ele escolheu (a escolha passa
   a ficar na plataforma). As notificações locais do app saem.
 
+**Contatos de cuidado (decisão do Dr. Aldo):** além da mensagem diária, a
+Patrícia procura o paciente quando o quadro pede, como uma pessoa que pergunta
+se ele está bem. O objetivo é que o paciente se sinta cuidado e acompanhado.
+
+- **Quem abre e quem responde (decisão do Dr. Aldo):** a mensagem que abre o
+  contato pode ser pré-definida, escolhida pela resposta do diário de humor do
+  dia anterior. Quando o paciente responder, quem responde é sempre a IA da
+  Patrícia, com o contexto do prontuário e da conversa.
+- **Na fase 2:** além das mensagens pré-definidas, a IA da plataforma pode
+  decidir outros contatos a partir do prontuário. Por exemplo: depois de dias
+  sem contato, depois de uma mudança de medicação ou perto da consulta. A IA só
+  acolhe e pergunta como o paciente está: não diagnostica, não orienta
+  medicamento e não muda o tratamento. Cada contato fica no prontuário com o
+  motivo, e o protocolo de crise continua com regras fora da IA.
+- **Na fase 1 (sem IA):** duas regras fixas simulam a ideia a partir do último
+  registro de humor:
+  - depois de um dia "Mal" ou "Muito mal", a Patrícia acolhe na hora e, no dia
+    seguinte às 10h, procura o paciente para saber como ele está;
+  - depois de 3 dias sem registro, às 10h, ela pergunta se está tudo bem.
+
+  Os contatos são mensagens de conversa, sem o seletor de humor (decisão do
+  Dr. Aldo): o paciente responde escrevendo, como faria com uma pessoa. Na fase
+  2, quem responde é a IA da Patrícia. Os contatos aparecem na conversa e com
+  notificação no celular. Um registro novo recomeça a contagem. Desligar o
+  lembrete diário não desliga os contatos de cuidado.
+- **A definir:**
+  - o máximo de contatos por dia ou por semana, para não cansar o paciente;
+  - se o paciente pode pausar os contatos de cuidado (hoje, só desativando as
+    notificações do app no celular);
+  - em quais situações do prontuário a IA pode se basear e quem revisa os
+    textos.
+
 **O que vai para o prontuário (decisão do Dr. Aldo):**
 
 - os registros do diário de humor (o humor e o texto);
@@ -102,7 +134,7 @@ sem backend, seguindo as regras da
 | Área | Situação |
 |---|---|
 | Início | Feito: última mensagem da Patrícia, "Sua próxima consulta", "Antes da sua consulta", diário de humor da semana, "Seu plano de cuidados está pronto" e "Agora: Acompanhamento · X dias desde sua última consulta". |
-| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, mensagem diária às 20h com notificação no celular (o paciente muda o horário ou desliga na Início), registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
+| Patrícia | Feito: conversa simulada (sem IA) com histórico salvo no aparelho, mensagem diária às 20h com notificação no celular (o paciente muda o horário ou desliga na Início), contatos de cuidado simulados (no dia seguinte a um dia difícil e depois de 3 dias sem registro), registro diário de humor (o texto "Quer me contar um pouco mais?" é escrito numa janela própria do Diário de humor) e atalhos "Posso ajudar você com", escondidos atrás do botão "+". |
 | Consultas | Feito: próxima consulta (teleconsulta ou presencial) e todas as consultas anteriores numa roleta circular (a do centro em destaque, as de cima e de baixo menores e inclinadas); tocar numa consulta abre o Cofre só com os documentos dela. "Remarcar" e "Agendar nova consulta" levam o pedido à Patrícia. |
 | Cofre | Feito: documentos agrupados por consulta, com "Nota fiscal referente à consulta do dia" e o aviso de emissão 24 horas depois da consulta. |
 | Questionários | Feito: Atualização pré-consulta, WHO-5, PHQ-9 e GAD-7, com os mesmos textos da plataforma, uma pergunta por vez. O item 9 do PHQ-9 mostra na hora as orientações de emergência. As respostas ficam no aparelho, e a Início mostra quanto tempo falta. |
@@ -269,5 +301,9 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
   medicamento. Valem as travas da plataforma: a IA não escreve na agenda
   sozinha (o paciente confirma) e a detecção de crise é feita por regras fora
   da IA.
+- **Contatos de cuidado (fase 2):** a mensagem que abre o contato pode ser
+  pré-definida, mas a resposta ao paciente é sempre da IA, que também pode
+  decidir outros contatos (ver "Contatos de cuidado"), só para acolher e
+  perguntar como ele está.
 - **IA clínica** (diagnóstico, conduta, interpretação de sintomas) continua
   fora do escopo.

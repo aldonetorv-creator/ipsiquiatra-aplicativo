@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 
 import {
+  ConversationMessage,
   DocumentMetadata,
   MESSAGE_MAX_LENGTH,
   MOOD_NOTE_MAX_LENGTH,
@@ -21,6 +22,7 @@ import {
   REMINDER_STORAGE_KEY,
 } from '@/mocks/patient-app-gateway';
 import { createMemoryStore } from '@/services/storage';
+import { careMessage } from '@/utils/care-contacts';
 import { dailyCheckText } from '@/utils/daily-reminder';
 
 const kinds: DocumentMetadata['kind'][] = [
@@ -284,6 +286,123 @@ describe('lembrete diário', () => {
   });
 });
 
+describe('contatos de cuidado da Patrícia', () => {
+  const evening = new Date(2026, 2, 9, 21, 0);
+
+  // Registra o humor no cartão em aberto e devolve o histórico salvo.
+  async function recorded(level: MoodLevel, at = evening, store = createMemoryStore()) {
+    const gateway = createMockPatientAppGateway({ store, now: () => at });
+    const conversation = await gateway.listConversation();
+    if (!conversation.ok) throw new Error('listConversation falhou');
+    const open = conversation.data.find(
+      (message) => message.kind === 'mood_check' && message.answer === null
+    )!;
+    const result = await gateway.recordMood({ checkId: open.id, level, note: null });
+    if (!result.ok) throw new Error('recordMood falhou');
+    return { store, reply: result.data.messages.at(-1)! };
+  }
+
+  const conversationAt = async (store: ReturnType<typeof createMemoryStore>, at: Date) => {
+    const result = await createMockPatientAppGateway({ store, now: () => at }).listConversation();
+    if (!result.ok) throw new Error('listConversation falhou');
+    return result.data;
+  };
+  const careOf = (messages: ConversationMessage[]) =>
+    messages.filter((message) => Object.values(careMessage).includes(message.text));
+
+  it('acolhe o dia difícil e, no dia seguinte, procura o paciente numa conversa', async () => {
+    const { store, reply } = await recorded(2);
+    expect(reply).toEqual(expect.objectContaining({ text: patriciaScript.afterHardMood }));
+
+    // Antes das 10h, ainda não.
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 9, 0)))).toEqual([]);
+
+    const later = await conversationAt(store, new Date(2026, 2, 10, 15, 0));
+    expect(careOf(later)).toEqual([
+      expect.objectContaining({
+        kind: 'text',
+        author: 'patricia',
+        text: careMessage.hard_day,
+        // Fica com o horário em que a Patrícia procurou, mesmo abrindo depois.
+        sentAt: new Date(2026, 2, 10, 10, 0).toISOString(),
+      }),
+    ]);
+    // Mensagem de conversa, sem o seletor de humor.
+    expect(later.filter((message) => message.kind === 'mood_check' && !message.answer)).toEqual(
+      []
+    );
+    // Só uma vez; à noite, o diário de humor segue no horário de sempre.
+    const night = await conversationAt(store, new Date(2026, 2, 10, 21, 0));
+    expect(careOf(night)).toHaveLength(1);
+    expect(night.at(-1)).toEqual(
+      expect.objectContaining({ kind: 'mood_check', answer: null, text: dailyCheckText(20) })
+    );
+  });
+
+  it('num dia bom, a Patrícia agradece e não volta no dia seguinte', async () => {
+    const { store, reply } = await recorded(4);
+    expect(reply).toEqual(expect.objectContaining({ text: patriciaScript.afterMood }));
+
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)))).toEqual([]);
+  });
+
+  it('se o paciente já contou que melhorou, não procura pelo dia difícil', async () => {
+    const { store } = await recorded(1);
+    const morning = new Date(2026, 2, 10, 8, 0);
+    await createMockPatientAppGateway({ store, now: () => morning }).requestMoodCheck();
+    await recorded(4, morning, store);
+
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)))).toEqual([]);
+  });
+
+  it('depois de 3 dias sem registro, pergunta se está tudo bem, uma vez só', async () => {
+    const { store } = await recorded(3);
+
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 11, 21, 0)))).toEqual([]);
+    const quiet = careOf(await conversationAt(store, new Date(2026, 2, 14, 9, 0)));
+    expect(quiet).toEqual([
+      expect.objectContaining({
+        kind: 'text',
+        author: 'patricia',
+        text: careMessage.quiet_days,
+        sentAt: new Date(2026, 2, 12, 10, 0).toISOString(),
+      }),
+    ]);
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 20, 9, 0)))).toHaveLength(1);
+  });
+
+  it('não sai de ordem se já há mensagem mais nova na conversa', async () => {
+    const { store } = await recorded(3);
+    await createMockPatientAppGateway({
+      store,
+      now: () => new Date(2026, 2, 12, 11, 0),
+    }).sendMessage('Oi');
+
+    const messages = await conversationAt(store, new Date(2026, 2, 12, 12, 0));
+    const times = messages.map((message) => new Date(message.sentAt).getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    expect(careOf(messages)).toHaveLength(1);
+  });
+
+  it('procura o paciente mesmo com o lembrete diário desligado', async () => {
+    const { store } = await recorded(2);
+    await createMockPatientAppGateway({ store, now: () => evening }).updateReminderSettings({
+      enabled: false,
+      hour: 20,
+      minute: 0,
+    });
+
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 10, 15, 0)))).toHaveLength(1);
+  });
+
+  it('não procura quem ainda não registrou nenhum humor', async () => {
+    const store = createMemoryStore();
+    await conversationAt(store, evening);
+
+    expect(careOf(await conversationAt(store, new Date(2026, 2, 20, 15, 0)))).toEqual([]);
+  });
+});
+
 describe('histórico salvo no aparelho', () => {
   const day1 = new Date(2026, 2, 9, 20, 0);
 
@@ -330,7 +449,7 @@ describe('histórico salvo no aparelho', () => {
 
   it('às 20h a Patrícia pergunta como foi o dia, mantendo os cartões anteriores', async () => {
     const store = createMemoryStore();
-    await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 2);
+    await answerOpenCheck(createMockPatientAppGateway({ store, now: () => day1 }), 3);
     const morning = new Date(2026, 2, 10, 9, 0);
     const evening = new Date(2026, 2, 10, 20, 5);
 
@@ -339,7 +458,7 @@ describe('histórico salvo no aparelho', () => {
 
     const tonight = createMockPatientAppGateway({ store, now: () => evening });
     expect(await checksOf(tonight)).toEqual([
-      expect.objectContaining({ answer: 2, sentAt: day1.toISOString() }),
+      expect.objectContaining({ answer: 3, sentAt: day1.toISOString() }),
       expect.objectContaining({
         answer: null,
         text: dailyCheckText(20),
