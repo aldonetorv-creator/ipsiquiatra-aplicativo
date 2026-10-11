@@ -1,7 +1,7 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { MoodEntry, ReminderSettings } from '@/contracts/platform';
+import { notifications, notificationsUnavailable } from '@/services/notifications-module';
 import { CareReason, careContactsAfter, careNotificationBody } from '@/utils/care-contacts';
 import {
   reminderDates,
@@ -31,7 +31,8 @@ export async function scheduleDailyReminders(
   moodEntries: MoodEntry[],
   now: Date = new Date()
 ) {
-  if (Platform.OS === 'web') return;
+  const Notifications = notifications();
+  if (!Notifications) return;
   const recordedToday = moodEntries.some(
     (entry) => dayKey(new Date(entry.recordedAt)) === dayKey(now)
   );
@@ -49,7 +50,7 @@ export async function scheduleDailyReminders(
     await Notifications.cancelAllScheduledNotificationsAsync();
     return;
   }
-  if (!(await ensurePermission())) return;
+  if (!(await ensurePermission(Notifications))) return;
 
   await Notifications.cancelAllScheduledNotificationsAsync();
   for (const { date, content } of planned) {
@@ -62,7 +63,7 @@ export async function scheduleDailyReminders(
 
 // Pede a permissão quando o celular ainda deixa pedir. No Android 13+, o pedido
 // só aparece depois de existir um canal.
-async function ensurePermission() {
+async function ensurePermission(Notifications: NonNullable<ReturnType<typeof notifications>>) {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Diário de humor',
@@ -78,10 +79,12 @@ async function ensurePermission() {
 
 // "blocked": o paciente negou e o celular não deixa pedir de novo; só nas
 // configurações do celular. "unsupported": na web não há notificação local.
-export type NotificationAccess = 'granted' | 'ask' | 'blocked' | 'unsupported';
+// "expo_go": no Expo Go do Android não há notificação (notifications-module.ts).
+export type NotificationAccess = 'granted' | 'ask' | 'blocked' | 'unsupported' | 'expo_go';
 
 export async function notificationAccess(): Promise<NotificationAccess> {
-  if (Platform.OS === 'web') return 'unsupported';
+  const Notifications = notifications();
+  if (!Notifications) return notificationsUnavailable === 'expo_go' ? 'expo_go' : 'unsupported';
   const { granted, canAskAgain } = await Notifications.getPermissionsAsync();
   if (granted) return 'granted';
   return canAskAgain ? 'ask' : 'blocked';
@@ -90,7 +93,8 @@ export async function notificationAccess(): Promise<NotificationAccess> {
 // Lembrete de teste em alguns segundos, para o paciente ver como chega sem
 // esperar o horário. Devolve false se não houver permissão.
 export async function sendTestReminder(hour: number) {
-  if (Platform.OS === 'web' || !(await ensurePermission())) return false;
+  const Notifications = notifications();
+  if (!Notifications || !(await ensurePermission(Notifications))) return false;
   await Notifications.scheduleNotificationAsync({
     content: reminderContent(hour),
     trigger: {
