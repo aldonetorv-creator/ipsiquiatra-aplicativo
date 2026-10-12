@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NextAppointmentCard } from '@/components/appointments/next-appointment-card';
+import { AccountCard } from '@/components/home/account-card';
 import { CarePlanCard } from '@/components/home/care-plan-card';
 import { FollowUpCard } from '@/components/home/follow-up-card';
 import { MoodWeekCard } from '@/components/home/mood-week-card';
@@ -16,9 +17,11 @@ import { IconBadge } from '@/components/ui/icon-badge';
 import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
+import { usePatientAppGateway } from '@/services/patient-app-gateway';
 
 export default function HomeScreen() {
   const { state, ensureMoodCheck, requestService } = useHome();
+  const livePatricia = usePatientAppGateway().patriciaMode() === 'live';
   const [actionError, setActionError] = useState<string | null>(null);
 
   const registerMood = async () => {
@@ -55,6 +58,8 @@ export default function HomeScreen() {
               Tem alguém cuidando de você.
             </ThemedText>
           </View>
+
+          <AccountCard />
 
           {state.status === 'error' ? (
             <ThemedText type="default" style={styles.muted}>
@@ -97,7 +102,9 @@ export default function HomeScreen() {
           ) : null}
 
           <ThemedText type="small" style={styles.demo}>
-            Versão de demonstração: dados fictícios, nada é enviado ao consultório.
+            {livePatricia
+              ? 'Consultas, documentos e questionários ainda são de demonstração, com dados fictícios. A conversa com a Patrícia já vai para a clínica.'
+              : 'Versão de demonstração: dados fictícios, nada é enviado ao consultório.'}
           </ThemedText>
         </ScrollView>
       </SafeAreaView>

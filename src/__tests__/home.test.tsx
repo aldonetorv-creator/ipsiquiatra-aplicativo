@@ -7,6 +7,7 @@ import HomeScreen from '@/app/index';
 import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
+import { createMemorySessionStore, PatientSessionProvider } from '@/services/patient-session';
 import { formatDayMonth, formatTime } from '@/utils/time';
 
 jest.mock('expo-router', () => ({
@@ -18,7 +19,9 @@ jest.mock('expo-router', () => ({
 async function renderWith(gateway: PatientAppGateway) {
   await render(
     <PatientAppGatewayProvider gateway={gateway}>
-      <HomeScreen />
+      <PatientSessionProvider store={createMemorySessionStore()}>
+        <HomeScreen />
+      </PatientSessionProvider>
     </PatientAppGatewayProvider>
   );
 }
@@ -120,7 +123,9 @@ describe('Início', () => {
     await answerAll(['general']);
     const first = await render(
       <PatientAppGatewayProvider gateway={gateway}>
-        <HomeScreen />
+        <PatientSessionProvider store={createMemorySessionStore()}>
+          <HomeScreen />
+        </PatientSessionProvider>
       </PatientAppGatewayProvider>
     );
     expect(await screen.findByText('4 minutos')).toBeOnTheScreen();

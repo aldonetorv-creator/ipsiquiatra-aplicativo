@@ -6,6 +6,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { useDailyReminders } from '@/hooks/use-daily-reminders';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
+import { PatientSessionProvider } from '@/services/patient-session';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -13,11 +14,13 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   return (
     <PatientAppGatewayProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AnimatedSplashOverlay />
-        <DailyReminders />
-        <AppTabs />
-      </ThemeProvider>
+      <PatientSessionProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <AnimatedSplashOverlay />
+          <DailyReminders />
+          <AppTabs />
+        </ThemeProvider>
+      </PatientSessionProvider>
     </PatientAppGatewayProvider>
   );
 }
