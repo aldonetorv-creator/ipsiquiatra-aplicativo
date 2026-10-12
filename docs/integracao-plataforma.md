@@ -8,21 +8,28 @@ próprias, só mostra o que a plataforma responde.
 Esta frente usa as rotas públicas que o chat do site já usa. A plataforma
 (repositório `aldonetorv-creator/ipsiquiatra`) não muda.
 
-## Como ligar
+## Endereço
 
-A Patrícia real fica **desligada por padrão**: sem configuração, o app continua
-na demonstração da fase 1.
+Por padrão, o app conversa com a Patrícia do Dr. Aldo, a mesma de
+`https://app.ipsiquiatra.com.br/patricia/dr-aldo-araujo-psiquiatra`
+(endereço confirmado pelo Dr. Aldo). Cada consulta marcada pelo app entra na
+agenda real.
 
 | Variável | Para quê | Padrão |
 |---|---|---|
-| `EXPO_PUBLIC_PATRICIA_SLUG` | Endereço da Patrícia do médico, o mesmo de `/patricia/<slug>` no site. Vazio deixa a demonstração. | vazio |
-| `EXPO_PUBLIC_PLATFORM_URL` | Endereço da plataforma. | `https://ipsiquiatra.com.br` |
+| `EXPO_PUBLIC_PATRICIA_SLUG` | Endereço da Patrícia do médico, o mesmo de `/patricia/<slug>` no site. Vazio volta à demonstração, sem IA. | `dr-aldo-araujo-psiquiatra` |
+| `EXPO_PUBLIC_PLATFORM_URL` | Endereço da plataforma. | `https://app.ipsiquiatra.com.br` |
 
-As duas ficam em `src/config/platform.ts`. Exemplo para testar no celular:
+As duas ficam em `src/config/platform.ts`. Para abrir a demonstração, sem a
+Patrícia real:
 
 ```bash
-EXPO_PUBLIC_PATRICIA_SLUG=<slug> npx expo start --clear
+EXPO_PUBLIC_PATRICIA_SLUG= npx expo start --clear
 ```
+
+No navegador (`npm run web`), a plataforma recusa os pedidos, porque vêm de
+outro endereço (cabeçalho `Origin`). A Patrícia real funciona no celular, pelo
+Expo Go ou pelo app instalado.
 
 ## Rotas usadas
 
@@ -99,4 +106,6 @@ Todas em `/api/public/patricia/<slug>`, chamadas por
   Foram conferidos na agenda da plataforma: consulta marcada, remarcada e
   cancelada; crise; CPF omitido; termo lembrado ao reabrir; recusa do termo
   com relato sem IA.
-- Ainda não foi testado contra o servidor de produção.
+- Ainda não foi testado contra o servidor de produção: a rede do ambiente de
+  desenvolvimento bloqueia `app.ipsiquiatra.com.br`. O primeiro teste real é
+  o do Dr. Aldo no celular.

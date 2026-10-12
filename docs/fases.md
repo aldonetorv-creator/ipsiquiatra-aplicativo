@@ -19,14 +19,15 @@ app.
   endereço próprio no site (`/patricia/<slug>`).
 - **Site e app são portas para a mesma Patrícia.** O app não terá uma Patrícia
   própria: a conversa do app chama o serviço da Patrícia na plataforma, pelo
-  contrato `PatientAppGateway`. A primeira parte já existe: com o endereço da
-  Patrícia configurado, o app usa as mesmas rotas públicas do chat do site
-  para conversar, agendar, remarcar e cancelar (ver
+  contrato `PatientAppGateway`. A primeira parte já existe: o app usa as
+  mesmas rotas públicas do chat do site para conversar, agendar, remarcar e
+  cancelar com a Patrícia do Dr. Aldo
+  (`app.ipsiquiatra.com.br/patricia/dr-aldo-araujo-psiquiatra`; ver
   `docs/integracao-plataforma.md`).
 - **Regra nova entra uma vez, na plataforma,** e vale no site e no app (por
   exemplo, prazo de remarcação, cobrança e nota fiscal).
-- **Sem o endereço configurado,** a Patrícia do app continua um roteiro de
-  demonstração, sem IA, e não deve ganhar lógica própria além disso.
+- **Na demonstração** (endereço da Patrícia vazio), a Patrícia do app é um
+  roteiro, sem IA, e não deve ganhar lógica própria além disso.
 
 ### Contexto e prontuário
 
@@ -132,6 +133,8 @@ A definir antes de implementar:
 Aplicativo do paciente com **dados simulados**, sem paciente real, sem PHI e
 sem backend, seguindo as regras da
 [issue #1](https://github.com/aldonetorv-creator/ipsiquiatra-aplicativo/issues/1).
+A exceção, por decisão do Dr. Aldo, é a conversa com a Patrícia, que já é a
+real (ver "Patrícia real" abaixo).
 
 | Área | Situação |
 |---|---|
@@ -144,8 +147,8 @@ sem backend, seguindo as regras da
 Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já existem na
 conversa. Na demonstração, a Patrícia só avisa que o serviço chega em breve.
 
-**Patrícia real (frente 1, decisão do Dr. Aldo):** com o endereço da Patrícia
-configurado, a conversa passa a ser com a Patrícia da plataforma, com IA: o
+**Patrícia real (frente 1, decisão do Dr. Aldo):** por padrão, a conversa é
+com a Patrícia da plataforma, com IA: o
 mesmo termo do site, horários em botões, cartões para confirmar consulta,
 remarcação e cancelamento, identificação, relato sem IA para quem não aceita o
 termo e as orientações de crise. Os atalhos vão para ela como mensagem. O
@@ -307,8 +310,8 @@ Pontos para validar com assessoria jurídica e contábil, não com este document
 
 ## IA
 
-- **Demonstração:** sem o endereço da Patrícia configurado, a Patrícia do app
-  não usa IA; ela não lê nem interpreta as mensagens.
+- **Demonstração:** com o endereço da Patrícia vazio, a Patrícia do app não
+  usa IA; ela não lê nem interpreta as mensagens.
 - **Patrícia real (frente 1, já no app):** o app usa a Patrícia da plataforma,
   que conversa com IA como secretária virtual. O app não tem IA própria: a IA,
   as regras e as travas são as da plataforma. Ela atende agendamento,
