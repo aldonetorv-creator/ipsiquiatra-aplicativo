@@ -55,7 +55,7 @@ export const authTexts = {
   locked: 'Muitas tentativas com este código. Peça um novo código.',
   rateLimited: 'Muitos pedidos seguidos. Aguarde um pouco e tente de novo.',
   offline: 'Sem conexão. Verifique a internet e tente de novo.',
-  // A Patrícia do app só aparece depois do login; a do site continua aberta.
-  notReceived:
-    'Não recebeu? O celular do cadastro pode estar desatualizado. Fale com a clínica ou com a Patrícia pelo site.',
+  // O app não troca o celular do cadastro: só a clínica (decisão do Dr. Aldo,
+  // 12/10/2026). Assim ninguém troca o celular de outra pessoa pelo app.
+  notReceived: 'Se o seu celular mudou, atualize o cadastro diretamente com a clínica.',
 };

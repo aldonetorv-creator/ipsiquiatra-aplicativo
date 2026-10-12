@@ -220,6 +220,26 @@ describe('login com CPF como primeira tela', () => {
     expect(await screen.findByText('Reenviar código em 1:00')).toBeOnTheScreen();
   });
 
+  it('sem o código depois de 1 minuto, pede para atualizar o celular com a clínica', async () => {
+    await renderApp();
+
+    await requestCode();
+    expect(await screen.findByText('Reenviar código em 1:00')).toBeOnTheScreen();
+    expect(screen.queryByText(authTexts.notReceived)).toBeNull();
+
+    await act(async () => {
+      jest.advanceTimersByTime((RESEND_AFTER_SEC + 1) * 1000);
+    });
+    expect(await screen.findByText(authTexts.notReceived)).toBeOnTheScreen();
+    // A troca do celular é só com a clínica (decisão do Dr. Aldo, 12/10/2026).
+    expect(authTexts.notReceived).toMatch(/atualize o cadastro diretamente com a clínica/);
+
+    // Reenviar não esconde o aviso.
+    await fireEvent.press(screen.getByRole('button', { name: 'Reenviar código' }));
+    expect(await screen.findByText('Reenviar código em 1:00')).toBeOnTheScreen();
+    expect(screen.getByText(authTexts.notReceived)).toBeOnTheScreen();
+  });
+
   it('voltar anda um passo: do código para o CPF e do CPF para a história', async () => {
     await renderApp();
 
