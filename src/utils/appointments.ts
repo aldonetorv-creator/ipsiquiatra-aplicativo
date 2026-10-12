@@ -1,5 +1,5 @@
 import { Appointment, DocumentMetadata } from '@/contracts/platform';
-import { formatDate } from '@/utils/time';
+import { calendarDaysBetween, formatDate } from '@/utils/time';
 
 export const modalityLabel: Record<Appointment['modality'], string> = {
   telemedicine: 'Teleconsulta',
@@ -21,6 +21,30 @@ export function splitAppointments(appointments: Appointment[], now: Date = new D
       .sort(byStart)[0] ?? null;
   const past = appointments.filter((item) => item.status === 'completed').sort(byStart).reverse();
   return { next, past };
+}
+
+// Cartão "Agora" da Início (pedido do Dr. Aldo, 12/10/2026):
+// - "Consulta próxima": a próxima consulta marcada está a 7 dias ou menos;
+// - "Retorno atrasado": passou a data do retorno pedido na última consulta sem
+//   outra consulta, ou a consulta marcada ficou para depois dela;
+// - "Em acompanhamento": os outros casos.
+export type FollowUp =
+  | { kind: 'soon'; daysUntil: number }
+  | { kind: 'following' | 'late'; daysSince: number; daysUntil: number | null };
+
+export const SOON_DAYS = 7;
+
+export function followUpFor(appointments: Appointment[], now: Date = new Date()): FollowUp | null {
+  const { next, past } = splitAppointments(appointments, now);
+  const last = past[0];
+  if (!last) return null;
+  const daysUntil = next ? Math.max(0, calendarDaysBetween(now, new Date(next.startsAt))) : null;
+  if (daysUntil !== null && daysUntil <= SOON_DAYS) return { kind: 'soon', daysUntil };
+  const daysSince = calendarDaysBetween(new Date(last.startsAt), now);
+  const late =
+    !!last.returnDueAt &&
+    calendarDaysBetween(new Date(last.returnDueAt), next ? new Date(next.startsAt) : now) > 0;
+  return { kind: late ? 'late' : 'following', daysSince, daysUntil };
 }
 
 // Toda nota fiscal diz a qual consulta se refere (decisão do Dr. Aldo,

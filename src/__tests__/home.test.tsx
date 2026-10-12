@@ -175,15 +175,69 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/cofre');
   });
 
-  it('conta os dias desde a última consulta', async () => {
+  it('a 7 dias da consulta, o cartão Agora mostra a consulta próxima', async () => {
     await renderWith(createMockPatientAppGateway());
 
     await fireEvent.press(
+      await screen.findByRole('button', { name: 'Agora: Consulta próxima. Consulta em 7 dias' })
+    );
+    expect(router.push).toHaveBeenCalledWith('/consultas');
+  });
+
+  // Consultas em dias relativos a hoje.
+  const relative = (days: number, status: 'scheduled' | 'completed', returnInDays?: number) => {
+    const day = (offset: number) => {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 10).toISOString();
+    };
+    return {
+      id: `appt-${days}`,
+      startsAt: day(days),
+      durationMinutes: 60,
+      modality: 'telemedicine' as const,
+      status,
+      doctor: { name: 'Dr. Aldo Araújo', specialty: 'Psiquiatra', photoUrl: null },
+      ...(returnInDays === undefined ? {} : { returnDueAt: day(days + returnInDays) }),
+    };
+  };
+
+  it('em acompanhamento, conta os dias desde a última e até a próxima consulta', async () => {
+    await renderWith({
+      ...createMockPatientAppGateway(),
+      listAppointments: async () => ({
+        ok: true,
+        requestId: 'test',
+        data: [relative(-8, 'completed', 30), relative(22, 'scheduled')],
+      }),
+    });
+
+    await fireEvent.press(
       await screen.findByRole('button', {
-        name: 'Agora: Acompanhamento. 8 dias desde sua última consulta',
+        name: 'Agora: Em acompanhamento. 8 dias desde sua última consulta. Próxima consulta em 22 dias',
       })
     );
     expect(router.push).toHaveBeenCalledWith('/consultas');
+  });
+
+  it('retorno atrasado sem consulta marcada pede o agendamento à Patrícia', async () => {
+    const gateway = {
+      ...createMockPatientAppGateway(),
+      listAppointments: async () => ({
+        ok: true as const,
+        requestId: 'test',
+        data: [relative(-40, 'completed', 30)],
+      }),
+    };
+    const requestService = jest.spyOn(gateway, 'requestService');
+    await renderWith(gateway);
+
+    await fireEvent.press(
+      await screen.findByRole('button', {
+        name: 'Agora: Retorno atrasado. 40 dias desde sua última consulta. Marque o retorno com a Patrícia',
+      })
+    );
+    expect(requestService).toHaveBeenCalledWith('schedule_appointment');
+    expect(router.push).toHaveBeenCalledWith('/patricia');
   });
 
   it('sem consultas, esconde os cartões de consulta e o plano fica para depois', async () => {

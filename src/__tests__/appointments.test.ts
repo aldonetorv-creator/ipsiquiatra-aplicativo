@@ -4,6 +4,7 @@ import { Appointment, DocumentMetadata } from '@/contracts/platform';
 import { mockDoctor } from '@/mocks/patient-app-gateway';
 import {
   documentTitle,
+  followUpFor,
   groupDocumentsByAppointment,
   splitAppointments,
 } from '@/utils/appointments';
@@ -114,5 +115,77 @@ describe('datas das consultas', () => {
 
   it('formata a data com dois dígitos', () => {
     expect(formatDate(at(5, 14).toISOString())).toBe('05/10/2026');
+  });
+});
+
+describe('cartão Agora da Início', () => {
+  const now = at(12, 9);
+  // Última consulta no dia 4, com retorno pedido para o dia `due`.
+  const last = (due: number | null) => ({
+    ...appointment('a1', at(4, 14)),
+    returnDueAt: due === null ? null : at(due, 0).toISOString(),
+  });
+
+  it('sem consulta realizada, não aparece', () => {
+    expect(followUpFor([appointment('a2', at(14, 10), 'scheduled')], now)).toBeNull();
+  });
+
+  it('em acompanhamento: dias desde a última e até a próxima', () => {
+    expect(followUpFor([last(30)], now)).toEqual({
+      kind: 'following',
+      daysSince: 8,
+      daysUntil: null,
+    });
+    expect(followUpFor([last(30), appointment('a2', at(30, 10), 'scheduled')], now)).toEqual({
+      kind: 'following',
+      daysSince: 8,
+      daysUntil: 18,
+    });
+  });
+
+  it('consulta próxima a partir de 7 dias antes', () => {
+    expect(followUpFor([last(30), appointment('a2', at(20, 10), 'scheduled')], now)?.kind).toBe(
+      'following'
+    );
+    expect(followUpFor([last(30), appointment('a2', at(19, 10), 'scheduled')], now)).toEqual({
+      kind: 'soon',
+      daysUntil: 7,
+    });
+    expect(followUpFor([last(30), appointment('a2', at(12, 18), 'scheduled')], now)).toEqual({
+      kind: 'soon',
+      daysUntil: 0,
+    });
+  });
+
+  it('retorno atrasado: passou a data pedida sem consulta marcada', () => {
+    expect(followUpFor([last(12)], now)?.kind).toBe('following');
+    expect(followUpFor([last(11)], now)).toEqual({ kind: 'late', daysSince: 8, daysUntil: null });
+  });
+
+  it('retorno atrasado: a consulta marcada ficou para depois da data pedida', () => {
+    expect(followUpFor([last(11), appointment('a2', at(25, 10), 'scheduled')], now)).toEqual({
+      kind: 'late',
+      daysSince: 8,
+      daysUntil: 13,
+    });
+    expect(followUpFor([last(25), appointment('a2', at(25, 10), 'scheduled')], now)?.kind).toBe(
+      'following'
+    );
+  });
+
+  it('retorno atrasado: a consulta marcada passou e não aconteceu', () => {
+    const missed = appointment('a2', at(10, 10), 'scheduled');
+    expect(followUpFor([last(10), missed], now)?.kind).toBe('late');
+  });
+
+  it('a consulta próxima vem antes do atraso', () => {
+    expect(followUpFor([last(11), appointment('a2', at(15, 10), 'scheduled')], now)).toEqual({
+      kind: 'soon',
+      daysUntil: 3,
+    });
+  });
+
+  it('sem data de retorno, nunca diz que está atrasado', () => {
+    expect(followUpFor([last(null)], at(28, 9))?.kind).toBe('following');
   });
 });

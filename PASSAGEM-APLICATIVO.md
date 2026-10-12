@@ -48,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 204.
+  - Total: 214.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -65,6 +65,9 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
   - plano B: "Entrar com CPF e SMS";
   - "Sair" desliga.
 - **Início:** saudação com o nome, sem "Você entrou como".
+- **Cartão "Agora" da Início:** "Em acompanhamento", "Retorno atrasado" (pela
+  data do retorno pedido na consulta, `returnDueAt`) ou "Consulta próxima" (7
+  dias ou menos). Regra em `followUpFor` (`src/utils/appointments.ts`).
 - **Termo da Patrícia no app:** curto, sem listar os dados do site (o login já
   identifica o paciente).
 - **Fora do app:**

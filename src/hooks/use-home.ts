@@ -3,8 +3,8 @@ import { useCallback, useState } from 'react';
 
 import { Appointment, ConversationMessage, MoodEntry, PatientService } from '@/contracts/platform';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
-import { splitAppointments } from '@/utils/appointments';
-import { calendarDaysBetween, greetingFor } from '@/utils/time';
+import { FollowUp, followUpFor, splitAppointments } from '@/utils/appointments';
+import { greetingFor } from '@/utils/time';
 
 export type HomeState =
   | { status: 'loading' }
@@ -14,8 +14,8 @@ export type HomeState =
       lastFromPatricia: ConversationMessage | null;
       moodEntries: MoodEntry[];
       nextAppointment: Appointment | null;
-      // Dias de calendário desde a última consulta realizada.
-      daysSinceLastAppointment: number | null;
+      // Cartão "Agora": null sem consulta realizada.
+      followUp: FollowUp | null;
       carePlanReady: boolean;
       // Tempo estimado dos questionários que faltam para a próxima consulta.
       pendingQuestionnaireMinutes: number;
@@ -63,9 +63,7 @@ export function useHome() {
           lastFromPatricia: fromPatricia[fromPatricia.length - 1] ?? null,
           moodEntries: moods.data,
           nextAppointment: next,
-          daysSinceLastAppointment: last
-            ? calendarDaysBetween(new Date(last.startsAt), now)
-            : null,
+          followUp: followUpFor(appointments.data, now),
           carePlanReady:
             last !== null &&
             documents.data.some(

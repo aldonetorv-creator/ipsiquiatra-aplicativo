@@ -50,6 +50,9 @@ export type Appointment = {
   modality: AppointmentModality;
   status: 'scheduled' | 'completed';
   doctor: Doctor;
+  // Nas consultas realizadas: até quando o médico pediu o retorno (ISO 8601).
+  // Sem ela, o app não diz que o retorno está atrasado.
+  returnDueAt?: string | null;
 };
 
 export type DocumentKind =
