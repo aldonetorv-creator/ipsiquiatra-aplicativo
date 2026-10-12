@@ -67,9 +67,11 @@ async function renderApp({
       index: HomeScreen,
       entrar: EntrarScreen,
       patricia: stub('Conversa com a Patrícia'),
+      medicacoes: stub('Minhas medicações'),
       consultas: stub('Consultas'),
       cofre: stub('Cofre'),
       questionarios: stub('Questionários'),
+      plano: stub('Plano de cuidados'),
     },
     { initialUrl }
   );

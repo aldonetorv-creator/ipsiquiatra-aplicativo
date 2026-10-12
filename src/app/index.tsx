@@ -102,7 +102,7 @@ export default function HomeScreen() {
 
               <MoodWeekCard entries={state.moodEntries} onRegister={registerMood} />
 
-              <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/cofre')} />
+              <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/plano')} />
 
               {state.followUp ? (
                 <FollowUpCard

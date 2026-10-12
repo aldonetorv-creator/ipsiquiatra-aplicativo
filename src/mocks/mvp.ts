@@ -20,6 +20,15 @@ export const mvpAreas: MvpArea[] = [
     status: 'mock',
   },
   {
+    id: 'medicacoes',
+    route: '/medicacoes',
+    title: 'Minhas medicações',
+    label: 'Medicações',
+    eyebrow: 'Remédios por horário',
+    description: 'Medicações da última receita validada pelo médico, organizadas por horário.',
+    status: 'mock',
+  },
+  {
     id: 'consultas',
     route: '/consultas',
     title: 'Consultas',
@@ -44,6 +53,15 @@ export const mvpAreas: MvpArea[] = [
     label: 'Cofre',
     eyebrow: 'Documentos protegidos',
     description: 'Organização visual de arquivos e recibos, sem upload ou armazenamento real.',
+    status: 'mock',
+  },
+  {
+    id: 'plano',
+    route: '/plano',
+    title: 'Plano de cuidados',
+    label: 'Plano',
+    eyebrow: 'Depois da consulta',
+    description: 'Plano de cuidados em texto para celular, com títulos e destaques.',
     status: 'mock',
   },
 ];

@@ -77,6 +77,59 @@ export type DocumentMetadata = {
   availability: 'mock_only' | 'available' | 'pending' | 'expired';
 };
 
+// Minhas medicações (pedido do Dr. Aldo, 12/10/2026): a plataforma extrai,
+// com IA, os remédios das últimas receitas. Só entra receita que o médico já
+// validou, porque a receita só é enviada ao paciente depois disso. O app só
+// mostra, organizado por horário, para facilitar a adesão; não calcula nem
+// muda dose.
+export type MedicationPeriod = 'morning' | 'midday' | 'afternoon' | 'evening' | 'bedtime';
+
+export type Medication = {
+  id: string;
+  // Nome e concentração, como na receita ("Sertralina 50 mg").
+  name: string;
+  // Quanto tomar de cada vez ("1 comprimido").
+  dose: string;
+  // Horários do dia; `time` ("08:00") quando a receita diz a hora.
+  schedule: { period: MedicationPeriod; time: string | null }[];
+  // "Se precisar": fora dos horários fixos.
+  asNeeded: boolean;
+  // Orientação da receita ("Depois do café da manhã").
+  instructions: string | null;
+  // Receita de onde veio (documento do Cofre).
+  prescriptionId: string;
+};
+
+export type MedicationPlan = {
+  // Receitas validadas de onde a lista saiu, da mais recente para a mais
+  // antiga, com o médico que validou cada uma.
+  sources: { prescriptionId: string; issuedAt: string; validatedBy: string }[];
+  medications: Medication[];
+};
+
+// Plano de cuidados em texto para celular, e não em PDF (pedido do Dr. Aldo,
+// 12/10/2026). As seções são as do prompt do Dr. Aldo para o plano
+// pós-consulta, na mesma ordem; a plataforma só manda as que se aplicam. Nos
+// itens, **assim** fica em negrito.
+export type CarePlanSectionId =
+  | 'priorities'
+  | 'treatment'
+  | 'watch'
+  | 'guidance'
+  | 'contact'
+  | 'next'
+  | 'notes';
+
+export type CarePlan = {
+  // O mesmo `id` do documento no Cofre.
+  id: string;
+  appointmentId: string;
+  createdAt: string;
+  // Frase de acolhimento do médico (o painel lateral do PDF).
+  welcome: string | null;
+  sections: { id: CarePlanSectionId; items: string[] }[];
+};
+
 export const MESSAGE_MAX_LENGTH = 1000;
 export const MOOD_NOTE_MAX_LENGTH = 300;
 
@@ -209,6 +262,10 @@ export interface PatientAppGateway {
   // Consultas do paciente, da mais antiga para a mais recente.
   listAppointments(): Promise<ApiResult<Appointment[]>>;
   listDocuments(): Promise<ApiResult<DocumentMetadata[]>>;
+  // Lista das últimas receitas validadas; null enquanto não houver receita.
+  getMedicationPlan(): Promise<ApiResult<MedicationPlan | null>>;
+  // Plano de cuidados de um documento do Cofre, ou o mais recente; null se não houver.
+  getCarePlan(documentId?: string): Promise<ApiResult<CarePlan | null>>;
   readConsent(): Promise<ApiResult<ConsentRecord>>;
   listConversation(): Promise<ApiResult<ConversationMessage[]>>;
   sendMessage(text: string): Promise<ApiResult<ConversationMessage[]>>;
