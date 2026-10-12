@@ -18,9 +18,21 @@ O logo oficial do aplicativo é `assets/images/ip-icon.png` (monograma `iP` roxo
 
 - `assets/images/favicon.png`: favicon web, recortado no contorno do logo.
 - `assets/images/android-icon-foreground.png`: primeiro plano do ícone
-  adaptativo do Android, com o logo em 54% da tela para caber na área segura
-  (o launcher só mostra os 66% centrais e aplica máscara de círculo ou
-  squircle). Usar o `ip-icon.png` direto cortava o "i".
+  adaptativo do Android. Decisão do Dr. Aldo (12/10/2026): no celular aparece
+  só o logo, sem a parte branca em volta.
+  - O logo, sem nenhuma alteração, ocupa 73dp dos 108dp, um pouco mais que a
+    área visível (72dp).
+  - O recorte do celular (quadrado arredondado, círculo) fica todo dentro do
+    logo.
+  - O "iP", com o contorno, vai até 33,5dp do centro e continua inteiro no
+    recorte redondo (36dp de raio).
+  - O fundo do ícone (`app.json`) é `#561F8A`, o roxo da borda do logo.
+  - Antes o logo ficava em 54% sobre fundo branco, e por isso aparecia a borda
+    branca. Usar o `ip-icon.png` inteiro (100%) cortava o "i".
+- `assets/images/icon.png`: ícone do iPhone e ícone padrão. É o logo recortado
+  na borda, sobre o mesmo roxo, sem transparência (exigência da Apple); o
+  iPhone arredonda os cantos.
+- Os dois ícones saem de `scripts/gerar-icones.py` (Python com Pillow).
 
 ## Patrícia — foto oficial
 
