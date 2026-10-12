@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Animated, Easing, PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { segment, useEntrance, useScreenReader } from '@/components/auth/story-motion';
 import {
   CareVisual,
   PatriciaVisual,
@@ -15,6 +14,7 @@ import {
 } from '@/components/auth/story-visuals';
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
+import { segment, useEntrance, useScreenReader } from '@/hooks/use-motion';
 
 export const STORY_SLIDE_MS = 5200;
 const FADE_OUT_MS = 180;

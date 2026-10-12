@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform } from 'react-native';
 
-// Preferências do sistema que mudam a história de boas-vindas.
+// Preferências do sistema que mudam as animações (história de boas-vindas,
+// folhas que sobem de baixo).
 function useSystemFlag(
   read: () => Promise<boolean>,
   event: 'reduceMotionChanged' | 'screenReaderChanged'

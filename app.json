@@ -37,7 +37,13 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": false
+          "faceIDPermission": "Permitir que o iPsiquiatra use o Face ID para você entrar no app."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permitir que o iPsiquiatra use o Face ID para você entrar no app."
         }
       ]
     ],

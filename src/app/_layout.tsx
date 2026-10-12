@@ -5,6 +5,7 @@ import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
+import { BiometricOffer } from '@/components/auth/biometric-offer';
 import { useDailyReminders } from '@/hooks/use-daily-reminders';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { PatientSessionProvider, usePatientSession } from '@/services/patient-session';
@@ -23,6 +24,7 @@ export default function TabLayout() {
           <SplashUntilSession />
           <DailyReminders />
           <AppTabs />
+          <BiometricOffer />
         </ThemeProvider>
       </PatientSessionProvider>
     </PatientAppGatewayProvider>

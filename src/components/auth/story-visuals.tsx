@@ -4,9 +4,9 @@ import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { segment, useBreathing, useEntrance } from '@/components/auth/story-motion';
 import { ThemedText } from '@/components/themed-text';
 import { Gradients, Tokens } from '@/constants/theme';
+import { segment, useBreathing, useEntrance } from '@/hooks/use-motion';
 
 // Ilustrações da história de boas-vindas. Cada uma tem 300 x 280 e entra com
 // a própria animação quando o quadro aparece.

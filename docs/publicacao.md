@@ -84,6 +84,8 @@ npx eas-cli@latest build --platform android --profile preview
 - **Notificações:** a mensagem das 20h e os contatos de cuidado passam a
   aparecer como notificação no Android. No Expo Go do Android elas não
   funcionam.
+- **Biometria:** a entrada pela digital funciona no Expo Go do Android e no
+  app instalado. Um APK feito antes dela não a tem: é preciso um build novo.
 - **Atualizações:** cada mudança no código precisa de um novo build. Mais
   adiante, o EAS Update pode mandar mudanças sem build novo.
 - **Dados reais:** o app instalado conversa com a Patrícia de verdade. Uma

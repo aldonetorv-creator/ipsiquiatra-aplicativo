@@ -3,21 +3,43 @@ import { Animated, BackHandler, Easing, StyleProp, StyleSheet, ViewStyle } from 
 
 import { CodeStep } from '@/components/auth/code-step';
 import { CpfStep } from '@/components/auth/cpf-step';
+import { UnlockScreen } from '@/components/auth/unlock-screen';
 import { WelcomeStory } from '@/components/auth/welcome-story';
 import { Tokens } from '@/constants/theme';
 import { useLoginFlow } from '@/hooks/use-login-flow';
+import { usePatientSession } from '@/services/patient-session';
 
 type Step = 'welcome' | 'cpf' | 'code';
 const order: Step[] = ['welcome', 'cpf', 'code'];
 
 // Primeira tela do app (decisão do Dr. Aldo, 12/10/2026): antes de qualquer
 // outra, o paciente entra com o CPF. As abas só existem depois do login
-// (components/app-tabs.tsx). Primeiro uma história curta de boas-vindas; depois
-// uma pergunta por tela: o CPF e o código do SMS.
+// (components/app-tabs.tsx). Quem ligou a biometria entra por ela.
 export default function EntrarScreen() {
+  const { state, logout } = usePatientSession();
+  // Quem desistiu da biometria vai direto ao CPF, sem a história.
+  const [skipStory, setSkipStory] = useState(false);
+
+  if (state.status === 'locked') {
+    return (
+      <UnlockScreen
+        firstName={state.session.patient.firstName}
+        onUseSms={() => {
+          setSkipStory(true);
+          logout();
+        }}
+      />
+    );
+  }
+  return <LoginScreen startAtCpf={skipStory} />;
+}
+
+// Primeiro uma história curta de boas-vindas; depois uma pergunta por tela: o
+// CPF e o código do SMS.
+function LoginScreen({ startAtCpf }: { startAtCpf: boolean }) {
   const flow = useLoginFlow();
   const { changeCpf } = flow;
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(startAtCpf);
   const step: Step = !started ? 'welcome' : flow.challenge ? 'code' : 'cpf';
 
   // A tela nova entra pelo lado para onde se anda: avançando, pela direita.

@@ -99,7 +99,25 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 - A sessão (token, validade e primeiro nome) fica no armazenamento seguro do
   sistema (`expo-secure-store`), em `src/services/patient-session.tsx`.
 - Sessão vencida, ou `401` da plataforma, pede para entrar de novo.
-- "Sair" apaga a sessão do celular e chama a `logout`.
+- "Sair" apaga a sessão do celular e chama a `logout`. Fica no botão da conta
+  (a inicial do paciente, no topo da Início), que também liga e desliga a
+  biometria.
+- **Biometria** (pedido do Dr. Aldo, 12/10/2026), só no celular, sem rota
+  nova na plataforma (`src/services/biometrics.ts`, `expo-local-authentication`):
+  - logo depois do login por SMS, se o celular tem digital ou rosto
+    cadastrado, o app oferece "Entrar com biometria?". Ligar pede a biometria
+    uma vez, para confirmar;
+  - com ela ligada, ao abrir o app, e ao voltar depois de 5 minutos fora dele,
+    a sessão salva só abre com a biometria (ou com a senha do celular, que o
+    sistema oferece se ela falhar). O pedido aparece sozinho, com "Olá,
+    {nome}!";
+  - se não der, o paciente pode tentar de novo ou "Entrar com CPF e SMS", que
+    apaga a sessão e vai direto ao CPF;
+  - se o celular deixar de ter biometria cadastrada, a entrada volta a ser pelo
+    SMS;
+  - o app só recebe do sistema se deu certo ou não: a digital e o rosto nunca
+    saem do celular. A escolha fica no armazenamento seguro, ao lado da
+    sessão, e "Sair" a apaga.
 
 ## A definir com o Dr. Aldo
 

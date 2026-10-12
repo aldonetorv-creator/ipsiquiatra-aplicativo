@@ -8,6 +8,7 @@ import { PatientSession } from '@/contracts/patient-auth';
 import { useDailyReminders } from '@/hooks/use-daily-reminders';
 import { createMockPatientAppGateway } from '@/mocks/patient-app-gateway';
 import { createMockPatientAuth, DEMO_LOGIN_CODE } from '@/mocks/patient-auth';
+import { BiometricAuth, noBiometrics } from '@/services/biometrics';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import {
   createMemorySessionStore,
@@ -41,10 +42,10 @@ const session: PatientSession = {
   patient: { firstName: 'Ana' },
 };
 
-function renderReminders(store: SessionStore) {
+function renderReminders(store: SessionStore, biometrics: BiometricAuth = noBiometrics) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <PatientAppGatewayProvider gateway={createMockPatientAppGateway()}>
-      <PatientSessionProvider store={store} api={createMockPatientAuth()}>
+      <PatientSessionProvider store={store} api={createMockPatientAuth()} biometrics={biometrics}>
         {children}
       </PatientSessionProvider>
     </PatientAppGatewayProvider>
@@ -95,5 +96,29 @@ describe('toque na notificação da Patrícia com o login como primeira tela', (
       await result.current.verifyCode(started.data.challengeId, DEMO_LOGIN_CODE);
     });
     expect(router.push).toHaveBeenCalledTimes(1);
+  });
+
+  it('com a biometria ligada, espera o desbloqueio para abrir a conversa', async () => {
+    mockLastResponse = tap('n3');
+    const answers = [false, true];
+    const biometrics: BiometricAuth = {
+      check: async () => 'fingerprint',
+      authenticate: async () => answers.shift() ?? true,
+    };
+    const store = createMemorySessionStore(session, { biometricUnlock: true });
+    const { result } = await renderReminders(store, biometrics);
+
+    await waitFor(() => expect(result.current.state.status).toBe('locked'));
+    await act(async () => {
+      expect(await result.current.unlock()).toBe(false);
+    });
+    expect(router.push).not.toHaveBeenCalled();
+
+    await act(async () => {
+      expect(await result.current.unlock()).toBe(true);
+    });
+    expect(result.current.state.status).toBe('signed_in');
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/patricia');
   });
 });
