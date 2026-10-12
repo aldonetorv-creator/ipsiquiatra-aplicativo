@@ -11,9 +11,10 @@ depois, publicar nas lojas. Decisões do Dr. Aldo (12/10/2026):
 
 | Onde | O quê |
 |---|---|
-| `app.json` | nome `iPsiquiatra`; `android.package` e `ios.bundleIdentifier` `br.com.ipsiquiatra.paciente` (não muda depois da loja) |
+| `app.json` | nome `iPsiquiatra`; `android.package` e `ios.bundleIdentifier` `br.com.ipsiquiatra.paciente` (não muda depois da loja); `owner` `aldoparaujos-team`, a conta da Expo dona do projeto |
 | `eas.json`, perfil `preview` | APK para instalar direto no Android, sem loja (`distribution: internal`) |
 | `eas.json`, perfil `production` | pacote para as lojas, com o número da versão contado pela Expo (`appVersionSource: remote`, `autoIncrement`) |
+| `eas.json`, `image: latest` | máquina de build mais nova da Expo; a Expo exige esse campo para build disparado pelo GitHub |
 
 O `eas.json` foi conferido com o leitor oficial da Expo (`@expo/eas-json`).
 
@@ -25,8 +26,11 @@ O Dr. Aldo criou a conta em [expo.dev](https://expo.dev) e o projeto com o slug
 `app.json`. O ID não é segredo: só identifica o projeto, e quem gera build
 precisa entrar na conta.
 
-O campo `owner` ficou de fora. Sem ele, a Expo usa a conta de quem está
-logado, e o projeto é dessa mesma conta.
+O projeto fica na organização `aldoparaujos-team` da Expo, e não na conta
+pessoal. Por isso o `app.json` tem `"owner": "aldoparaujos-team"`. Sem esse
+campo, o `eas build` para logo no começo com
+`Owner of project identified by "extra.eas.projectId" (aldoparaujos-team) does
+not match the logged in user`.
 
 Os comandos que o site da Expo mostra depois de criar o projeto
 (`npx create-expo-app` e `npx eas-cli init --id ...`) servem para começar um
@@ -34,7 +38,38 @@ app do zero e **não devem ser rodados aqui**. O primeiro cria um app novo e
 vazio; o segundo mudaria o `app.json` no computador e atrapalharia o próximo
 `git pull`.
 
-## Passo 2: primeiro build para Android (Dr. Aldo, no PowerShell)
+## GitHub ligado à Expo (feito em 12/10/2026)
+
+O Dr. Aldo ligou o repositório do GitHub ao projeto na Expo. Com isso, o build
+pode sair direto do site da Expo, sem o computador.
+
+## Passo 2: primeiro build para Android
+
+### Pelo site da Expo (sem computador)
+
+1. Em [expo.dev](https://expo.dev), abra o projeto `ipsiquiatra-aplicativo`
+   da organização `aldoparaujos-team` e vá em **Builds**.
+2. Clique em **Build from GitHub**.
+3. Escolha:
+   - **Git ref:** `main`;
+   - **Platform:** **Android**, só ele (o iPhone ainda não dá; ver abaixo);
+   - **Build profile:** **preview**, que gera o APK para instalar no celular.
+     O `production` gera o pacote do Google Play, que não instala direto.
+4. Espere terminar. No fim aparecem um link e um QR Code, como no build pelo
+   computador.
+
+- **Chave do Android:** no build pelo site, a Expo gera a chave de assinatura
+  sozinha, sem perguntar, e a guarda na conta. Isso foi conferido no código do
+  EAS CLI 24.12.1.
+- **Se falhar por credenciais:** a Expo recomenda um primeiro build pelo
+  computador. Nesse caso, siga o caminho do PowerShell abaixo uma vez. Os
+  builds seguintes podem sair pelo site.
+- **Etiqueta em PR:** também dá para pedir build pondo a etiqueta
+  `eas-build-android:preview` num pull request. Sem o perfil (por exemplo,
+  `eas-build-android`), a Expo usa o `production`; sem a plataforma, pede
+  iPhone e Android.
+
+### Pelo computador (Dr. Aldo, no PowerShell)
 
 Rode um comando de cada vez:
 
@@ -76,6 +111,25 @@ npx eas-cli@latest build --platform android --profile preview
   aparecem um link e um QR Code.
 - **Instalação:** abra o link no celular Android, baixe e instale o APK. O
   Android pede para permitir a instalação de fora da loja.
+
+## Build do iPhone (ainda não)
+
+O primeiro build de iPhone (perfil `production`, 12/10/2026) falhou. Sem a
+conta de desenvolvedor da Apple, ele não tem como dar certo:
+
+- todo app de iPhone precisa de um certificado e de um perfil de distribuição
+  da Apple, e só a conta de desenvolvedor (US$ 99 por ano) gera os dois;
+- no build pelo site, a Expo não pode perguntar nada. Sem esses dois arquivos
+  guardados na conta Expo, ela para com
+  `Credentials are not set up. Run this command again in interactive mode.`
+
+Quando a conta Apple existir:
+
+1. No computador, rode
+   `npx eas-cli@latest build --platform ios --profile production` uma vez. A
+   Expo pede o login da Apple, cria o certificado e o perfil e os guarda na
+   conta. Isso não precisa de Mac.
+2. Depois disso, o build de iPhone também sai pelo site.
 
 ## O que muda com o app instalado
 
