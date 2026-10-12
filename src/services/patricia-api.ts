@@ -1,9 +1,9 @@
 import { PatriciaApi, PatriciaResponse } from '@/contracts/patricia';
 
 type Options = {
-  // Endereço da plataforma, sem barra no fim (ex.: https://ipsiquiatra.com.br).
+  // Endereço da plataforma, sem barra no fim (ex.: https://app.ipsiquiatra.com.br).
   baseUrl: string;
-  // Endereço da Patrícia do médico: ipsiquiatra.com.br/patricia/<slug>.
+  // Endereço da Patrícia do médico: app.ipsiquiatra.com.br/patricia/<slug>.
   slug: string;
   fetch?: typeof fetch;
   // Sem resposta nesse tempo, conta como sem conexão (a IA pode levar alguns segundos).

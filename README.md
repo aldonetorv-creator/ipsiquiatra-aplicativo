@@ -62,28 +62,30 @@ Questionários (`useQuestionnaires`) e a conversa com a Patrícia
 
 ## Patrícia nesta versão
 
-Por padrão, a conversa com a Patrícia é **simulada**: as respostas são textos fixos e não
-clínicos, e ela não lê nem interpreta o que o paciente escreve (sem IA, conforme
-a issue #1). O histórico da conversa e do humor fica salvo **só no aparelho**
-(AsyncStorage) e pode ser apagado em "Apagar histórico"; a cada novo dia a
-Patrícia abre um novo registro de humor. Ver privacidade em
-`docs/dependencias.md`. A tela mostra esse aviso e os
-contatos de emergência (CVV 188 e SAMU 192).
+A Patrícia é uma só, a mesma do site. Por padrão, o app conversa com a
+Patrícia do Dr. Aldo na plataforma do iPsiquiatra
+(`app.ipsiquiatra.com.br/patricia/dr-aldo-araujo-psiquiatra`), com IA, pelas
+mesmas rotas públicas do chat do site: termo, agendamento, remarcação,
+cancelamento e orientações de crise (ver
+[`docs/integracao-plataforma.md`](docs/integracao-plataforma.md)). A conversa
+fica salva no aparelho (AsyncStorage) e pode ser apagada em "Apagar
+histórico"; ver privacidade em `docs/dependencias.md`. A tela mostra o aviso
+de que a Patrícia tem apoio de IA e os contatos de emergência (CVV 188 e SAMU
+192).
 
-Esse roteiro é provisório. A Patrícia é uma só, a mesma do site. Com
-`EXPO_PUBLIC_PATRICIA_SLUG` configurado, o app já conversa com a Patrícia da
-plataforma do iPsiquiatra, com IA, pelas mesmas rotas públicas do chat do site:
-termo, agendamento, remarcação, cancelamento e orientações de crise (ver
-[`docs/integracao-plataforma.md`](docs/integracao-plataforma.md)). Sem essa
-configuração, continua a demonstração. Com o login do paciente (fase 2), a
-conversa, o diário de humor e as escalas passam a ser guardados na plataforma e
-entram no prontuário, como contexto para a Patrícia e para o médico. Ver
-`docs/fases.md`.
+Com `EXPO_PUBLIC_PATRICIA_SLUG` vazio, o app volta ao roteiro de demonstração:
+as respostas são textos fixos e não clínicos, e a Patrícia não lê nem
+interpreta o que o paciente escreve (sem IA).
 
-Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" já aparecem e
-passam pelo contrato (`requestService`). Na demonstração, a Patrícia só avisa
-que o serviço chega em breve; com a Patrícia real, o pedido vai para ela.
-"Encontrar documento" abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
+O diário de humor, a mensagem das 20h e os contatos de cuidado continuam no
+aparelho. Com o login do paciente (fase 2), a conversa, o diário de humor e as
+escalas passam a ser guardados na plataforma e entram no prontuário, como
+contexto para a Patrícia e para o médico. Ver `docs/fases.md`.
+
+Os atalhos "Agendar consulta", "Remarcar" e "Pedir nota fiscal" passam pelo
+contrato (`requestService`) e vão para a Patrícia como mensagem; na
+demonstração, ela só avisa que o serviço chega em breve. "Encontrar documento"
+abre o Cofre. Tocar na foto da Patrícia mostra a foto em tamanho grande.
 
 ## Princípio de evolução
 

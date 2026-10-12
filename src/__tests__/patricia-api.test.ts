@@ -1,5 +1,6 @@
 /// <reference types="jest" />
 
+import { patriciaSlug, platformUrl } from '@/config/platform';
 import { createPatriciaHttpApi } from '@/services/patricia-api';
 
 function fakeFetch(status: number, body: unknown) {
@@ -14,18 +15,30 @@ const sentBody = (doFetch: jest.MockedFunction<typeof fetch>) =>
   JSON.parse(String(doFetch.mock.calls[0][1]?.body));
 
 describe('rotas públicas da Patrícia', () => {
+  it('por padrão, o app fala com a Patrícia do Dr. Aldo no endereço do site', async () => {
+    const doFetch = fakeFetch(200, { ok: true, greeting: 'Olá' });
+    const api = createPatriciaHttpApi({ baseUrl: platformUrl, slug: patriciaSlug, fetch: doFetch });
+
+    await api.info();
+
+    // Mesmo endereço de app.ipsiquiatra.com.br/patricia/dr-aldo-araujo-psiquiatra.
+    expect(doFetch.mock.calls[0][0]).toBe(
+      'https://app.ipsiquiatra.com.br/api/public/patricia/dr-aldo-araujo-psiquiatra'
+    );
+  });
+
   it('fala com o endereço da Patrícia do médico, como o chat do site', async () => {
     const doFetch = fakeFetch(200, { ok: true, session: 'tok' });
     const api = createPatriciaHttpApi({
-      baseUrl: 'https://ipsiquiatra.com.br/',
-      slug: 'aldo-araujo',
+      baseUrl: 'https://app.ipsiquiatra.com.br/',
+      slug: 'dr-aldo-araujo-psiquiatra',
       fetch: doFetch,
     });
 
     const result = await api.startSession();
 
     expect(doFetch).toHaveBeenCalledWith(
-      'https://ipsiquiatra.com.br/api/public/patricia/aldo-araujo/session',
+      'https://app.ipsiquiatra.com.br/api/public/patricia/dr-aldo-araujo-psiquiatra/session',
       expect.objectContaining({ method: 'POST' })
     );
     expect(sentBody(doFetch)).toEqual({ consent: true });
