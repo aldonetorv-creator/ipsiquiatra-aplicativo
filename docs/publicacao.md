@@ -48,6 +48,9 @@ git checkout app.json
 git pull
 ```
 ```
+npm ci
+```
+```
 npx eas-cli@latest login
 ```
 ```
@@ -57,6 +60,13 @@ npx eas-cli@latest build --platform android --profile preview
 - **`git checkout app.json`:** desfaz qualquer mudança feita no `app.json` do
   computador (por exemplo, por um `eas init`). Se não houver mudança, não faz
   nada.
+- **`npm ci`:** instala no computador os pacotes do app na versão certa.
+  - Antes, pare o Expo, se estiver rodando (Ctrl + C na janela dele).
+  - Espere aparecer "added ... packages".
+  - Sem ele, o build falha logo no começo com
+    `expo\bin\cli config --json exited with non-zero code: 1`. O motivo é que
+    o `app.json` usa o plugin do `expo-secure-store`, e esse pacote ainda não
+    está no computador.
 - **Chave do Android:** na primeira vez, a Expo pergunta se gera a chave de
   assinatura do Android ("Generate a new Android Keystore?"). Responda que sim.
   Ela fica guardada na conta Expo e serve também para enviar o app ao Google
