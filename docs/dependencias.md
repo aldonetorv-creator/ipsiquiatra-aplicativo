@@ -53,6 +53,8 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 | Pacote | Para quê | Observação |
 |---|---|---|
 | `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. No Expo Go do iPhone, os lembretes locais funcionam. No Expo Go do Android (SDK 53+), só carregar o pacote já dá erro e o app não abre; por isso o app carrega o pacote só onde ele funciona (`src/services/notifications-module.ts`) e, no Expo Go do Android, abre sem notificações (a mensagem diária continua na conversa). Para ver as notificações no Android é preciso o app instalado (build de desenvolvimento). Na fase 2 o lembrete passa a vir da plataforma por push. |
+| `expo-crypto` | Cifra AES-GCM de 256 bits do histórico guardado no aparelho (fase 2, lote 1). | Versão do SDK 57 (`npx expo install`; aqui com `EXPO_OFFLINE=1`, porque a rede do ambiente bloqueia a API do Expo). Vem no Expo Go. Carregado só no celular (`src/services/device-cipher.ts`). |
+| `expo-secure-store` | Guarda a chave do histórico no Keychain (iPhone) ou no Keystore (Android). | Versão do SDK 57, vem no Expo Go. O plugin entra no `app.json` com `faceIDPermission: false`, porque o app não usa Face ID. Pelo padrão do plugin, a chave fica fora do backup automático do Android. |
 
 ## Removidas
 
@@ -81,12 +83,35 @@ Native.
 Foi escolhido em vez de `expo-sqlite` porque funciona igual em iOS, Android e
 web; o suporte web do `expo-sqlite` ainda é experimental.
 
-**Antes de pacientes reais** (conversa e humor são dados sensíveis de saúde,
-LGPD art. 11):
+**Criptografia em repouso (fase 2, lote 1).** No celular, tudo o que o app
+guarda (conversa, humor, questionários e aceite do termo) é gravado cifrado com
+AES-GCM de 256 bits (`expo-crypto`). A chave é criada no aparelho na primeira
+gravação e fica no armazenamento seguro do sistema (`expo-secure-store`): ela
+nunca vai para o AsyncStorage nem para a plataforma.
 
-- criptografar o histórico em repouso (ex.: `expo-sqlite` com SQLCipher ou
-  chave guardada no `expo-secure-store`);
-- pedir consentimento explícito para guardar o histórico;
+- **Dados de antes da criptografia:** continuam valendo e passam a ser
+  gravados cifrados na primeira leitura.
+- **Cada valor só abre na chave em que foi gravado:** o nome da chave entra
+  como dado autenticado.
+- **Chave ilegível no momento:** se o sistema não entregar a chave (erro, não
+  "chave inexistente"), o app não grava nada nem cria outra chave, para não
+  perder o histórico que ainda vale.
+- **Backup do Android:** a chave não vai no backup automático. Se o
+  AsyncStorage for restaurado em outro aparelho sem a chave, o histórico não
+  abre e o app começa do zero.
+- **Web:** sem armazenamento seguro, o `localStorage` continua sem cifra. A web
+  não é usada por pacientes (a Patrícia real só funciona no celular).
+
+Código em `src/services/encrypted-store.ts` e `src/services/device-cipher.ts`;
+testes em `src/__tests__/encrypted-store.test.ts`. Eles usam a versão web do
+AES do `expo-crypto` (WebCrypto), que tem a mesma interface da nativa.
+
+**Ainda antes de pacientes reais** (conversa e humor são dados sensíveis de
+saúde, LGPD art. 11):
+
+- consentimento explícito para guardar o histórico: o termo da Patrícia já
+  diz que a conversa fica no celular; falta o mesmo para o diário e os
+  questionários, quando forem para a plataforma (login, fase 2);
 - definir retenção e o que acontece ao trocar de aparelho ou sair da conta.
 
 ## Atualizações

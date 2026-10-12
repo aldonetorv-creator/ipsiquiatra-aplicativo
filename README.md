@@ -68,8 +68,9 @@ Patrícia do Dr. Aldo na plataforma do iPsiquiatra
 mesmas rotas públicas do chat do site: termo, agendamento, remarcação,
 cancelamento e orientações de crise (ver
 [`docs/integracao-plataforma.md`](docs/integracao-plataforma.md)). A conversa
-fica salva no aparelho (AsyncStorage) e pode ser apagada em "Apagar
-histórico"; ver privacidade em `docs/dependencias.md`. A tela mostra o aviso
+fica salva no aparelho, cifrada (AsyncStorage com chave no armazenamento seguro
+do celular), e pode ser apagada em "Apagar histórico"; ver privacidade em
+`docs/dependencias.md`. A tela mostra o aviso
 de que a Patrícia tem apoio de IA e os contatos de emergência (CVV 188 e SAMU
 192).
 
