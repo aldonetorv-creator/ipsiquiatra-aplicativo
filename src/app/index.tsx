@@ -108,9 +108,11 @@ export default function HomeScreen() {
                 <FollowUpCard
                   followUp={state.followUp}
                   onPress={
-                    state.followUp.kind === 'late' && state.followUp.daysUntil === null
-                      ? scheduleReturn
-                      : () => router.push('/consultas')
+                    state.followUp.kind !== 'late'
+                      ? () => router.push('/consultas')
+                      : state.followUp.daysUntil === null
+                        ? scheduleReturn
+                        : reschedule
                   }
                 />
               ) : null}

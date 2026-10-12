@@ -208,8 +208,9 @@ dos dados simulados. Ordem sugerida:
    - **Consulta próxima:** a próxima consulta marcada está a 7 dias ou menos
      ("Consulta em 7 dias", "amanhã", "hoje");
    - **Retorno atrasado:** passou a data do retorno sem consulta marcada, ou a
-     consulta marcada ficou para depois dela. Sem consulta marcada, o toque
-     pede o agendamento à Patrícia;
+     consulta marcada ficou para depois dela. No lugar das contagens, o cartão
+     mostra o que fazer: "Marcar consulta" (sem consulta marcada) ou
+     "Remarcar consulta". O toque leva o pedido à Patrícia;
    - **Em acompanhamento:** os outros casos, com os dias desde a última
      consulta e, se houver, os dias até a próxima.
 3. **Documentos liberados pelo médico** (Cofre, `listDocuments`): só o que o
