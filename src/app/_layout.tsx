@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -16,6 +17,9 @@ export default function TabLayout() {
     <PatientAppGatewayProvider>
       <PatientSessionProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          {/* Ícones escuros sobre as telas claras. A abertura e a história de
+              boas-vindas, roxas, trocam por claros enquanto aparecem. */}
+          <StatusBar style="dark" />
           <SplashUntilSession />
           <DailyReminders />
           <AppTabs />

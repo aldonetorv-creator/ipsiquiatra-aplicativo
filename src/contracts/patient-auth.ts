@@ -47,7 +47,8 @@ export interface PatientAuthApi {
 }
 
 export const authTexts = {
-  sent: 'Se este CPF estiver no cadastro da clínica, enviamos um código por SMS para o celular cadastrado.',
+  // Igual para quem está ou não no cadastro: não revela quem é paciente.
+  sent: 'Se o CPF estiver no cadastro da clínica, você vai receber o código por SMS.',
   invalidCpf: 'Confira o CPF: os números não formam um CPF válido.',
   wrongCode: 'Código incorreto.',
   expired: 'Este código expirou. Peça um novo código.',

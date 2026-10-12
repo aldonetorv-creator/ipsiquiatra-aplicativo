@@ -53,7 +53,7 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 
 - **Sem revelar quem é paciente.** A `start` responde igual para CPF que não
   está no cadastro, com um `challengeId` que nunca valida. O app sempre mostra
-  "Se este CPF estiver no cadastro da clínica, enviamos um código por SMS...".
+  "Se o CPF estiver no cadastro da clínica, você vai receber o código por SMS."
 - **Código:** 6 números, gerados por fonte criptográfica, guardados só como
   hash, válidos por 10 minutos, com 5 tentativas. Pedir de novo (depois de 60
   segundos) troca o código e zera as tentativas. Um desafio usado não vale de
@@ -83,7 +83,10 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 ## No app
 
 - **O login é a primeira tela** (decisão do Dr. Aldo, 12/10/2026).
-  - Sem sessão, o app só mostra a tela de entrar (`src/app/entrar.tsx`).
+  - Sem sessão, o app só mostra a tela de entrar (`src/app/entrar.tsx`): uma
+    história curta de boas-vindas, em três quadros que passam sozinhos, com o
+    botão "Entrar com CPF" sempre à mão; depois uma pergunta por tela, o CPF e
+    o código do SMS (que é conferido sozinho com os 6 números).
   - As abas (Início, Patrícia, Consultas, Cofre, Questionários) nem existem até
     o login. São rotas protegidas do Expo Router (`Tabs.Protected` em
     `src/components/app-tabs.tsx`).

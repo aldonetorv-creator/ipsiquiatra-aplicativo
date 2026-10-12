@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet } from 'react-native';
 
@@ -42,6 +43,7 @@ export function AnimatedSplashOverlay({ ready = true }: { ready?: boolean }) {
         SplashScreen.hideAsync().finally(() => setShown(true));
       }}
       style={[styles.splashOverlay, { opacity }]}>
+      <StatusBar style="light" />
       <Image source={require('@/assets/images/ip-icon.png')} style={styles.brandMark} />
     </Animated.View>
   );
@@ -53,9 +55,11 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
   },
+  // Mesmo roxo do splash nativo (backgroundColor em app.json) e da história de
+  // boas-vindas: a abertura continua no roxo até a tela de entrar.
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: Tokens.color.surface,
+    backgroundColor: Tokens.color.brandDeep,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,

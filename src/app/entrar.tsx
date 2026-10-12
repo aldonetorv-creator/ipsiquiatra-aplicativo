@@ -1,102 +1,111 @@
-import { Image } from 'expo-image';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
+import { Animated, BackHandler, Easing, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
-import { LoginForm } from '@/components/auth/login-form';
-import { ThemedText } from '@/components/themed-text';
-import { Card } from '@/components/ui/card';
-import { ScreenBackground } from '@/components/ui/screen-background';
-import { MaxContentWidth, Tokens } from '@/constants/theme';
+import { CodeStep } from '@/components/auth/code-step';
+import { CpfStep } from '@/components/auth/cpf-step';
+import { WelcomeStory } from '@/components/auth/welcome-story';
+import { Tokens } from '@/constants/theme';
+import { useLoginFlow } from '@/hooks/use-login-flow';
+
+type Step = 'welcome' | 'cpf' | 'code';
+const order: Step[] = ['welcome', 'cpf', 'code'];
 
 // Primeira tela do app (decisão do Dr. Aldo, 12/10/2026): antes de qualquer
 // outra, o paciente entra com o CPF. As abas só existem depois do login
-// (components/app-tabs.tsx).
+// (components/app-tabs.tsx). Primeiro uma história curta de boas-vindas; depois
+// uma pergunta por tela: o CPF e o código do SMS.
 export default function EntrarScreen() {
+  const flow = useLoginFlow();
+  const { changeCpf } = flow;
+  const [started, setStarted] = useState(false);
+  const step: Step = !started ? 'welcome' : flow.challenge ? 'code' : 'cpf';
+
+  // A tela nova entra pelo lado para onde se anda: avançando, pela direita.
+  const [previous, setPrevious] = useState(step);
+  const [direction, setDirection] = useState(1);
+  if (step !== previous) {
+    setPrevious(step);
+    setDirection(order.indexOf(step) > order.indexOf(previous) ? 1 : -1);
+  }
+
+  const back = useCallback(() => {
+    if (step === 'code') changeCpf();
+    else setStarted(false);
+  }, [step, changeCpf]);
+
+  // O voltar do Android volta um passo; na história, sai do app como sempre.
+  useEffect(() => {
+    if (step === 'welcome') return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      back();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [step, back]);
+
   return (
-    <ScreenBackground>
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.safeArea}>
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            <View style={styles.brand}>
-              <Image
-                source={require('@/assets/images/ip-icon.png')}
-                style={styles.logo}
-                accessibilityLabel="Logo do iPsiquiatra"
-              />
-              <ThemedText type="subtitle" style={styles.brandName}>
-                iPsiquiatra
-              </ThemedText>
-              <ThemedText type="small" style={styles.muted}>
-                Inteligência que amplifica o cuidado.
-              </ThemedText>
-            </View>
+    <StepTransition key={step} direction={direction} style={step === 'welcome' && styles.story}>
+      {step === 'welcome' ? (
+        <WelcomeStory onEnter={() => setStarted(true)} />
+      ) : step === 'cpf' ? (
+        <CpfStep flow={flow} onBack={back} />
+      ) : (
+        <CodeStep flow={flow} onBack={back} />
+      )}
+    </StepTransition>
+  );
+}
 
-            <View style={styles.greeting}>
-              <ThemedText type="title" style={styles.title}>
-                Que bom ter você aqui
-              </ThemedText>
-              <ThemedText type="default" style={styles.muted}>
-                Entre com o seu CPF para ver suas consultas, falar com a Patrícia e acompanhar o seu
-                dia a dia.
-              </ThemedText>
-            </View>
+// A tela nova chega deslizando um pouco e aparecendo.
+function StepTransition({
+  direction,
+  style,
+  children,
+}: {
+  direction: number;
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  const [enter] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const animation = Animated.timing(enter, {
+      toValue: 1,
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [enter]);
 
-            <Card>
-              <ThemedText type="smallBold" style={styles.cardTitle}>
-                Entrar com CPF
-              </ThemedText>
-              <LoginForm />
-            </Card>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ScreenBackground>
+  return (
+    <Animated.View
+      style={[
+        styles.step,
+        style,
+        {
+          opacity: enter,
+          transform: [
+            {
+              translateX: enter.interpolate({
+                inputRange: [0, 1],
+                outputRange: [direction * 36, 0],
+              }),
+            },
+          ],
+        },
+      ]}>
+      {children}
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  step: {
     flex: 1,
+    backgroundColor: Tokens.color.surface,
   },
-  content: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 32,
-    gap: 20,
-  },
-  brand: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  logo: {
-    width: 88,
-    height: 88,
-    marginBottom: 8,
-  },
-  brandName: {
-    color: Tokens.color.brand,
-    fontSize: 24,
-    lineHeight: 30,
-  },
-  greeting: {
-    gap: 6,
-  },
-  title: {
-    color: Tokens.color.text,
-    fontSize: 30,
-    lineHeight: 36,
-  },
-  muted: {
-    color: Tokens.color.muted,
-  },
-  cardTitle: {
-    color: Tokens.color.brand,
-    fontSize: 18,
-    lineHeight: 24,
+  story: {
+    backgroundColor: Tokens.color.brandDeep,
   },
 });

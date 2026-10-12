@@ -28,7 +28,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#4A1F9A",
           "image": "./assets/images/ip-icon.png",
           "imageWidth": 96
         }
