@@ -41,6 +41,13 @@ export default function HomeScreen() {
     if (!failure) router.push('/patricia');
   };
 
+  // Retorno atrasado sem consulta marcada: o pedido vai para a Patrícia.
+  const scheduleReturn = async () => {
+    const failure = await requestService('schedule_appointment');
+    setActionError(failure);
+    if (!failure) router.push('/patricia');
+  };
+
   return (
     <ScreenBackground>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -97,10 +104,14 @@ export default function HomeScreen() {
 
               <CarePlanCard ready={state.carePlanReady} onOpen={() => router.push('/cofre')} />
 
-              {state.daysSinceLastAppointment !== null ? (
+              {state.followUp ? (
                 <FollowUpCard
-                  daysSinceLast={state.daysSinceLastAppointment}
-                  onPress={() => router.push('/consultas')}
+                  followUp={state.followUp}
+                  onPress={
+                    state.followUp.kind === 'late' && state.followUp.daysUntil === null
+                      ? scheduleReturn
+                      : () => router.push('/consultas')
+                  }
                 />
               ) : null}
             </>

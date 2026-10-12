@@ -67,6 +67,8 @@ export function mockAppointments(now: Date): Appointment[] {
     [-36, 9, 30, 'in_person'],
     [-8, 14, 30, 'telemedicine'],
   ];
+  // O retorno pedido em cada consulta é o dia da seguinte: nada atrasado.
+  const nextDays = 7;
   const past: Appointment[] = schedule.map(([days, hour, minute, modality], index) => ({
     id: `appt-${index + 1}`,
     startsAt: at(days, hour, minute),
@@ -74,12 +76,13 @@ export function mockAppointments(now: Date): Appointment[] {
     modality,
     status: 'completed',
     doctor: mockDoctor,
+    returnDueAt: at(schedule[index + 1]?.[0] ?? nextDays, 0),
   }));
   return [
     ...past,
     {
       id: `appt-${past.length + 1}`,
-      startsAt: at(7, 14, 30),
+      startsAt: at(nextDays, 14, 30),
       durationMinutes: 60,
       modality: 'telemedicine',
       status: 'scheduled',

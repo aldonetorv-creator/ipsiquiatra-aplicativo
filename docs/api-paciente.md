@@ -202,7 +202,16 @@ Com o paciente identificado, as telas do app passam a ler a plataforma em vez
 dos dados simulados. Ordem sugerida:
 
 1. **Patrícia com o paciente identificado** (seção acima).
-2. **Consultas:** próxima e anteriores (`listAppointments`).
+2. **Consultas:** próxima e anteriores (`listAppointments`). Cada consulta
+   realizada traz `returnDueAt`, a data até quando o médico pediu o retorno.
+   O cartão "Agora" da Início usa essa data (pedido do Dr. Aldo, 12/10/2026):
+   - **Consulta próxima:** a próxima consulta marcada está a 7 dias ou menos
+     ("Consulta em 7 dias", "amanhã", "hoje");
+   - **Retorno atrasado:** passou a data do retorno sem consulta marcada, ou a
+     consulta marcada ficou para depois dela. Sem consulta marcada, o toque
+     pede o agendamento à Patrícia;
+   - **Em acompanhamento:** os outros casos, com os dias desde a última
+     consulta e, se houver, os dias até a próxima.
 3. **Documentos liberados pelo médico** (Cofre, `listDocuments`): só o que o
    médico liberou, nunca o prontuário interno.
 4. **Questionários pedidos para a próxima consulta** (`listQuestionnaires` e
