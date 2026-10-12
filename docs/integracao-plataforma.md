@@ -58,6 +58,15 @@ Todas em `/api/public/patricia/<slug>`, chamadas por
   (`ipsiquiatra:patricia-consent`); se o termo mudar, ele aparece de novo.
   Quando a Patrícia tiver a rota com o paciente identificado
   (`docs/api-paciente.md`), os cartões também deixam de pedir esses dados.
+- **Primeiro acesso, na ordem** (pedido do Dr. Aldo, 12/10/2026): o termo
+  vem sozinho, antes de qualquer fala da Patrícia (nem o diário das 20h
+  aparece antes dele). Depois do "Concordo", a Patrícia se apresenta ("Oi! Eu
+  sou a Patrícia, assistente do Dr. Aldo Araújo...") e então pergunta do
+  humor. Quem concorda de novo, porque o termo mudou, recebe a saudação da
+  plataforma.
+- **Ritmo:** as mensagens novas da Patrícia entram uma de cada vez, depois do
+  "digitando…", com tempo de leitura (de 0,7 a 2,2 segundos;
+  `src/constants/patricia-pace.ts`).
 - **Quem não concorda** recebe o caminho sem IA: um relato escrito vai para a
   clínica, como no site.
 - **Conversa:** a resposta da Patrícia aparece em balões. Horários aparecem como

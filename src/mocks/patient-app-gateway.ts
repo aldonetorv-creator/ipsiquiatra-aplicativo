@@ -151,7 +151,7 @@ export function mockDocuments(appointments: Appointment[], now: Date): DocumentM
 // paciente escreve (sem IA e sem conteúdo clínico, conforme a issue #1).
 export const patriciaScript = {
   greeting:
-    'Oi! Eu sou a Patrícia, assistente do Dr. Aldo. Estou aqui para ajudar com consultas, documentos e lembretes.',
+    'Oi! Eu sou a Patrícia, assistente do Dr. Aldo Araújo. Estou aqui para ajudar com consultas, documentos e lembretes.',
   moodCheck: 'Como você está se sentindo hoje?',
   moodCheckAgain: 'Como você está se sentindo agora?',
   afterMood: 'Obrigada por me contar como você está. Estou aqui com você. 💙',
@@ -263,10 +263,22 @@ export function createMockPatientAppGateway({
     answer: null,
   });
 
+  // Apresentação da Patrícia e o diário de humor (se não houver um em aberto).
+  const welcome = (): ConversationMessage[] => {
+    const openCheck = history!.conversation.some(
+      (message) => message.kind === 'mood_check' && message.answer === null
+    );
+    return [
+      text('patricia', patriciaScript.greeting),
+      ...(openCheck ? [] : [moodCheck(patriciaScript.moodCheck)]),
+    ];
+  };
+
+  // Com a Patrícia real, a conversa começa vazia: primeiro vem o termo, e a
+  // apresentação só depois do "Concordo" (patricia-live.ts).
   const seed = () => {
     history = { version: 1, sequence: 0, conversation: [], moodEntries: [] };
-    history.conversation.push(text('patricia', patriciaScript.greeting));
-    history.conversation.push(moodCheck(patriciaScript.moodCheck));
+    if (!patricia) history.conversation.push(...welcome());
     return history;
   };
 
@@ -295,6 +307,7 @@ export function createMockPatientAppGateway({
         nextId,
         messages: () => history!.conversation,
         save: () => save(),
+        welcome,
       })
     : null;
   const demoOnly = (): ApiFailure => ({
@@ -395,8 +408,11 @@ export function createMockPatientAppGateway({
     async listConversation() {
       await load();
       await live?.onLoad();
-      await ensureCareContacts();
-      await ensureDailyMoodCheck();
+      // Antes do termo, a Patrícia não manda mais nada.
+      if (!live || (await live.hasConsent())) {
+        await ensureCareContacts();
+        await ensureDailyMoodCheck();
+      }
       return mockResult([...history!.conversation]);
     },
     async sendMessage(body) {
@@ -467,6 +483,11 @@ export function createMockPatientAppGateway({
       await store.removeItem(HISTORY_STORAGE_KEY);
       live?.reset();
       seed();
+      if (live) {
+        // Termo já aceito: a conversa recomeça com a apresentação.
+        await live.onLoad();
+        if (history!.conversation.length === 0) history!.conversation.push(...welcome());
+      }
       await save();
       return mockResult([...history!.conversation]);
     },

@@ -80,9 +80,12 @@ type Deps = {
   // Conversa salva no aparelho: este módulo acrescenta e troca mensagens nela.
   messages: () => ConversationMessage[];
   save: () => Promise<void>;
+  // Primeiro acesso: o que a Patrícia diz depois do termo (apresentação e
+  // diário de humor), na ordem pedida pelo Dr. Aldo.
+  welcome: () => ConversationMessage[];
 };
 
-export function createPatriciaLive({ api, store, now, nextId, messages, save }: Deps) {
+export function createPatriciaLive({ api, store, now, nextId, messages, save, welcome }: Deps) {
   let session: string | null = null;
   let booked = false;
   let leaveSent = false;
@@ -284,6 +287,10 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save }: 
     }
     const started = await ensureSession();
     if ('error' in started) return fail(started.error);
+    // Primeiro acesso: a conversa ainda não tem nenhuma fala da Patrícia.
+    const firstTime = !messages().some(
+      (message) => message.kind === 'text' && message.author === 'patricia'
+    );
     await store.setItem(
       PATRICIA_CONSENT_KEY,
       JSON.stringify({ version: CONSENT_VERSION, acceptedAt: now().toISOString() })
@@ -292,6 +299,7 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save }: 
     const updated = card
       ? [replace({ ...card, status: 'done' as const, note: 'Você concordou com o termo.' })]
       : [];
+    if (firstTime) return ok([...updated, ...(await append(...welcome()))]);
     const info = await api.info();
     const greeting = info?.ok && info.data.greeting ? info.data.greeting : patriciaTexts.ready;
     return ok([...updated, ...(await append(text('patricia', greeting)))]);
@@ -477,7 +485,7 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save }: 
     leaveSent = false;
   };
 
-  return { send, onLoad, answerTerms, pickSlot, submitCard, leave, reset };
+  return { send, onLoad, answerTerms, pickSlot, submitCard, leave, reset, hasConsent };
 }
 
 export type PatriciaLive = ReturnType<typeof createPatriciaLive>;

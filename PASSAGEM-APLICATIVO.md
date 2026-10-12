@@ -48,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 215.
+  - Total: 220.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -68,6 +68,8 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Cartão "Agora" da Início:** "Em acompanhamento", "Retorno atrasado" (pela
   data do retorno pedido na consulta, `returnDueAt`) ou "Consulta próxima" (7
   dias ou menos). Regra em `followUpFor` (`src/utils/appointments.ts`).
+- **Primeiro acesso à Patrícia:** termo sozinho → "Concordo" → apresentação →
+  diário de humor, uma mensagem de cada vez, com "digitando…".
 - **Termo da Patrícia no app:** curto, sem listar os dados do site (o login já
   identifica o paciente).
 - **Fora do app:**
@@ -122,6 +124,11 @@ APK: expo.dev → Builds → Build from GitHub → `main`, Android, `preview`.
 - **`renderRouter`** (expo-router/testing-library):
   - é preciso `await` no resultado;
   - ele liga relógios falsos: usar `afterEach(jest.useRealTimers)`.
+- **Ritmo da Patrícia nos testes:** `test/setup.js` zera o ritmo; o teste
+  `src/__tests__/patricia-pace.test.tsx` liga um ritmo curto para ver a ordem.
+- **Código do SMS no Android:** o campo invisível sobre as casinhas precisa de
+  `opacity: 0.01` (o Android ignora `color: 'transparent'` e mostrava os
+  números de novo na primeira casinha).
 - **Web (RN-web):**
   - `useWindowDimensions` dá 0 no export estático: medir com `onLayout`;
   - `AccessibilityInfo.isScreenReaderEnabled` sempre diz `true`.

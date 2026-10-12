@@ -7,7 +7,11 @@ import {
   PatriciaCardMessage,
   TextMessage,
 } from '@/contracts/platform';
-import { createMockPatientAppGateway, HISTORY_STORAGE_KEY } from '@/mocks/patient-app-gateway';
+import {
+  createMockPatientAppGateway,
+  HISTORY_STORAGE_KEY,
+  patriciaScript,
+} from '@/mocks/patient-app-gateway';
 import { PATRICIA_CONSENT_KEY, patriciaTexts } from '@/services/patricia-live';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
 
@@ -118,21 +122,56 @@ describe('Patrícia real: termo', () => {
     expect(api.message).not.toHaveBeenCalled();
   });
 
-  it('concordar abre a conversa, guarda o aceite e traz a saudação da plataforma', async () => {
+  it('no primeiro acesso, o termo vem sozinho, antes de qualquer fala da Patrícia', async () => {
+    const { gateway } = await setup();
+
+    expect(await conversation(gateway)).toEqual([
+      expect.objectContaining({ kind: 'patricia_card', card: { type: 'consent' } }),
+    ]);
+  });
+
+  it('concordar abre a conversa, guarda o aceite e a Patrícia se apresenta e pergunta do humor', async () => {
     const { gateway, api, store } = await setup();
 
     const messages = data(await gateway.answerPatriciaTerms(true));
 
     expect(api.startSession).toHaveBeenCalledTimes(1);
-    expect(messages[0]).toEqual(
-      expect.objectContaining({ status: 'done', note: 'Você concordou com o termo.' })
-    );
-    expect(lastOf(messages)).toEqual(
-      expect.objectContaining({ author: 'patricia', text: 'Olá, sou a Patrícia.' })
-    );
+    expect(api.info).not.toHaveBeenCalled();
+    expect(messages).toEqual([
+      expect.objectContaining({ status: 'done', note: 'Você concordou com o termo.' }),
+      expect.objectContaining({ author: 'patricia', text: patriciaScript.greeting }),
+      expect.objectContaining({ kind: 'mood_check', answer: null }),
+    ]);
     expect(JSON.parse((await store.getItem(PATRICIA_CONSENT_KEY))!)).toEqual(
       expect.objectContaining({ acceptedAt: expect.any(String) })
     );
+  });
+
+  it('concordar de novo, com o termo novo, traz a saudação da plataforma', async () => {
+    const store = createMemoryStore();
+    await consented(fakeApi(), store);
+    await store.setItem(
+      PATRICIA_CONSENT_KEY,
+      JSON.stringify({ version: 'antiga', acceptedAt: new Date().toISOString() })
+    );
+    const reopened = createMockPatientAppGateway({ store, patricia: fakeApi() });
+    await reopened.listConversation();
+    await reopened.sendMessage('Oi');
+
+    const messages = data(await reopened.answerPatriciaTerms(true));
+
+    expect(lastOf(messages)).toEqual(
+      expect.objectContaining({ author: 'patricia', text: 'Olá, sou a Patrícia.' })
+    );
+    expect(messages.filter((message) => message.kind === 'mood_check')).toEqual([]);
+  });
+
+  it('antes do termo, o diário das 20h não aparece', async () => {
+    const evening = () => new Date(2026, 9, 12, 21, 0);
+    const gateway = createMockPatientAppGateway({ patricia: fakeApi(), now: evening });
+
+    const before = await conversation(gateway);
+    expect(before.map((message) => message.kind)).toEqual(['patricia_card']);
   });
 
   it('recusar oferece o relato sem IA, que vai direto à clínica', async () => {
