@@ -82,6 +82,16 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 
 ## No app
 
+- **O login é a primeira tela** (decisão do Dr. Aldo, 12/10/2026).
+  - Sem sessão, o app só mostra a tela de entrar (`src/app/entrar.tsx`).
+  - As abas (Início, Patrícia, Consultas, Cofre, Questionários) nem existem até
+    o login. São rotas protegidas do Expo Router (`Tabs.Protected` em
+    `src/components/app-tabs.tsx`).
+  - Abrir uma tela direto, por exemplo pela notificação da Patrícia, também
+    cai na tela de entrar.
+  - "Sair" volta para ela.
+  - A abertura animada só some depois que o app lê a sessão salva, para quem
+    já entrou não ver o login piscar.
 - O CPF só é usado para pedir o código e não fica salvo no celular.
 - A sessão (token, validade e primeiro nome) fica no armazenamento seguro do
   sistema (`expo-secure-store`), em `src/services/patient-session.tsx`.
@@ -95,8 +105,13 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
   responsável entra?
 - **Paciente sem CPF** (a Patrícia aceita cadastro sem CPF): qual outro
   caminho? Por exemplo, nome, nascimento e código.
-- **Celular desatualizado:** hoje o app manda falar com a Patrícia ou com a
-  clínica. Precisa de um caminho para o paciente pedir a troca?
+- **Celular desatualizado:** hoje o app manda falar com a clínica ou com a
+  Patrícia pelo site, porque a Patrícia do app só aparece depois do login.
+  Precisa de um caminho para o paciente pedir a troca?
+- **Quem ainda não é paciente:** com o login real, só entra quem já tem
+  cadastro na clínica. A primeira consulta fica com a Patrícia do site. Vale
+  pôr na tela de entrar um botão "Ainda não é paciente?" para a Patrícia do
+  site?
 
 ## Próximas rotas (depois do login)
 

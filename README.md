@@ -28,7 +28,7 @@ consulta pelo app: agendamento, cobrança pela Patrícia, pagamento confirmado
 pela integração com o Nubank, teleconsulta por videochamada e nota fiscal
 (NFS-e) emitida 24 horas depois da consulta. Dela, já existem a conversa com a
 Patrícia real (agendar, remarcar e cancelar), o histórico cifrado no celular e
-o login com CPF e código por SMS, por enquanto simulado
+o login com CPF e código por SMS, a primeira tela do app, por enquanto simulado
 ([`docs/api-paciente.md`](docs/api-paciente.md)).
 
 ## Comandos
