@@ -119,20 +119,20 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
     saem do celular. A escolha fica no armazenamento seguro, ao lado da
     sessão, e "Sair" a apaga.
 
-## A definir com o Dr. Aldo
+## Decidido com o Dr. Aldo (12/10/2026)
 
-- **Paciente menor de idade:** entra com o CPF do responsável e a data de
-  nascimento do paciente, como no TCLE (`minor-responsible-cpf`)? Ou só o
-  responsável entra?
-- **Paciente sem CPF** (a Patrícia aceita cadastro sem CPF): qual outro
-  caminho? Por exemplo, nome, nascimento e código.
-- **Celular desatualizado:** hoje o app manda falar com a clínica ou com a
-  Patrícia pelo site, porque a Patrícia do app só aparece depois do login.
-  Precisa de um caminho para o paciente pedir a troca?
-- **Quem ainda não é paciente:** com o login real, só entra quem já tem
-  cadastro na clínica. A primeira consulta fica com a Patrícia do site. Vale
-  pôr na tela de entrar um botão "Ainda não é paciente?" para a Patrícia do
-  site?
+- **Paciente menor de idade não usa o app.** Não há entrada pelo responsável.
+  Na plataforma, o CPF de um paciente menor recebe a mesma resposta genérica
+  de um CPF fora do cadastro, sem SMS.
+- **Paciente sem CPF também não usa o app.** Não há outro caminho de entrada.
+- **Celular desatualizado:** depois de 1 minuto sem o código, a tela do código
+  mostra "Não recebeu o código? Se o seu celular mudou, atualize o cadastro
+  diretamente com a clínica." (`authTexts.notReceived`). O aviso fica na tela
+  mesmo depois de reenviar. O app não troca o celular do cadastro: só a
+  clínica. Assim ninguém troca o celular de outra pessoa pelo app.
+- **Sem botão "Ainda não é paciente?"** na tela de entrar: só poluiria a tela.
+  Com o login real, só entra quem já tem cadastro; a primeira consulta continua
+  com a Patrícia do site.
 
 ## Próximas rotas (depois do login)
 

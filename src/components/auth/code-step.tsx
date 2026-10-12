@@ -1,3 +1,4 @@
+import { SymbolView } from 'expo-symbols';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
@@ -12,7 +13,10 @@ const clock = (seconds: number) =>
 
 // Passo 2 de 2: o código do SMS, uma caixa por número.
 export function CodeStep({ flow, onBack }: { flow: LoginFlow; onBack: () => void }) {
-  const [help, setHelp] = useState(false);
+  // Depois de 1 minuto sem o código, o aviso do celular desatualizado aparece
+  // sozinho e fica, mesmo depois de reenviar.
+  const [waited, setWaited] = useState(false);
+  if (flow.resendIn === 0 && !waited) setWaited(true);
 
   return (
     <StepLayout
@@ -38,9 +42,25 @@ export function CodeStep({ flow, onBack }: { flow: LoginFlow; onBack: () => void
         ) : (
           <LinkButton label="Reenviar código" onPress={flow.resend} />
         )}
-        <LinkButton label="Não recebeu o código?" onPress={() => setHelp((open) => !open)} />
-        {help ? <StepHint text={authTexts.notReceived} /> : null}
       </View>
+
+      {waited ? (
+        <View style={styles.notice} accessible accessibilityRole="text">
+          <SymbolView
+            name={{ ios: 'iphone', android: 'smartphone', web: 'smartphone' }}
+            tintColor={Tokens.color.brand}
+            size={22}
+          />
+          <View style={styles.noticeCopy}>
+            <ThemedText type="smallBold" style={styles.noticeTitle}>
+              Não recebeu o código?
+            </ThemedText>
+            <ThemedText type="small" style={styles.muted}>
+              {authTexts.notReceived}
+            </ThemedText>
+          </View>
+        </View>
+      ) : null}
 
       {flow.demoCode ? (
         <View style={styles.demo}>
@@ -162,8 +182,24 @@ const styles = StyleSheet.create({
   },
   links: {
     alignItems: 'flex-start',
-    gap: 12,
     marginTop: 8,
+  },
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Tokens.color.brandBorder,
+    backgroundColor: Tokens.color.brandSoft,
+  },
+  noticeCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  noticeTitle: {
+    color: Tokens.color.text,
   },
   muted: {
     color: Tokens.color.muted,
