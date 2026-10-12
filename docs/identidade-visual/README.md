@@ -57,6 +57,27 @@ circular roxa e livros com os temas "Saúde mental", "Bem-estar", "Ciência" e
 | [03-patricia-atalhos-e-cofre](./03-patricia-atalhos-e-cofre.webp) | Patrícia (chat) e Cofre | Atalhos "Agendar consulta", "Remarcar", "Pedir nota fiscal", "Encontrar documento"; Cofre com busca, filtro e documentos agrupados por consulta (plano de cuidados, receita, exames, nota fiscal, relatório) |
 | [04-inicio-proxima-consulta](./04-inicio-proxima-consulta.webp) | Início (variação) | Próxima consulta com "Ver consulta" e "Remarcar", questionário pré-consulta ("Responder agora", 3 minutos), plano de cuidados, dias desde a última consulta |
 
+## Entrada do app
+
+Pedido do Dr. Aldo (12/10/2026): pouco texto, uma progressão até o login e
+acabamento no estilo do Nubank e da Apple. Implementado em `src/app/entrar.tsx`
+e `src/components/auth/`.
+
+- **Abertura e história de boas-vindas no roxo da marca** (degradê
+  `Gradients.story`, com brilhos suaves). O splash nativo e a abertura animada
+  usam o mesmo roxo (`#4A1F9A`, `brandDeep`), para não piscar branco antes da
+  história.
+- **Três quadros, como stories**: barras de progresso no topo, uma ilustração,
+  um título e uma linha. Passam sozinhos (cerca de 5 segundos cada), com toque
+  ou deslize; com leitor de tela, só quando a pessoa pede.
+  1. "Tem alguém cuidando de você." (círculos que respiram devagar);
+  2. "Conheça a Patrícia." (foto e começo de conversa);
+  3. "Tudo num só lugar." (consultas, documentos com cadeado, questionários).
+- **"Entrar com CPF" sempre visível**: quem já conhece não precisa esperar.
+- **Uma pergunta por tela** (como no Nubank), em fundo branco: voltar e
+  progresso de 2 passos no topo, a pergunta em destaque, o campo grande e o
+  botão redondo de seguir acima do teclado. O código tem uma caixa por número.
+
 ## Princípios observados
 
 - **Tom acolhedor**: "Tem alguém cuidando de você.", "Como você está hoje?",

@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NextAppointmentCard } from '@/components/appointments/next-appointment-card';
-import { AccountCard } from '@/components/home/account-card';
+import { AccountButton } from '@/components/home/account-button';
 import { CarePlanCard } from '@/components/home/care-plan-card';
 import { FollowUpCard } from '@/components/home/follow-up-card';
 import { MoodWeekCard } from '@/components/home/mood-week-card';
@@ -18,10 +18,14 @@ import { ScreenBackground } from '@/components/ui/screen-background';
 import { MaxContentWidth, Tokens } from '@/constants/theme';
 import { useHome } from '@/hooks/use-home';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
+import { usePatientSession } from '@/services/patient-session';
 
 export default function HomeScreen() {
   const { state, ensureMoodCheck, requestService } = useHome();
   const livePatricia = usePatientAppGateway().patriciaMode() === 'live';
+  const session = usePatientSession().state;
+  // Boas-vindas pelo nome, no lugar do antigo "Você entrou como".
+  const name = session.status === 'signed_in' ? `, ${session.session.patient.firstName}` : '';
   const [actionError, setActionError] = useState<string | null>(null);
 
   const registerMood = async () => {
@@ -41,25 +45,26 @@ export default function HomeScreen() {
     <ScreenBackground>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.brand}>
-            <ThemedText type="subtitle" style={styles.brandName}>
-              iPsiquiatra
-            </ThemedText>
-            <ThemedText type="small" style={styles.muted}>
-              Inteligência que amplifica o cuidado.
-            </ThemedText>
+          <View style={styles.top}>
+            <View style={styles.brand}>
+              <ThemedText type="subtitle" style={styles.brandName}>
+                iPsiquiatra
+              </ThemedText>
+              <ThemedText type="small" style={styles.muted}>
+                Inteligência que amplifica o cuidado.
+              </ThemedText>
+            </View>
+            <AccountButton />
           </View>
 
           <View style={styles.greeting}>
             <ThemedText type="title" style={styles.greetingTitle}>
-              {state.status === 'ready' ? `${state.greeting}!` : 'Olá!'}
+              {state.status === 'ready' ? `${state.greeting}${name}!` : `Olá${name}!`}
             </ThemedText>
             <ThemedText type="default" style={styles.greetingSubtitle}>
               Tem alguém cuidando de você.
             </ThemedText>
           </View>
-
-          <AccountCard />
 
           {state.status === 'error' ? (
             <ThemedText type="default" style={styles.muted}>
@@ -163,7 +168,14 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     gap: 16,
   },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   brand: {
+    flex: 1,
     gap: 2,
   },
   brandName: {

@@ -19,6 +19,7 @@ export const Tokens = {
     brandSoft: '#EFEAFD',
     brandBorder: '#D9CCFA',
     onBrand: '#FFFFFF',
+    danger: '#C7344F',
   },
   radius: {
     sm: 8,
@@ -31,6 +32,8 @@ export const Gradients = {
   background: ['#E9ECFB', '#F4F3FD', '#FAF9FE'],
   primary: ['#2F45B5', '#6B3FD9'],
   soft: ['#F3F0FE', '#E9EDFC'],
+  // Roxo da abertura e da história de boas-vindas (tela de entrar).
+  story: ['#5A2FD3', '#4A1F9A', '#2B0F69'],
 } as const;
 
 export const Shadows = {

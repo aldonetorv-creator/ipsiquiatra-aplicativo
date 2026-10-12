@@ -1,12 +1,14 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
+import { BiometricOffer } from '@/components/auth/biometric-offer';
 import { useDailyReminders } from '@/hooks/use-daily-reminders';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
-import { PatientSessionProvider } from '@/services/patient-session';
+import { PatientSessionProvider, usePatientSession } from '@/services/patient-session';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -16,13 +18,24 @@ export default function TabLayout() {
     <PatientAppGatewayProvider>
       <PatientSessionProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <AnimatedSplashOverlay />
+          {/* Ícones escuros sobre as telas claras. A abertura e a história de
+              boas-vindas, roxas, trocam por claros enquanto aparecem. */}
+          <StatusBar style="dark" />
+          <SplashUntilSession />
           <DailyReminders />
           <AppTabs />
+          <BiometricOffer />
         </ThemeProvider>
       </PatientSessionProvider>
     </PatientAppGatewayProvider>
   );
+}
+
+// A abertura animada só some depois que o app sabe se há sessão salva: quem já
+// entrou não vê a tela de login piscar.
+function SplashUntilSession() {
+  const { state } = usePatientSession();
+  return <AnimatedSplashOverlay ready={state.status !== 'loading'} />;
 }
 
 // Precisa estar dentro do provider para ler o diário de humor pelo gateway.

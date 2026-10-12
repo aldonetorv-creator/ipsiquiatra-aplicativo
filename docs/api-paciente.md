@@ -53,7 +53,7 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 
 - **Sem revelar quem é paciente.** A `start` responde igual para CPF que não
   está no cadastro, com um `challengeId` que nunca valida. O app sempre mostra
-  "Se este CPF estiver no cadastro da clínica, enviamos um código por SMS...".
+  "Se o CPF estiver no cadastro da clínica, você vai receber o código por SMS."
 - **Código:** 6 números, gerados por fonte criptográfica, guardados só como
   hash, válidos por 10 minutos, com 5 tentativas. Pedir de novo (depois de 60
   segundos) troca o código e zera as tentativas. Um desafio usado não vale de
@@ -82,11 +82,42 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
 
 ## No app
 
+- **O login é a primeira tela** (decisão do Dr. Aldo, 12/10/2026).
+  - Sem sessão, o app só mostra a tela de entrar (`src/app/entrar.tsx`): uma
+    história curta de boas-vindas, em três quadros que passam sozinhos, com o
+    botão "Entrar com CPF" sempre à mão; depois uma pergunta por tela, o CPF e
+    o código do SMS (que é conferido sozinho com os 6 números).
+  - As abas (Início, Patrícia, Consultas, Cofre, Questionários) nem existem até
+    o login. São rotas protegidas do Expo Router (`Tabs.Protected` em
+    `src/components/app-tabs.tsx`).
+  - Abrir uma tela direto, por exemplo pela notificação da Patrícia, também
+    cai na tela de entrar.
+  - "Sair" volta para ela.
+  - A abertura animada só some depois que o app lê a sessão salva, para quem
+    já entrou não ver o login piscar.
 - O CPF só é usado para pedir o código e não fica salvo no celular.
 - A sessão (token, validade e primeiro nome) fica no armazenamento seguro do
   sistema (`expo-secure-store`), em `src/services/patient-session.tsx`.
 - Sessão vencida, ou `401` da plataforma, pede para entrar de novo.
-- "Sair" apaga a sessão do celular e chama a `logout`.
+- "Sair" apaga a sessão do celular e chama a `logout`. Fica no botão da conta
+  (a inicial do paciente, no topo da Início), que também liga e desliga a
+  biometria.
+- **Biometria** (pedido do Dr. Aldo, 12/10/2026), só no celular, sem rota
+  nova na plataforma (`src/services/biometrics.ts`, `expo-local-authentication`):
+  - logo depois do login por SMS, se o celular tem digital ou rosto
+    cadastrado, o app oferece "Entrar com biometria?". Ligar pede a biometria
+    uma vez, para confirmar;
+  - com ela ligada, ao abrir o app, e ao voltar depois de 5 minutos fora dele,
+    a sessão salva só abre com a biometria (ou com a senha do celular, que o
+    sistema oferece se ela falhar). O pedido aparece sozinho, com "Olá,
+    {nome}!";
+  - se não der, o paciente pode tentar de novo ou "Entrar com CPF e SMS", que
+    apaga a sessão e vai direto ao CPF;
+  - se o celular deixar de ter biometria cadastrada, a entrada volta a ser pelo
+    SMS;
+  - o app só recebe do sistema se deu certo ou não: a digital e o rosto nunca
+    saem do celular. A escolha fica no armazenamento seguro, ao lado da
+    sessão, e "Sair" a apaga.
 
 ## A definir com o Dr. Aldo
 
@@ -95,8 +126,13 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
   responsável entra?
 - **Paciente sem CPF** (a Patrícia aceita cadastro sem CPF): qual outro
   caminho? Por exemplo, nome, nascimento e código.
-- **Celular desatualizado:** hoje o app manda falar com a Patrícia ou com a
-  clínica. Precisa de um caminho para o paciente pedir a troca?
+- **Celular desatualizado:** hoje o app manda falar com a clínica ou com a
+  Patrícia pelo site, porque a Patrícia do app só aparece depois do login.
+  Precisa de um caminho para o paciente pedir a troca?
+- **Quem ainda não é paciente:** com o login real, só entra quem já tem
+  cadastro na clínica. A primeira consulta fica com a Patrícia do site. Vale
+  pôr na tela de entrar um botão "Ainda não é paciente?" para a Patrícia do
+  site?
 
 ## Próximas rotas (depois do login)
 

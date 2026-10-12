@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import { scheduleDailyReminders } from '@/services/daily-reminders';
 import { notifications } from '@/services/notifications-module';
 import { usePatientAppGateway } from '@/services/patient-app-gateway';
+import { usePatientSession } from '@/services/patient-session';
 import { onReminderChange } from '@/services/reminder-events';
 
 // Onde não há notificação local (Expo Go do Android), o app segue sem ela.
@@ -48,14 +49,24 @@ export function useDailyReminders() {
     };
   }, [gateway]);
 
+  // A conversa só existe com o paciente dentro (login como primeira tela). Se o
+  // toque abriu o app ainda lendo a sessão, ou sem sessão, a conversa abre
+  // assim que ele entrar; cada toque abre a conversa uma vez só.
+  const signedIn = usePatientSession().state.status === 'signed_in';
+  const opened = useRef<string | null>(null);
   useEffect(() => {
     if (
-      Notifications &&
-      response &&
-      response.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER &&
-      response.notification.request.content.data?.screen === 'patricia'
+      !Notifications ||
+      !signedIn ||
+      !response ||
+      response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER ||
+      response.notification.request.content.data?.screen !== 'patricia'
     ) {
-      router.push('/patricia');
+      return;
     }
-  }, [response]);
+    const tap = `${response.notification.request.identifier}@${response.notification.date}`;
+    if (opened.current === tap) return;
+    opened.current = tap;
+    router.push('/patricia');
+  }, [response, signedIn]);
 }

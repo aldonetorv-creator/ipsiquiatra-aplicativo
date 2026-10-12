@@ -29,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#4A1F9A",
           "image": "./assets/images/ip-icon.png",
           "imageWidth": 96
         }
@@ -38,7 +38,13 @@
       [
         "expo-secure-store",
         {
-          "faceIDPermission": false
+          "faceIDPermission": "Permitir que o iPsiquiatra use o Face ID para você entrar no app."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permitir que o iPsiquiatra use o Face ID para você entrar no app."
         }
       ]
     ],

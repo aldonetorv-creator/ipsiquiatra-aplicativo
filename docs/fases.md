@@ -164,7 +164,10 @@ cuidado) continua simulado até o login do paciente. Detalhes e limitações em
   cancelar pela conversa;
 - o histórico do celular cifrado (lote 1, ver `docs/dependencias.md`);
 - o login do paciente com CPF e código por SMS, por enquanto simulado (lote 2).
-  As rotas que a plataforma precisa ter estão em `docs/api-paciente.md`.
+  Desde 12/10/2026 é a primeira tela do app: a Início e as outras abas só
+  aparecem depois de entrar. Depois do primeiro SMS, o paciente pode entrar
+  com a biometria do celular. As rotas que a plataforma precisa ter estão em
+  `docs/api-paciente.md`.
 
 O resto faz parte do escopo do MVP e entra depois. Decisão do Dr. Aldo
 (12/10/2026): primeiro o que não depende da plataforma, que está em pausa de

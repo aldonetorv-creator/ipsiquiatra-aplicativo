@@ -47,13 +47,15 @@ export interface PatientAuthApi {
 }
 
 export const authTexts = {
-  sent: 'Se este CPF estiver no cadastro da clínica, enviamos um código por SMS para o celular cadastrado.',
+  // Igual para quem está ou não no cadastro: não revela quem é paciente.
+  sent: 'Se o CPF estiver no cadastro da clínica, você vai receber o código por SMS.',
   invalidCpf: 'Confira o CPF: os números não formam um CPF válido.',
   wrongCode: 'Código incorreto.',
   expired: 'Este código expirou. Peça um novo código.',
   locked: 'Muitas tentativas com este código. Peça um novo código.',
   rateLimited: 'Muitos pedidos seguidos. Aguarde um pouco e tente de novo.',
   offline: 'Sem conexão. Verifique a internet e tente de novo.',
+  // A Patrícia do app só aparece depois do login; a do site continua aberta.
   notReceived:
-    'Não recebeu? O celular do cadastro pode estar desatualizado. Fale com a Patrícia ou com a clínica.',
+    'Não recebeu? O celular do cadastro pode estar desatualizado. Fale com a clínica ou com a Patrícia pelo site.',
 };
