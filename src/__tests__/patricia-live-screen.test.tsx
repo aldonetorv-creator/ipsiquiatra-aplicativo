@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import PatriciaScreen from '@/app/patricia';
 import { PatriciaApi } from '@/contracts/patricia';
-import { createMockPatientAppGateway } from '@/mocks/patient-app-gateway';
+import { createMockPatientAppGateway, patriciaScript } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 
 jest.mock('expo-router', () => ({
@@ -79,7 +79,8 @@ describe('Conversa com a Patrícia real', () => {
     expect(await screen.findByText('Termo da conversa com a Patrícia')).toBeOnTheScreen();
     expect(screen.getByText(/Não faz diagnóstico nem orienta tratamento/)).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Concordo e continuar' }));
-    expect(await screen.findByText('Olá, sou a Patrícia. Em que posso ajudar?')).toBeOnTheScreen();
+    expect(await screen.findByText(patriciaScript.greeting)).toBeOnTheScreen();
+    expect(await screen.findByText(patriciaScript.moodCheck)).toBeOnTheScreen();
 
     await fireEvent.changeText(screen.getByLabelText('Mensagem para a Patrícia'), 'Quero marcar');
     await fireEvent.press(screen.getByRole('button', { name: 'Enviar mensagem' }));

@@ -173,11 +173,15 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontWeight: 700,
   },
+  // O Android ignora a cor transparente e mostrava os números de novo,
+  // pequenos, na primeira casinha. Quase sem opacidade (e não 0), o campo
+  // continua recebendo o toque e o código do SMS.
   hiddenInput: {
     ...StyleSheet.absoluteFill,
+    opacity: 0.01,
     color: 'transparent',
     backgroundColor: 'transparent',
-    fontSize: 16,
+    fontSize: 1,
     outlineWidth: 0,
   },
   links: {
