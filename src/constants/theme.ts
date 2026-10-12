@@ -31,6 +31,10 @@ export const Tokens = {
 export const Gradients = {
   background: ['#E9ECFB', '#F4F3FD', '#FAF9FE'],
   primary: ['#2F45B5', '#6B3FD9'],
+  // Roxo vivo → azul, da referência do Dr. Aldo (botão "Transcrever consulta"),
+  // com as pontas um pouco mais escuras para o texto branco continuar legível
+  // (contraste de 3,9 a 4,4). Para os destaques do plano e das medicações.
+  ai: ['#A152F9', '#7F58FE', '#3A7BEF'],
   soft: ['#F3F0FE', '#E9EDFC'],
   // Roxo da abertura e da história de boas-vindas (tela de entrar).
   story: ['#5A2FD3', '#4A1F9A', '#2B0F69'],

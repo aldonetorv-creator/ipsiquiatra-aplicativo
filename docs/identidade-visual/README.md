@@ -96,8 +96,12 @@ e `src/components/auth/`.
   diverge desta proposta e deve ser revisto quando a interface for retomada.
 
 - **Direção do Dr. Aldo (12/10/2026):** roxo, branco, azul e degradês de
-  azul para roxo (`Gradients.primary`, `#2F45B5` → `#6B3FD9`), "bem
-  futurista, bem moderno, bem IA". Destaques em degradê: cartões de abertura
+  roxo para azul, "bem futurista, bem moderno, bem IA". A referência é o
+  botão "Transcrever consulta" da plataforma: roxo vivo à esquerda, azul à
+  direita, e não só roxo. O token é `Gradients.ai` (`#A152F9` → `#7F58FE` →
+  `#3A7BEF`), com as pontas um pouco mais escuras que as da referência
+  (`#B34FF7` → `#4194F8`) para o texto branco continuar legível. Os ícones
+  das seções alternam roxo e azul, como pontos de cor. Destaques em degradê: cartões de abertura
   (acolhimento do plano de cuidados, receita das medicações), números e
   ícones em círculo, selos como "Próximo". O verde e dourado ficam só no PDF
   do plano pós-consulta, fora do app.

@@ -74,9 +74,9 @@ export default function PlanoScreen() {
         <>
           {plan.welcome ? (
             <LinearGradient
-              colors={Gradients.primary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+              colors={Gradients.ai}
+              start={{ x: 0, y: 0.2 }}
+              end={{ x: 1, y: 0.8 }}
               style={styles.welcome}>
               <SymbolView
                 name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
@@ -104,12 +104,17 @@ export default function PlanoScreen() {
                   <ThemedText type="default" style={styles.sectionTitle} accessibilityRole="header">
                     {title}
                   </ThemedText>
-                  <View style={styles.icon}>
-                    <SymbolView name={icon} tintColor={Tokens.color.brand} size={22} />
+                  {/* Pontos de cor: os ícones alternam roxo e azul. */}
+                  <View style={[styles.icon, index % 2 === 1 && styles.iconBlue]}>
+                    <SymbolView
+                      name={icon}
+                      tintColor={index % 2 === 1 ? Tokens.color.blue : Tokens.color.brand}
+                      size={22}
+                    />
                   </View>
                 </View>
                 <LinearGradient
-                  colors={Gradients.primary}
+                  colors={Gradients.ai}
                   start={{ x: 0, y: 0.5 }}
                   end={{ x: 1, y: 0.5 }}
                   style={styles.accent}
@@ -176,6 +181,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Tokens.color.brandSoft,
+  },
+  iconBlue: {
+    backgroundColor: Tokens.color.blueSoft,
   },
   sectionTitle: {
     flex: 1,

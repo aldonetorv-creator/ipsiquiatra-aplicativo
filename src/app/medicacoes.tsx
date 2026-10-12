@@ -61,9 +61,9 @@ function Plan({ plan }: { plan: MedicationPlan }) {
   return (
     <>
       <LinearGradient
-        colors={Gradients.primary}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={Gradients.ai}
+        start={{ x: 0, y: 0.2 }}
+        end={{ x: 1, y: 0.8 }}
         style={styles.source}>
         <SymbolView
           name={{ ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' }}
@@ -122,7 +122,7 @@ function Slot({ slot, next }: { slot: MedicationSlot; next: boolean }) {
         </ThemedText>
         {next ? (
           <LinearGradient
-            colors={Gradients.primary}
+            colors={Gradients.ai}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={styles.nextChip}>
