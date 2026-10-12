@@ -239,8 +239,9 @@ A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
   A conversa com a Patrícia já usa as rotas públicas da plataforma; consultas,
   documentos, questionários e diário ainda dependem do login;
 - login do paciente;
-- criptografia em repouso do histórico no aparelho, consentimento explícito e
-  política de retenção (ver `docs/dependencias.md`, seção de privacidade);
+- consentimento explícito e política de retenção do histórico no aparelho (ver
+  `docs/dependencias.md`, seção de privacidade). A criptografia em repouso já
+  está feita (fase 2, lote 1);
 - revisão independente de segurança e privacidade (LGPD, dados de saúde são
   dados sensíveis, art. 11), incluindo os dados de pagamento;
 - builds pelo EAS: a videochamada usa código nativo, então o Expo Go deixa de

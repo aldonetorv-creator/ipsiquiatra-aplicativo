@@ -90,9 +90,8 @@ Todas em `/api/public/patricia/<slug>`, chamadas por
 - **Origem dos pedidos:** a plataforma aceita pedidos sem o cabeçalho `Origin`,
   que é como o app nativo chama. Se a plataforma passar a exigir esse
   cabeçalho, o app para de falar com a Patrícia. A Opus I precisa saber disso.
-- **Histórico no celular sem criptografia.** Antes de publicar para pacientes
-  reais, vale o item de `docs/dependencias.md` (criptografia em repouso e
-  retenção).
+- **Histórico no celular:** cifrado desde a fase 2, lote 1 (ver
+  `docs/dependencias.md`). Ainda falta definir a retenção.
 
 ## Como foi testado
 

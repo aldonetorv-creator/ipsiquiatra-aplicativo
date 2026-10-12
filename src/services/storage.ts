@@ -1,5 +1,6 @@
 // Armazenamento chave-valor assíncrono. No app é o AsyncStorage (dados só no
-// aparelho; na web, localStorage); nos testes, a versão em memória.
+// aparelho, cifrados por encrypted-store.ts; na web, localStorage); nos
+// testes, a versão em memória.
 export interface KeyValueStore {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
