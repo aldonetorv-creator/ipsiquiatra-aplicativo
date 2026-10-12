@@ -149,7 +149,7 @@ conversa. Na demonstração, a Patrícia só avisa que o serviço chega em breve
 
 **Patrícia real (frente 1, decisão do Dr. Aldo):** por padrão, a conversa é
 com a Patrícia da plataforma, com IA: o
-mesmo termo do site, horários em botões, cartões para confirmar consulta,
+termo do app (mais curto que o do site), horários em botões, cartões para confirmar consulta,
 remarcação e cancelamento, identificação, relato sem IA para quem não aceita o
 termo e as orientações de crise. Os atalhos vão para ela como mensagem. O
 resto do app (Início, Consultas, Cofre, Questionários, diário e contatos de

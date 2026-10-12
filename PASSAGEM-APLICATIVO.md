@@ -21,7 +21,8 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Falta:**
   1. O Dr. Aldo testar no celular (Expo Go e um APK novo) e dar retorno visual.
   2. Parte da plataforma (rotas do paciente, `docs/api-paciente.md`): fica com a
-     Opus I depois do beta.
+     Opus I depois do beta. Inclui a Patrícia com o paciente identificado, para
+     os cartões pararem de pedir nome, celular, CPF e nascimento.
   3. Lojas: conta Apple (US$ 99/ano), política de privacidade, Google Play.
 
 ## Branch, PRs e arquivos
@@ -47,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 203.
+  - Total: 204.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -64,6 +65,8 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
   - plano B: "Entrar com CPF e SMS";
   - "Sair" desliga.
 - **Início:** saudação com o nome, sem "Você entrou como".
+- **Termo da Patrícia no app:** curto, sem listar os dados do site (o login já
+  identifica o paciente).
 - **Fora do app:**
   - sem botão "Ainda não é paciente?";
   - menor de idade não usa o app (na plataforma, CPF de menor recebe a resposta genérica, sem SMS);

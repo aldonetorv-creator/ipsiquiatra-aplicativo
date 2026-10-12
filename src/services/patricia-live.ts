@@ -20,17 +20,17 @@ import { maskCpfInText } from '@/utils/patient-data';
 
 export const PATRICIA_CONSENT_KEY = 'ipsiquiatra:patricia-consent';
 // Mudou o texto do termo: o paciente concorda de novo.
-export const CONSENT_VERSION = '2026-10-12';
+export const CONSENT_VERSION = '2026-10-12-app';
 
 export const patriciaTexts = {
-  // O mesmo termo do chat do site, mais a frase sobre o aparelho.
+  // Termo próprio do app (pedido do Dr. Aldo, 12/10/2026): o paciente já
+  // entrou com CPF e SMS, então o termo não lista os dados do site (nome,
+  // celular, CPF e nascimento).
   consent:
     'Antes de começarmos: sou uma secretária virtual e não faço diagnóstico nem oriento tratamento. ' +
-    'Ao continuar, você concorda que suas mensagens e os dados que informar (nome, celular, CPF e data de nascimento) sejam usados por esta clínica para agendar, remarcar ou cancelar a sua consulta, ' +
-    'com apoio de inteligência artificial na conversa. Os dados dos formulários, como o CPF, vão direto para o cadastro da clínica e não são enviados à inteligência artificial. ' +
-    'Na primeira consulta, posso fazer algumas perguntas de saúde para preparar o atendimento: as respostas vão para o médico e são processadas com apoio de inteligência artificial. ' +
-    'Fora isso, evite compartilhar detalhes de saúde além do necessário. ' +
-    'Neste app, a conversa também fica salva no seu celular.',
+    'Converso com apoio de inteligência artificial para marcar, remarcar ou cancelar a sua consulta. ' +
+    'Evite compartilhar detalhes de saúde além do necessário. ' +
+    'A conversa fica salva no seu celular.',
   ready: 'Pronto! Em que posso ajudar?',
   refused: 'Não concordo.',
   noAi: 'Tudo bem. Sem o termo, eu não converso por aqui. Se quiser, escreva o motivo da consulta ou o que gostaria de contar ao médico: o texto vai direto para a equipe da clínica, sem passar por inteligência artificial.',
