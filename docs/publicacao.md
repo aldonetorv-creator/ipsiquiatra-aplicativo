@@ -17,33 +17,32 @@ depois, publicar nas lojas. Decisões do Dr. Aldo (12/10/2026):
 
 O `eas.json` foi conferido com o leitor oficial da Expo (`@expo/eas-json`).
 
-## Passo 1: conta Expo (Dr. Aldo)
+## Passo 1: conta Expo (feito em 12/10/2026)
 
-1. Em [expo.dev](https://expo.dev), crie uma conta gratuita ("Sign up"). O nome de usuário aparece nos links dos builds.
-2. Ainda no site, crie o projeto ("Create a project"):
-   - nome: `iPsiquiatra`;
-   - slug: `ipsiquiatra-aplicativo`, igual ao do `app.json`.
-3. Mande ao Claude o **nome de usuário** e o **ID do projeto** (um código como `1a2b3c4d-...`). Ele coloca os dois no `app.json` (`owner` e `extra.eas.projectId`) por PR.
+O Dr. Aldo criou a conta em [expo.dev](https://expo.dev) e o projeto com o slug
+`ipsiquiatra-aplicativo`, o mesmo do `app.json`. O ID do projeto
+(`d091bdf1-3474-49cb-8c92-840c49849d17`) está em `extra.eas.projectId`, no
+`app.json`. O ID não é segredo: só identifica o projeto, e quem gera build
+precisa entrar na conta.
 
-Se o site não oferecer a criação do projeto, dá para criar pelo PowerShell, na
-pasta do app:
+O campo `owner` ficou de fora. Sem ele, a Expo usa a conta de quem está
+logado, e o projeto é dessa mesma conta.
 
-```
-npx eas-cli@latest login
-```
-```
-npx eas-cli@latest init
-```
-
-Nesse caso, mande ao Claude o ID que aparecer e desfaça a mudança local antes
-do próximo `git pull`, com `git checkout app.json`.
+Os comandos que o site da Expo mostra depois de criar o projeto
+(`npx create-expo-app` e `npx eas-cli init --id ...`) servem para começar um
+app do zero e **não devem ser rodados aqui**. O primeiro cria um app novo e
+vazio; o segundo mudaria o `app.json` no computador e atrapalharia o próximo
+`git pull`.
 
 ## Passo 2: primeiro build para Android (Dr. Aldo, no PowerShell)
 
-Depois do PR com o ID do projeto, rode um comando de cada vez:
+Rode um comando de cada vez:
 
 ```
 cd C:\Users\aldo_\ipsiquiatra-aplicativo
+```
+```
+git checkout app.json
 ```
 ```
 git pull
@@ -55,9 +54,12 @@ npx eas-cli@latest login
 npx eas-cli@latest build --platform android --profile preview
 ```
 
+- **`git checkout app.json`:** desfaz qualquer mudança feita no `app.json` do
+  computador (por exemplo, por um `eas init`). Se não houver mudança, não faz
+  nada.
 - **Chave do Android:** na primeira vez, a Expo pergunta se gera a chave de
   assinatura do Android ("Generate a new Android Keystore?"). Responda que sim.
-  Ela fica guardada na conta Expo, e é a mesma chave que vai para o Google
+  Ela fica guardada na conta Expo e serve também para enviar o app ao Google
   Play.
 - **Tempo:** o build roda na nuvem da Expo, e o computador pode até ser
   desligado. No plano gratuito há fila e um limite de builds por mês. No fim
