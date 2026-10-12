@@ -267,7 +267,10 @@ Os tipos estão em `src/contracts/platform.ts`.
   acolhimento (o painel lateral do PDF) vai no topo.
 - **O prompt continua valendo** para o conteúdo: iniciais em vez do nome,
   nada inventado, a frase padrão quando falta uma conduta. Para o app, a
-  saída deixa de ser o arquivo JPG ou PDF e passa a ser o texto em seções. O
-  prompt hoje proíbe negrito; para o app, o negrito pode marcar o essencial.
+  saída deixa de ser o arquivo JPG ou PDF e passa a ser o texto em seções.
+  **No app, o negrito está autorizado** (Dr. Aldo, 12/10/2026), para marcar o
+  essencial; a regra de "zero negrito" do prompt vale só para o PDF.
+- **Cores:** as do app, e não o verde e dourado do PDF: roxo, branco, azul e
+  degradês de azul para roxo (Dr. Aldo, 12/10/2026).
 - **Onde abre:** no "Abrir plano" da Início e no plano de cuidados do Cofre.
 

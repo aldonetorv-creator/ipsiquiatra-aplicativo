@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { StyleSheet, View } from 'react-native';
@@ -5,8 +6,9 @@ import { StyleSheet, View } from 'react-native';
 import { RichText } from '@/components/care/rich-text';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
+import { GradientBadge } from '@/components/ui/gradient-badge';
 import { PageScreen } from '@/components/ui/page-screen';
-import { Tokens } from '@/constants/theme';
+import { Gradients, Shadows, Tokens } from '@/constants/theme';
 import { CarePlanSectionId } from '@/contracts/platform';
 import { useCarePlan } from '@/hooks/use-care';
 import { formatDayMonth } from '@/utils/time';
@@ -71,31 +73,47 @@ export default function PlanoScreen() {
       ) : (
         <>
           {plan.welcome ? (
-            <View style={styles.welcome}>
-              <ThemedText style={styles.quote}>“</ThemedText>
+            <LinearGradient
+              colors={Gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.welcome}>
+              <SymbolView
+                name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
+                tintColor={Tokens.color.onBrand}
+                size={26}
+              />
               <ThemedText type="default" style={styles.welcomeText}>
                 {plan.welcome}
               </ThemedText>
               <ThemedText type="smallBold" style={styles.signature}>
                 Dr. Aldo Araújo
               </ThemedText>
-            </View>
+            </LinearGradient>
           ) : null}
           {plan.sections.map((section, index) => {
             const { title, icon } = sections[section.id];
             return (
               <Card key={section.id} style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={styles.number}>
+                  <GradientBadge size={32}>
                     <ThemedText type="smallBold" style={styles.numberText}>
                       {index + 1}
                     </ThemedText>
-                  </View>
+                  </GradientBadge>
                   <ThemedText type="default" style={styles.sectionTitle} accessibilityRole="header">
                     {title}
                   </ThemedText>
-                  <SymbolView name={icon} tintColor={Tokens.color.brand} size={24} />
+                  <View style={styles.icon}>
+                    <SymbolView name={icon} tintColor={Tokens.color.brand} size={22} />
+                  </View>
                 </View>
+                <LinearGradient
+                  colors={Gradients.primary}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={styles.accent}
+                />
                 <View style={styles.items}>
                   {section.items.map((item, itemIndex) => (
                     <View key={itemIndex} style={styles.item}>
@@ -121,49 +139,43 @@ const styles = StyleSheet.create({
     color: Tokens.color.text,
   },
   welcome: {
-    gap: 6,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 18,
+    gap: 10,
+    padding: 22,
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: Tokens.color.brandBorder,
-    backgroundColor: Tokens.color.brandSoft,
-  },
-  quote: {
-    color: Tokens.color.brand,
-    fontSize: 56,
-    lineHeight: 60,
-    fontWeight: 700,
+    boxShadow: Shadows.floating,
   },
   welcomeText: {
-    marginTop: -18,
-    color: Tokens.color.brandDeep,
+    color: Tokens.color.onBrand,
     fontSize: 19,
     lineHeight: 28,
     fontStyle: 'italic',
   },
   signature: {
-    color: Tokens.color.brand,
+    color: 'rgba(255, 255, 255, 0.85)',
   },
   section: {
     gap: 12,
+  },
+  accent: {
+    width: 56,
+    height: 3,
+    borderRadius: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  number: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  numberText: {
+    color: Tokens.color.onBrand,
+  },
+  icon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Tokens.color.brand,
-  },
-  numberText: {
-    color: Tokens.color.surface,
+    backgroundColor: Tokens.color.brandSoft,
   },
   sectionTitle: {
     flex: 1,
@@ -185,7 +197,7 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
     marginTop: 10,
-    backgroundColor: Tokens.color.brand,
+    backgroundColor: Tokens.color.blue,
   },
   itemText: {
     flex: 1,

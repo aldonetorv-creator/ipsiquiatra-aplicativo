@@ -73,6 +73,9 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Plano de cuidados em texto para celular** (`src/app/plano.tsx`), com as
   seções do prompt do Dr. Aldo para o plano pós-consulta. O prompt não fica
   no repositório.
+- **Plano de cuidados no app:** negrito autorizado; cores do app (roxo,
+  branco, azul, degradês de azul para roxo, "futurista, moderno, IA"), e não
+  o verde e dourado do PDF.
 - **Primeiro acesso à Patrícia:** termo sozinho → "Concordo" → apresentação →
   diário de humor, uma mensagem de cada vez, com "digitando…".
 - **Termo da Patrícia no app:** curto, sem listar os dados do site (o login já
