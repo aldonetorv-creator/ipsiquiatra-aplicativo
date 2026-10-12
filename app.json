@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "iPsiquiatra-Aplicativo",
+    "name": "iPsiquiatra",
     "slug": "ipsiquiatra-aplicativo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,9 +8,11 @@
     "scheme": "ipsiquiatraaplicativo",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/ip-icon.png"
+      "icon": "./assets/images/ip-icon.png",
+      "bundleIdentifier": "br.com.ipsiquiatra.paciente"
     },
     "android": {
+      "package": "br.com.ipsiquiatra.paciente",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"

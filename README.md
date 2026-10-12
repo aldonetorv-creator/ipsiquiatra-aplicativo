@@ -41,6 +41,13 @@ npm run typecheck
 npm test
 ```
 
+## Publicação
+
+O app instalável sai pelo EAS Build da Expo (`eas.json`), com o identificador
+`br.com.ipsiquiatra.paciente`. O passo a passo da conta Expo, do primeiro APK
+para Android e do que falta para as lojas está em
+[`docs/publicacao.md`](docs/publicacao.md).
+
 ## Integração contínua
 
 O workflow `.github/workflows/ci.yml` roda em todo PR e em push na `main`:
