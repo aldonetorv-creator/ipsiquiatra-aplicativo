@@ -54,7 +54,7 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 |---|---|---|
 | `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. No Expo Go do iPhone, os lembretes locais funcionam. No Expo Go do Android (SDK 53+), só carregar o pacote já dá erro e o app não abre; por isso o app carrega o pacote só onde ele funciona (`src/services/notifications-module.ts`) e, no Expo Go do Android, abre sem notificações (a mensagem diária continua na conversa). Para ver as notificações no Android é preciso o app instalado (build de desenvolvimento). Na fase 2 o lembrete passa a vir da plataforma por push. |
 | `expo-crypto` | Cifra AES-GCM de 256 bits do histórico guardado no aparelho (fase 2, lote 1). | Versão do SDK 57 (`npx expo install`; aqui com `EXPO_OFFLINE=1`, porque a rede do ambiente bloqueia a API do Expo). Vem no Expo Go. Carregado só no celular (`src/services/device-cipher.ts`). |
-| `expo-secure-store` | Guarda a chave do histórico no Keychain (iPhone) ou no Keystore (Android). | Versão do SDK 57, vem no Expo Go. O plugin entra no `app.json` com `faceIDPermission: false`, porque o app não usa Face ID. Pelo padrão do plugin, a chave fica fora do backup automático do Android. |
+| `expo-secure-store` | Guarda no Keychain (iPhone) ou no Keystore (Android) a chave do histórico e a sessão do paciente depois do login. | Versão do SDK 57, vem no Expo Go. O plugin entra no `app.json` com `faceIDPermission: false`, porque o app não usa Face ID. Pelo padrão do plugin, a chave fica fora do backup automático do Android. |
 
 ## Removidas
 

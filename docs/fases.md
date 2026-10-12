@@ -158,9 +158,17 @@ cuidado) continua simulado até o login do paciente. Detalhes e limitações em
 
 ## Fase 2 — atendimento pelo app
 
-**Desta fase, só a conversa com a Patrícia real está implementada** (frente 1,
-acima): agendar, remarcar e cancelar pela conversa. O resto faz parte do escopo
-do MVP e entra depois.
+**Desta fase, está implementado:**
+
+- a conversa com a Patrícia real (frente 1, acima): agendar, remarcar e
+  cancelar pela conversa;
+- o histórico do celular cifrado (lote 1, ver `docs/dependencias.md`);
+- o login do paciente com CPF e código por SMS, por enquanto simulado (lote 2).
+  As rotas que a plataforma precisa ter estão em `docs/api-paciente.md`.
+
+O resto faz parte do escopo do MVP e entra depois. Decisão do Dr. Aldo
+(12/10/2026): primeiro o que não depende da plataforma, que está em pausa de
+produto até o beta; a parte da plataforma vem depois.
 
 ### Jornada de uma consulta
 
@@ -238,7 +246,8 @@ A fase 2 é a primeira com pacientes e dados reais. Antes dela é preciso:
   site (o contrato `PatientAppGateway` já permite a troca sem mudar as telas).
   A conversa com a Patrícia já usa as rotas públicas da plataforma; consultas,
   documentos, questionários e diário ainda dependem do login;
-- login do paciente;
+- login do paciente: no app, já existe em versão simulada; falta a plataforma
+  (`docs/api-paciente.md`);
 - consentimento explícito e política de retenção do histórico no aparelho (ver
   `docs/dependencias.md`, seção de privacidade). A criptografia em repouso já
   está feita (fase 2, lote 1);

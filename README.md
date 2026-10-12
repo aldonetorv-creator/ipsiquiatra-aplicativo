@@ -26,8 +26,10 @@ O plano está em [`docs/fases.md`](docs/fases.md). A fase 1 é o MVP de
 demonstração, com dados simulados. A fase 2 traz a jornada completa da
 consulta pelo app: agendamento, cobrança pela Patrícia, pagamento confirmado
 pela integração com o Nubank, teleconsulta por videochamada e nota fiscal
-(NFS-e) emitida 24 horas depois da consulta. Dela, só a conversa com a
-Patrícia real (agendar, remarcar e cancelar) já existe.
+(NFS-e) emitida 24 horas depois da consulta. Dela, já existem a conversa com a
+Patrícia real (agendar, remarcar e cancelar), o histórico cifrado no celular e
+o login com CPF e código por SMS, por enquanto simulado
+([`docs/api-paciente.md`](docs/api-paciente.md)).
 
 ## Comandos
 

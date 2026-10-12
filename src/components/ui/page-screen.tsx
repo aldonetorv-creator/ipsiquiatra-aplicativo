@@ -31,7 +31,7 @@ export function PageScreen({ title, subtitle, children }: Props) {
           </View>
           {children}
           <ThemedText type="small" style={styles.demo}>
-            Versão de demonstração: dados fictícios, nada é enviado ao consultório.
+            Versão de demonstração: os dados desta tela são fictícios.
           </ThemedText>
         </ScrollView>
       </SafeAreaView>
