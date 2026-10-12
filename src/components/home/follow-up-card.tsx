@@ -36,6 +36,10 @@ function linesFor(followUp: FollowUp): Line[] {
     return [{ before: 'Consulta em ', strong: dayCount(daysUntil) }];
   }
   const { daysSince, daysUntil } = followUp;
+  // No atraso, em vez das contagens, o que fazer (pedido do Dr. Aldo).
+  if (followUp.kind === 'late') {
+    return [{ strong: daysUntil === null ? 'Marcar consulta' : 'Remarcar consulta' }];
+  }
   const lines: Line[] = [
     daysSince === 0
       ? { strong: 'Sua última consulta foi hoje' }
@@ -43,12 +47,12 @@ function linesFor(followUp: FollowUp): Line[] {
   ];
   if (daysUntil !== null)
     lines.push({ before: 'Próxima consulta em ', strong: dayCount(daysUntil) });
-  else if (followUp.kind === 'late') lines.push({ strong: 'Marque o retorno com a Patrícia' });
   return lines;
 }
 
 // "Agora: Em acompanhamento · 8 dias desde sua última consulta", "Agora:
-// Retorno atrasado" ou "Agora: Consulta próxima · Consulta em 7 dias".
+// Retorno atrasado · Remarcar consulta" ou "Agora: Consulta próxima · Consulta
+// em 7 dias".
 export function FollowUpCard({ followUp, onPress }: Props) {
   const lines = linesFor(followUp);
   const label = [

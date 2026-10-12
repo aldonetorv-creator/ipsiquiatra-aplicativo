@@ -233,11 +233,31 @@ describe('Início', () => {
 
     await fireEvent.press(
       await screen.findByRole('button', {
-        name: 'Agora: Retorno atrasado. 40 dias desde sua última consulta. Marque o retorno com a Patrícia',
+        name: 'Agora: Retorno atrasado. Marcar consulta',
       })
     );
     expect(requestService).toHaveBeenCalledWith('schedule_appointment');
     expect(router.push).toHaveBeenCalledWith('/patricia');
+  });
+
+  it('retorno atrasado com consulta marcada depois da data pede a remarcação', async () => {
+    const gateway = {
+      ...createMockPatientAppGateway(),
+      listAppointments: async () => ({
+        ok: true as const,
+        requestId: 'test',
+        data: [relative(-40, 'completed', 30), relative(20, 'scheduled')],
+      }),
+    };
+    const requestService = jest.spyOn(gateway, 'requestService');
+    await renderWith(gateway);
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Agora: Retorno atrasado. Remarcar consulta' })
+    );
+    expect(requestService).toHaveBeenCalledWith('reschedule_appointment');
+    expect(router.push).toHaveBeenCalledWith('/patricia');
+    expect(screen.queryByText(/desde sua última consulta/)).toBeNull();
   });
 
   it('sem consultas, esconde os cartões de consulta e o plano fica para depois', async () => {
