@@ -50,11 +50,14 @@ Todas em `/api/public/patricia/<slug>`, chamadas por
 
 ## Como funciona no app
 
-- **Termo:** na primeira conversa aparece o mesmo termo do site, com uma linha
-  a mais: no app, a conversa também fica salva no celular. Nada vai para a IA
-  antes do "Concordo e continuar". A resposta fica guardada com a versão do
-  termo (`ipsiquiatra:patricia-consent`); se o termo mudar, ele aparece de
-  novo.
+- **Termo:** na primeira conversa aparece o termo do app. Ele é mais curto que
+  o do site e não lista nome, celular, CPF e nascimento, porque o paciente já
+  entrou com CPF e SMS (pedido do Dr. Aldo, 12/10/2026). Diz também que a
+  conversa fica salva no celular. Nada vai para a IA antes do "Concordo e
+  continuar". A resposta fica guardada com a versão do termo
+  (`ipsiquiatra:patricia-consent`); se o termo mudar, ele aparece de novo.
+  Quando a Patrícia tiver a rota com o paciente identificado
+  (`docs/api-paciente.md`), os cartões também deixam de pedir esses dados.
 - **Quem não concorda** recebe o caminho sem IA: um relato escrito vai para a
   clínica, como no site.
 - **Conversa:** a resposta da Patrícia aparece em balões. Horários aparecem como

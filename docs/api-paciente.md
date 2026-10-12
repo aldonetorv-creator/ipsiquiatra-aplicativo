@@ -134,18 +134,81 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
   Com o login real, só entra quem já tem cadastro; a primeira consulta continua
   com a Patrícia do site.
 
+## Patrícia com o paciente identificado
+
+Pedido do Dr. Aldo (12/10/2026): no app, a Patrícia já sabe com quem está
+falando e não pede dados para agendar, remarcar ou cancelar. Hoje o app usa a
+conversa pública do site (`/api/public/patricia/<slug>`,
+`docs/integracao-plataforma.md`), que não sabe quem escreve: por isso os
+cartões pedem nome, celular, CPF e nascimento. O termo do app já não lista
+esses dados (`patriciaTexts.consent`).
+
+Na plataforma, isto também é **VERMELHO** (identidade do paciente, PHI e IA).
+
+### Rotas
+
+As mesmas da conversa pública, com o token do login no cabeçalho
+(`Authorization: Bearer <token>`), em `/api/patient-app/<slug>/patricia`:
+
+| Rota | Muda em relação à pública |
+|---|---|
+| `GET` | Saudação com o primeiro nome. |
+| `POST /session` | `{consent: true}`. A conversa fica ligada ao paciente do token. |
+| `POST /message` | Igual. A resposta nunca traz `identify`. |
+| `POST /confirm` | Só `{session, holdId}`: os dados vêm do cadastro. Sem formulário e sem `notFound`. |
+| `POST /hold/cancel` | Igual. |
+| `POST /change/cancel` | Igual. |
+| `POST /relato` | Só `{text}`: nome e celular vêm do cadastro. |
+| `POST /leave` | Igual. |
+
+Não há `/identify`: para remarcar ou cancelar, a Patrícia já vê as próximas
+consultas do paciente. Se houver mais de uma, ela pergunta qual, com botões,
+como faz com os horários.
+
+### Regras
+
+- **A IA não recebe identificação:** nem CPF, nem nascimento, nem celular.
+  Recebe só o primeiro nome e as consultas futuras (data, hora e
+  modalidade), o bastante para conversar. É a mesma regra de hoje, em que os
+  formulários vão direto ao cadastro, sem passar pela IA.
+- **Só as consultas do próprio paciente:** toda rota confere se a conversa e
+  a consulta são do paciente do token, e daquele médico. A IA não consegue
+  marcar, remarcar nem cancelar a consulta de outra pessoa.
+- **Token inválido ou vencido** responde `401` com `{reason: 'signed_out'}`.
+  O app pede para entrar de novo (a conversa vencida, depois de 4 horas
+  parada, continua sendo outro `401`, sem esse `reason`, e o app abre outra).
+- **Limites** por paciente, além dos de IP que a conversa pública já tem.
+- **Registro:** cada agendamento, remarcação e cancelamento pelo app entra na
+  trilha da plataforma, com a origem "app".
+- **O termo continua:** a IA ainda é usada, então o paciente concorda antes da
+  primeira mensagem, como hoje.
+- **A primeira consulta** continua com a Patrícia do site: no app só entra
+  quem já tem cadastro.
+
+### No app, quando a rota existir
+
+- `src/services/patricia-api.ts` passa a usar a rota nova, com o token da
+  sessão.
+- Os cartões de agendar, remarcar e cancelar ficam só com os dados da
+  consulta e "Confirmar", sem formulário.
+- O cartão de identificação e os campos de nome e celular do relato sem IA
+  saem.
+- Um `401` com `reason: 'signed_out'` leva à tela de entrar, como as outras
+  rotas do paciente.
+
 ## Próximas rotas (depois do login)
 
 Com o paciente identificado, as telas do app passam a ler a plataforma em vez
 dos dados simulados. Ordem sugerida:
 
-1. **Consultas:** próxima e anteriores (`listAppointments`).
-2. **Documentos liberados pelo médico** (Cofre, `listDocuments`): só o que o
+1. **Patrícia com o paciente identificado** (seção acima).
+2. **Consultas:** próxima e anteriores (`listAppointments`).
+3. **Documentos liberados pelo médico** (Cofre, `listDocuments`): só o que o
    médico liberou, nunca o prontuário interno.
-3. **Questionários pedidos para a próxima consulta** (`listQuestionnaires` e
+4. **Questionários pedidos para a próxima consulta** (`listQuestionnaires` e
    `submitQuestionnaire`), com o alerta do item 9 do PHQ-9 indo para o médico.
-4. **Diário de humor e conversa no prontuário:** entram marcados como relato
+5. **Diário de humor e conversa no prontuário:** entram marcados como relato
    do paciente, com consentimento próprio (`docs/fases.md`, "Contexto e
    prontuário").
-5. **Push:** o lembrete das 20h e os contatos de cuidado passam a vir da
+6. **Push:** o lembrete das 20h e os contatos de cuidado passam a vir da
    plataforma.

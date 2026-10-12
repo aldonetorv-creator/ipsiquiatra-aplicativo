@@ -94,6 +94,12 @@ async function consented(api = fakeApi(), store?: KeyValueStore) {
 const conversation = async (gateway: PatientAppGateway) => data(await gateway.listConversation());
 
 describe('Patrícia real: termo', () => {
+  it('o termo do app não pede os dados que o login já deu', () => {
+    expect(patriciaTexts.consent).not.toMatch(/CPF|nascimento|nome/i);
+    expect(patriciaTexts.consent).toContain('inteligência artificial');
+    expect(patriciaTexts.consent).toContain('salva no seu celular');
+  });
+
   it('pede o termo na primeira vez e não manda nada à IA antes dele', async () => {
     const { gateway, api } = await setup();
 
