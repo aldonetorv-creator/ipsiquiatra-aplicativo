@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
@@ -146,8 +146,16 @@ function DocumentRow({
   const title = documentTitle(document, appointment);
   const status = statusText(document);
   const delivered = document.availability === 'mock_only' || document.availability === 'available';
+  // O plano de cuidados abre em texto para celular, e não como arquivo.
+  const opensPlan = delivered && document.kind === 'care_plan';
   return (
-    <View style={styles.row} accessible accessibilityLabel={`${title}. ${status}`}>
+    <Pressable
+      accessible
+      accessibilityRole={opensPlan ? 'button' : undefined}
+      accessibilityLabel={`${title}. ${status}`}
+      disabled={!opensPlan}
+      onPress={() => router.push({ pathname: '/plano', params: { documento: document.id } })}
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
       <View style={styles.docIcon}>
         <SymbolView
           name={
@@ -168,17 +176,24 @@ function DocumentRow({
         </ThemedText>
       </View>
       <SymbolView
-        name={statusIcon[document.availability]}
+        name={
+          opensPlan
+            ? { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }
+            : statusIcon[document.availability]
+        }
         tintColor={delivered ? Tokens.color.brand : Tokens.color.muted}
         size={22}
       />
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   muted: {
     color: Tokens.color.muted,
+  },
+  pressed: {
+    opacity: 0.7,
   },
   notice: {
     flexDirection: 'row',

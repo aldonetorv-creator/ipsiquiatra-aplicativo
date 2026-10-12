@@ -167,12 +167,12 @@ describe('Início', () => {
     expect(router.push).toHaveBeenCalledWith('/patricia');
   });
 
-  it('avisa que o plano de cuidados está pronto e o abre no Cofre', async () => {
+  it('avisa que o plano de cuidados está pronto e o abre em texto para celular', async () => {
     await renderWith(createMockPatientAppGateway());
 
     expect(await screen.findByText('Seu plano de cuidados está pronto')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Abrir plano de cuidados' }));
-    expect(router.push).toHaveBeenCalledWith('/cofre');
+    expect(router.push).toHaveBeenCalledWith('/plano');
   });
 
   it('a 7 dias da consulta, o cartão Agora mostra a consulta próxima', async () => {

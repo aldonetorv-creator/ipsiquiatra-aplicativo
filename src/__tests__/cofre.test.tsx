@@ -10,7 +10,7 @@ import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { formatDate, formatLongDate } from '@/utils/time';
 
 jest.mock('expo-router', () => ({
-  router: { setParams: jest.fn() },
+  router: { setParams: jest.fn(), push: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),
 }));
 
@@ -155,5 +155,26 @@ describe('Cofre', () => {
     await renderWith({ listDocuments: async () => ok([]) });
 
     expect(await screen.findByText('Nenhum documento por aqui ainda.')).toBeOnTheScreen();
+  });
+
+  it('o plano de cuidados abre em texto para celular', async () => {
+    const plan: DocumentMetadata = {
+      id: 'plano-1',
+      displayName: 'Plano de cuidados',
+      kind: 'care_plan',
+      createdAt: consult.startsAt,
+      appointmentId: consult.id,
+      availability: 'available',
+    };
+    await renderWith({
+      listAppointments: async () => ok([consult]),
+      listDocuments: async () => ok([plan]),
+    });
+
+    await fireEvent.press(await screen.findByRole('button', { name: /^Plano de cuidados\./ }));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/plano',
+      params: { documento: 'plano-1' },
+    });
   });
 });

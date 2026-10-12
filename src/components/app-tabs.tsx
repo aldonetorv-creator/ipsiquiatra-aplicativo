@@ -14,6 +14,7 @@ import { usePatientSession } from '@/services/patient-session';
 const tabIcons: Partial<Record<MvpAreaId, SymbolViewProps['name']>> = {
   home: { ios: 'house.fill', android: 'home', web: 'home' },
   patricia: { ios: 'bubble.left.fill', android: 'chat_bubble', web: 'chat_bubble' },
+  medicacoes: { ios: 'pills.fill', android: 'medication', web: 'medication' },
   consultas: { ios: 'calendar', android: 'calendar_month', web: 'calendar_month' },
   cofre: { ios: 'lock.fill', android: 'lock', web: 'lock' },
 };

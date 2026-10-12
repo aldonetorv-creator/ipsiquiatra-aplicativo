@@ -48,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 220.
+  - Total: 229.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -68,6 +68,11 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Cartão "Agora" da Início:** "Em acompanhamento", "Retorno atrasado" (pela
   data do retorno pedido na consulta, `returnDueAt`) ou "Consulta próxima" (7
   dias ou menos). Regra em `followUpFor` (`src/utils/appointments.ts`).
+- **Minhas medicações** (aba nova): a lista sai das últimas receitas
+  validadas pelo médico (extraída com IA na plataforma), por horário do dia.
+- **Plano de cuidados em texto para celular** (`src/app/plano.tsx`), com as
+  seções do prompt do Dr. Aldo para o plano pós-consulta. O prompt não fica
+  no repositório.
 - **Primeiro acesso à Patrícia:** termo sozinho → "Concordo" → apresentação →
   diário de humor, uma mensagem de cada vez, com "digitando…".
 - **Termo da Patrícia no app:** curto, sem listar os dados do site (o login já

@@ -222,3 +222,52 @@ dos dados simulados. Ordem sugerida:
    prontuário").
 6. **Push:** o lembrete das 20h e os contatos de cuidado passam a vir da
    plataforma.
+7. **Minhas medicações e plano de cuidados** (seção abaixo).
+
+## Minhas medicações e plano de cuidados
+
+Pedidos do Dr. Aldo (12/10/2026). No app, as duas telas já existem com dados
+de demonstração (`src/mocks/care.ts`); quando as rotas existirem, só troca a
+implementação do gateway. Na plataforma, isto é **VERMELHO** (PHI, receita e
+IA).
+
+| Rota | Resposta |
+|---|---|
+| `GET /api/patient-app/<slug>/medications` | `200 {plan: MedicationPlan \| null}` |
+| `GET /api/patient-app/<slug>/care-plan?document=<id>` | `200 {plan: CarePlan \| null}`; sem `document`, o mais recente |
+
+Os tipos estão em `src/contracts/platform.ts`.
+
+### Minhas medicações (aba "Medicações")
+
+- **De onde vem:** a plataforma extrai, com IA, os remédios das últimas
+  receitas. Só entra receita que o médico já validou: a receita só é enviada
+  ao paciente depois disso. Se a receita já é feita na plataforma, com os
+  remédios em campos próprios, a lista pode sair desses campos, sem IA.
+- **Cada remédio:** nome e concentração, quanto tomar, os horários do dia
+  (período e, quando a receita diz, a hora), "se precisar" e a orientação da
+  receita. A IA não completa o que a receita não diz: sem horário claro, o
+  remédio não entra num horário.
+- **No app:** os remédios aparecem por horário do dia (manhã, almoço, tarde,
+  noite, ao deitar), com o próximo horário marcado, e os de "se precisar" à
+  parte. A tela diz de qual receita a lista saiu e quem a validou, e lembra
+  "Não pare nem mude a dose por conta própria". O app não calcula nem muda
+  dose.
+- **Depois:** lembrete no horário de cada remédio e "tomei" para marcar a dose
+  (ainda não feitos).
+
+### Plano de cuidados em texto para celular
+
+- **Não é PDF:** a plataforma manda o texto em seções, e o app mostra com
+  títulos, tópicos e negrito (`**assim**`), no tamanho de letra do celular.
+- **Seções:** as do prompt do Dr. Aldo para o plano pós-consulta, na mesma
+  ordem: o mais importante agora, seu plano de tratamento, o que observar,
+  orientações personalizadas, quando entrar em contato, próximo passo e
+  anotações importantes. A plataforma só manda as que se aplicam. A frase de
+  acolhimento (o painel lateral do PDF) vai no topo.
+- **O prompt continua valendo** para o conteúdo: iniciais em vez do nome,
+  nada inventado, a frase padrão quando falta uma conduta. Para o app, a
+  saída deixa de ser o arquivo JPG ou PDF e passa a ser o texto em seções. O
+  prompt hoje proíbe negrito; para o app, o negrito pode marcar o essencial.
+- **Onde abre:** no "Abrir plano" da Início e no plano de cuidados do Cofre.
+

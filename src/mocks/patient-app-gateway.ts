@@ -18,6 +18,7 @@ import {
   TextMessage,
 } from '@/contracts/platform';
 import { PatriciaApi } from '@/contracts/patricia';
+import { mockCarePlan, mockMedicationPlan } from '@/mocks/care';
 import { mockQuestionnaireDefinitions } from '@/mocks/questionnaires';
 import { createPatriciaLive } from '@/services/patricia-live';
 import { createMemoryStore, KeyValueStore } from '@/services/storage';
@@ -397,6 +398,13 @@ export function createMockPatientAppGateway({
     },
     async listDocuments() {
       return mockResult(mockDocuments(appointments, now()));
+    },
+    async getMedicationPlan() {
+      return mockResult(mockMedicationPlan(appointments));
+    },
+    async getCarePlan(documentId) {
+      const plan = mockCarePlan(appointments);
+      return mockResult(!documentId || plan?.id === documentId ? plan : null);
     },
     async readConsent(): Promise<ApiResult<ConsentRecord>> {
       return mockResult({

@@ -1,10 +1,17 @@
-export type MvpAreaId = 'home' | 'patricia' | 'consultas' | 'questionarios' | 'cofre';
+export type MvpAreaId =
+  | 'home'
+  | 'patricia'
+  | 'medicacoes'
+  | 'consultas'
+  | 'questionarios'
+  | 'cofre'
+  | 'plano';
 
 export type MvpAreaStatus = 'mock' | 'planned' | 'blocked';
 
 export type MvpArea = {
   id: MvpAreaId;
-  route: '/' | '/patricia' | '/consultas' | '/questionarios' | '/cofre';
+  route: '/' | '/patricia' | '/medicacoes' | '/consultas' | '/questionarios' | '/cofre' | '/plano';
   title: string;
   label: string;
   eyebrow: string;
