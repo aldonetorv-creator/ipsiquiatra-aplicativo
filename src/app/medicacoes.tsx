@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
@@ -5,10 +6,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
-import { IconBadge } from '@/components/ui/icon-badge';
+import { GradientBadge } from '@/components/ui/gradient-badge';
 import { OutlineButton } from '@/components/ui/outline-button';
 import { PageScreen, SectionLabel } from '@/components/ui/page-screen';
-import { Tokens } from '@/constants/theme';
+import { Gradients, Shadows, Tokens } from '@/constants/theme';
 import { Medication, MedicationPeriod, MedicationPlan } from '@/contracts/platform';
 import { useMedicationPlan } from '@/hooks/use-care';
 import { medicationSlots, MedicationSlot, nextSlotKey, periodLabels } from '@/utils/medications';
@@ -59,16 +60,20 @@ function Plan({ plan }: { plan: MedicationPlan }) {
   const source = plan.sources[0];
   return (
     <>
-      <View style={styles.source}>
+      <LinearGradient
+        colors={Gradients.ai}
+        start={{ x: 0, y: 0.2 }}
+        end={{ x: 1, y: 0.8 }}
+        style={styles.source}>
         <SymbolView
           name={{ ios: 'checkmark.seal.fill', android: 'verified', web: 'verified' }}
-          tintColor={Tokens.color.brandDeep}
-          size={20}
+          tintColor={Tokens.color.onBrand}
+          size={22}
         />
         <ThemedText type="small" style={styles.sourceText}>
           {`Conforme a receita de ${formatDate(source.issuedAt)}, validada por ${source.validatedBy}.`}
         </ThemedText>
-      </View>
+      </LinearGradient>
 
       {slots.map((slot) => (
         <Slot key={slot.key} slot={slot} next={slot.key === next} />
@@ -109,16 +114,22 @@ function Slot({ slot, next }: { slot: MedicationSlot; next: boolean }) {
         accessible
         accessibilityRole="header"
         accessibilityLabel={next ? `${heading}. Próximo horário` : heading}>
-        <IconBadge name={periodIcons[slot.period]} tone="purple" size={40} />
+        <GradientBadge size={40}>
+          <SymbolView name={periodIcons[slot.period]} tintColor={Tokens.color.onBrand} size={20} />
+        </GradientBadge>
         <ThemedText type="smallBold" style={styles.slotTitle}>
           {heading}
         </ThemedText>
         {next ? (
-          <View style={styles.nextChip}>
+          <LinearGradient
+            colors={Gradients.ai}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.nextChip}>
             <ThemedText type="smallBold" style={styles.nextText}>
               Próximo
             </ThemedText>
-          </View>
+          </LinearGradient>
         ) : null}
       </View>
       <Card style={next ? { ...styles.slotCard, ...styles.slotCardNext } : styles.slotCard}>
@@ -136,7 +147,7 @@ function MedicationRow({ medication }: { medication: Medication }) {
       <View style={styles.pill}>
         <SymbolView
           name={{ ios: 'pills.fill', android: 'medication', web: 'medication' }}
-          tintColor={Tokens.color.brand}
+          tintColor={Tokens.color.blue}
           size={20}
         />
       </View>
@@ -166,15 +177,15 @@ const styles = StyleSheet.create({
   },
   source: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: Tokens.color.brandSoft,
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 20,
+    boxShadow: Shadows.floating,
   },
   sourceText: {
     flex: 1,
-    color: Tokens.color.brandDeep,
+    color: Tokens.color.onBrand,
   },
   slot: {
     gap: 10,
@@ -194,10 +205,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    backgroundColor: Tokens.color.brand,
   },
   nextText: {
-    color: Tokens.color.surface,
+    color: Tokens.color.onBrand,
     fontSize: 12,
     lineHeight: 16,
   },
@@ -219,7 +229,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Tokens.color.brandSoft,
+    backgroundColor: Tokens.color.blueSoft,
   },
   rowCopy: {
     flex: 1,

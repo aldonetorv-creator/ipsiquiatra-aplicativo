@@ -82,8 +82,8 @@ e `src/components/auth/`.
 
 - **Tom acolhedor**: "Tem alguém cuidando de você.", "Como você está hoje?",
   "Estou aqui com você." A Patrícia toma a iniciativa do contato.
-- **Navegação em 4 abas**: Início, Patrícia, Consultas, Cofre. Hoje o app tem
-  também "Questionários"; nos mockups eles aparecem como cartões na Início.
+- **Navegação em 5 abas**: Início, Patrícia, Medicações, Consultas, Cofre.
+  "Questionários" e o plano de cuidados abrem por cartões, fora da barra.
 - **Cofre** = "Tudo o que foi entregue a você": documentos organizados por
   consulta.
 - **Visual**: fundo claro com gradiente lavanda/azul suave, cartões brancos com
@@ -94,6 +94,17 @@ e `src/components/auth/`.
   ~`#EEF0FB`, verde do plano de cuidados ~`#2E7D5B`. Os tokens atuais em
   `src/constants/theme.ts` usam fundo bege (`#F7F5F2`) e roxo `#7B42F6`, o que
   diverge desta proposta e deve ser revisto quando a interface for retomada.
+
+- **Direção do Dr. Aldo (12/10/2026):** roxo, branco, azul e degradês de
+  roxo para azul, "bem futurista, bem moderno, bem IA". A referência é o
+  botão "Transcrever consulta" da plataforma: roxo vivo à esquerda, azul à
+  direita, e não só roxo. O token é `Gradients.ai` (`#A152F9` → `#7F58FE` →
+  `#3A7BEF`), com as pontas um pouco mais escuras que as da referência
+  (`#B34FF7` → `#4194F8`) para o texto branco continuar legível. Os ícones
+  das seções alternam roxo e azul, como pontos de cor. Destaques em degradê: cartões de abertura
+  (acolhimento do plano de cuidados, receita das medicações), números e
+  ícones em círculo, selos como "Próximo". O verde e dourado ficam só no PDF
+  do plano pós-consulta, fora do app.
 
 ## Fora de escopo por enquanto
 
