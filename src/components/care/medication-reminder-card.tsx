@@ -5,14 +5,10 @@ import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientBadge } from '@/components/ui/gradient-badge';
 import { GradientButton } from '@/components/ui/gradient-button';
-import { Tokens } from '@/constants/theme';
+import { Gradients, Tokens } from '@/constants/theme';
 import { MedicationPlan } from '@/contracts/platform';
 import { useMedicationReminderChoice } from '@/hooks/use-medication-reminders';
 import { FOLLOW_UP_MINUTES, reminderTimes } from '@/utils/medication-reminders';
-
-// "08:00", "08:00 e 20:00", "08:00, 20:00 e 22:00".
-const listTimes = (times: string[]) =>
-  times.length < 2 ? times.join('') : `${times.slice(0, -1).join(', ')} e ${times.at(-1)}`;
 
 // Sugere o lembrete nos horários da receita: o paciente só aceita, sem
 // cadastrar remédio nem horário (decisão do Dr. Aldo, 16/10/2026).
@@ -20,7 +16,6 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
   const times = reminderTimes(plan);
   const { state, enable, disable } = useMedicationReminderChoice(plan);
   if (times.length === 0 || state === 'loading') return null;
-  const when = listTimes(times);
 
   return (
     <Card style={styles.card}>
@@ -33,9 +28,23 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
           />
         </GradientBadge>
         <ThemedText type="smallBold" style={styles.title}>
-          {state === 'on' ? 'Lembretes ativos' : 'Lembrete na hora dos remédios'}
+          {state === 'on' ? 'Lembretes ativos' : 'Lembrete da hora dos remédios'}
         </ThemedText>
       </View>
+      {/* A IA só organiza os horários da receita do médico; não recomenda remédio. */}
+      <View style={styles.source}>
+        <SymbolView
+          name={{ ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' }}
+          tintColor={Tokens.color.brand}
+          size={16}
+        />
+        <ThemedText type="small" style={styles.sourceText}>
+          Horários sugeridos pela IA a partir da sua última receita.
+        </ThemedText>
+      </View>
+      <ThemedText type="default" style={styles.times}>
+        {times.join(' · ')}
+      </ThemedText>
 
       {state === 'unavailable' ? (
         <ThemedText type="small" style={styles.text}>
@@ -44,7 +53,7 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
       ) : state === 'on' ? (
         <>
           <ThemedText type="small" style={styles.text}>
-            {`Um aviso às ${when}. Na notificação, toque em "Já tomei".`}
+            Na notificação, toque em &quot;Já tomei&quot;.
           </ThemedText>
           <Pressable
             accessibilityRole="button"
@@ -60,7 +69,10 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
       ) : (
         <>
           <ThemedText type="small" style={styles.text}>
-            {`Um aviso às ${when}, nos horários da sua receita. O nome dos remédios não aparece na notificação. Se você não responder, a Patrícia lembra de novo ${FOLLOW_UP_MINUTES} minutos depois.`}
+            {`O nome dos remédios não aparece na notificação. Se você não responder, a Patrícia lembra de novo ${FOLLOW_UP_MINUTES} minutos depois.`}
+          </ThemedText>
+          <ThemedText type="smallBold" style={styles.question}>
+            Ativar lembretes?
           </ThemedText>
           {state === 'denied' ? (
             <ThemedText type="small" style={styles.denied}>
@@ -68,7 +80,12 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
               de novo.
             </ThemedText>
           ) : null}
-          <GradientButton label="Ativar lembretes" chevron={false} onPress={enable} />
+          <GradientButton
+            label="Ativar lembretes"
+            chevron={false}
+            colors={Gradients.ai}
+            onPress={enable}
+          />
         </>
       )}
     </Card>
@@ -90,8 +107,26 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 24,
   },
+  source: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sourceText: {
+    flex: 1,
+    color: Tokens.color.brandDeep,
+  },
+  times: {
+    color: Tokens.color.text,
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: 700,
+  },
   text: {
     color: Tokens.color.muted,
+  },
+  question: {
+    color: Tokens.color.text,
   },
   denied: {
     color: Tokens.color.danger,

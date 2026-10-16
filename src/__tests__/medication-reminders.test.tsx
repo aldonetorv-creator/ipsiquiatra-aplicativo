@@ -173,8 +173,10 @@ describe('cartão do lembrete em Minhas medicações', () => {
     await render(<MedicationReminderCard plan={plan} />);
 
     expect(
-      await screen.findByText(/^Um aviso às 08:00, 20:00 e 22:00, nos horários da sua receita\./)
+      await screen.findByText('Horários sugeridos pela IA a partir da sua última receita.')
     ).toBeOnTheScreen();
+    expect(screen.getByText('08:00 · 20:00 · 22:00')).toBeOnTheScreen();
+    expect(screen.getByText('Ativar lembretes?')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Ativar lembretes' }));
 
     expect(await screen.findByText('Lembretes ativos')).toBeOnTheScreen();

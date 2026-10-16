@@ -12,6 +12,8 @@ type Props = {
   disabled?: boolean;
   chevron?: boolean;
   accessibilityLabel?: string;
+  // Cores do degradê; o padrão é o azul → roxo dos botões do app.
+  colors?: readonly [string, string, ...string[]];
 };
 
 // Botão principal em degradê azul → roxo, como nos mockups.
@@ -22,6 +24,7 @@ export function GradientButton({
   disabled = false,
   chevron = true,
   accessibilityLabel,
+  colors = Gradients.primary,
 }: Props) {
   const small = size === 'small';
   return (
@@ -37,7 +40,7 @@ export function GradientButton({
         (pressed || disabled) && styles.dimmed,
       ]}>
       <LinearGradient
-        colors={Gradients.primary}
+        colors={colors}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[styles.gradient, small && styles.gradientSmall]}>
