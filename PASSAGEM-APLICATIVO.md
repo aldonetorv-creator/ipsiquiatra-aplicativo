@@ -1,4 +1,4 @@
-# Passagem — app do paciente iPsiquiatra (12/10/2026)
+# Passagem — app do paciente iPsiquiatra (16/10/2026)
 
 ## Objetivo
 App do paciente (Expo SDK 57, Expo Router, React Native 0.86, TypeScript) do
@@ -7,23 +7,47 @@ agora, plataforma depois". A plataforma (`aldonetorv-creator/ipsiquiatra`,
 branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 
 ## Estado
-- **Pronto e mesclado na `main`** (`ba133b4`):
-  - Patrícia real;
-  - histórico cifrado;
-  - login simulado por CPF + SMS (código 123456) como primeira tela;
-  - entrada em história + uma pergunta por tela (PR #39);
-  - biometria (PR #39);
-  - saudação "Boa noite, {nome}!" e botão da conta (PR #39);
-  - aviso do celular desatualizado (PR #41);
-  - ícone só com o logo;
-  - EAS, com build também pelo site da Expo (PR #40, de outra sessão).
-- **Em andamento:** nada. Nenhum PR aberto desta frente.
-- **Falta:**
-  1. O Dr. Aldo testar no celular (Expo Go e um APK novo) e dar retorno visual.
-  2. Parte da plataforma (rotas do paciente, `docs/api-paciente.md`): fica com a
-     Opus I depois do beta. Inclui a Patrícia com o paciente identificado, para
-     os cartões pararem de pedir nome, celular, CPF e nascimento.
-  3. Lojas: conta Apple (US$ 99/ano), política de privacidade, Google Play.
+- **Pronto e mesclado na `main`** (`a768010`):
+  - Patrícia real; histórico cifrado; login simulado por CPF + SMS (código
+    123456) como primeira tela; biometria; aviso do celular desatualizado;
+    EAS, com build pelo site da Expo (PRs até #41);
+  - #42: termo da Patrícia próprio do app + rota da "Patrícia identificada"
+    documentada;
+  - #43/#44: cartão "Agora" da Início (em acompanhamento, retorno atrasado
+    com "Marcar/Remarcar consulta", consulta próxima);
+  - #45: primeiro acesso em ordem e ritmo (termo → apresentação → humor),
+    código do SMS sem duplicar no Android, patches do SDK 57;
+  - #46: aba Minhas medicações (das receitas validadas) e plano de cuidados
+    em texto para celular (`/plano`);
+  - #47: negrito no app e degradê `Gradients.ai` (roxo → azul);
+  - #51: lembrete dos remédios (horários da receita, "Já tomei" na
+    notificação, 2º aviso em 30 min, semana local segunda a domingo).
+- **Em andamento:** nada. Nenhum PR aberto desta frente. Dependabot #48–#50
+  abertos (não são desta frente).
+- **Falta, em ordem:**
+  1. **Pedido mais recente do Dr. Aldo (16/10), sem resposta dele ainda:**
+     "Eu quero que o aplicativo funcione de verdade, tudo integrado ao
+     prontuário, login com paciente teste". Respondi que exige as rotas do
+     paciente na plataforma (pausada) e pedi 3 decisões:
+     - liberar a plataforma (`ipsiquiatra`, `correcoes`) só para isso?
+     - quem faz a parte da plataforma: esta frente (precisa `add_repo` do
+       `ipsiquiatra`) ou a Opus I?
+     - paciente teste com código fixo, sem SMS (recomendado), ou SMS real?
+     Plano proposto (VERMELHO: login e dados de saúde; revisão dele em cada PR):
+     1. plataforma: login CPF + SMS com paciente teste fictício (CPF e dados
+        inventados);
+     2. plataforma: consulta com `returnDueAt`, receita validada e plano de
+        cuidados do paciente teste; rotas `/me`, consultas, documentos,
+        medicações, plano (contrato em `docs/api-paciente.md`);
+     3. plataforma: Patrícia identificada pelo login;
+     4. app: `PatientAuthApi` e `PatientAppGateway` reais no lugar dos mocks
+        (`src/mocks/patient-auth.ts`, `src/mocks/patient-app-gateway.ts`),
+        com chave de configuração para manter o modo demonstração; APK novo.
+     **Não mexer na plataforma antes da resposta dele.**
+  2. Oferta sem resposta: usar `Gradients.ai` também nos botões do app
+     (hoje `Gradients.primary`).
+  3. Dr. Aldo: gerar APK novo pelo site e testar os lembretes no celular.
+  4. Lojas: conta Apple (US$ 99/ano), política de privacidade, Google Play.
 
 ## Branch, PRs e arquivos
 - **Branch:** `claude/adoring-mendel-xq8vl9`, base `main`.
@@ -41,14 +65,33 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Início:**
   - `src/app/index.tsx`;
   - `src/components/home/account-button.tsx`, que leva à biometria e ao Sair.
-- **Contrato e mock:** `src/contracts/patient-auth.ts`, `src/mocks/patient-auth.ts`.
+- **Contrato e mock:**
+  - `src/contracts/patient-auth.ts`, `src/mocks/patient-auth.ts`;
+  - `src/contracts/platform.ts` (gateway: consultas, documentos,
+    medicações, plano), `src/mocks/patient-app-gateway.ts`, `src/mocks/care.ts`.
+- **Patrícia:** `src/services/patricia-live.ts` (termo, `CONSENT_VERSION`),
+  `src/services/patricia-api.ts` (única parte já ligada à plataforma, rota
+  pública), `src/hooks/use-conversation.ts` (fila com ritmo),
+  `src/constants/patricia-pace.ts`.
+- **Cartão "Agora":** `src/utils/appointments.ts` (`followUpFor`),
+  `src/components/home/follow-up-card.tsx`.
+- **Medicações e plano:** `src/app/medicacoes.tsx`, `src/app/plano.tsx`,
+  `src/utils/medications.ts`.
+- **Lembretes dos remédios:**
+  - `src/utils/medication-reminders.ts` (horários, ids, textos);
+  - `src/services/medication-reminders.ts` (agenda, "Já tomei", registro local);
+  - `src/services/medication-task.ts` (tarefa em segundo plano do Android);
+  - `src/hooks/use-medication-reminders.ts`;
+  - `src/components/care/medication-reminder-card.tsx`, `medication-week.tsx`.
 - **Cores e abertura:**
   - `src/constants/theme.ts` (`Gradients.story`, `danger`);
   - `app.json` (splash `#4A1F9A`, plugins).
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
-  - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 239.
+  - `src/__tests__/notification-tap.test.tsx`;
+  - `src/__tests__/care.test.tsx`, `medication-reminders.test.tsx`,
+    `patricia-pace.test.tsx`.
+  - Total: 239, todos verdes na `main`.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -101,6 +144,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Nunca** `npm audit fix --force`.
 
 ## Pendentes que dependem do Dr. Aldo
+- As 3 decisões da integração com o prontuário (item 1 do "Falta").
 - Testar no celular e dar retorno.
 - Fazer o APK novo pelo site.
 - Conta Apple, quando quiser publicar no iPhone.
@@ -156,4 +200,24 @@ APK: expo.dev → Builds → Build from GitHub → `main`, Android, `preview`.
   - módulo nativo novo exige APK novo.
 - **Mutações antes do PR:** fazer backup de arquivos não rastreados antes de mutar; `git checkout`
   não os restaura.
+- **CI expo-doctor:** quebra quando a Expo publica patch novo do SDK 57.
+  Corrigir subindo as versões no próprio PR (`EXPO_OFFLINE=1 npx expo
+  install`). O schema também recusou `ios.icon` como PNG: o app usa só o
+  `icon` do topo.
+- **expo-notifications no Expo Go Android:** não carrega;
+  `src/services/notifications-module.ts` devolve `null` e o cartão mostra
+  "indisponível". Lembretes só no APK.
+- **"Já tomei" com o app fechado (Android):** precisa da tarefa do
+  `expo-task-manager` registrada no `_layout`. iOS ainda sem teste (sem build
+  de iPhone).
+- **iOS limita 64 notificações agendadas:** os 2º avisos são DATE para 3 dias,
+  renovados ao abrir o app e a cada "Já tomei".
+- **Lembretes diários da Patrícia** cancelam só o que não é remédio
+  (`isMedicationId`); não usar `cancelAllScheduledNotificationsAsync`.
+- **Capturas dos lembretes na web:** remendar temporariamente
+  `notifications-module.ts` e `medication-task.ts` e voltar com `git checkout`.
+- **docs.expo.dev e a API da Expo são bloqueados aqui:** ler os `.d.ts` e os
+  fontes em `node_modules`.
+- **Aviso de act() intermitente no `patricia.test`** só com a suíte inteira
+  sob carga; não reproduz sozinho nem na `main`.
 - **Outras sessões** mexem neste repositório (ex.: PR #40): conferir a `main` antes de abrir PR.
