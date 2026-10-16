@@ -31,9 +31,9 @@ jest.mock('@/services/notifications-module', () => ({
   }),
 }));
 
-const tap = (identifier: string) => ({
+const tap = (identifier: string, screen = 'patricia') => ({
   actionIdentifier: 'default',
-  notification: { date: 1, request: { identifier, content: { data: { screen: 'patricia' } } } },
+  notification: { date: 1, request: { identifier, content: { data: { screen } } } },
 });
 
 const session: PatientSession = {
@@ -120,5 +120,13 @@ describe('toque na notificação da Patrícia com o login como primeira tela', (
     expect(result.current.state.status).toBe('signed_in');
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith('/patricia');
+  });
+
+  it('o toque no lembrete dos remédios abre Minhas medicações', async () => {
+    mockLastResponse = tap('n4', 'medicacoes');
+    const { result } = await renderReminders(createMemorySessionStore(session));
+
+    await waitFor(() => expect(result.current.state.status).toBe('signed_in'));
+    expect(router.push).toHaveBeenCalledWith('/medicacoes');
   });
 });

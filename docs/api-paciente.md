@@ -253,8 +253,20 @@ Os tipos estão em `src/contracts/platform.ts`.
   parte. A tela diz de qual receita a lista saiu e quem a validou, e lembra
   "Não pare nem mude a dose por conta própria". O app não calcula nem muda
   dose.
-- **Depois:** lembrete no horário de cada remédio e "tomei" para marcar a dose
-  (ainda não feitos).
+- **Lembrete dos remédios** (decisões do Dr. Aldo, 16/10/2026), só no
+  aparelho, sem rota nova (`src/services/medication-reminders.ts`):
+  - os horários vêm desta lista; o paciente não cadastra remédio nem horário,
+    só aceita o lembrete no cartão de Minhas medicações;
+  - um aviso por horário, todo dia, **sem o nome dos remédios** ("Hora dos
+    seus remédios das 08:00."), porque a tela bloqueada fica à vista;
+  - a notificação tem o botão **"Já tomei"**, que fecha o aviso sem abrir o
+    app. Sem resposta, a Patrícia lembra de novo uma única vez, 30 minutos
+    depois; "Já tomei" cancela esse segundo aviso;
+  - **nada vira registro de adesão:** o app não tem lista de doses tomadas,
+    e o "Já tomei" não vai para o prontuário. Não responder não quer dizer
+    que o paciente não tomou;
+  - com uma receita nova, os horários mudam sozinhos ao abrir o app. "Sair"
+    desliga o lembrete deste aparelho.
 
 ### Plano de cuidados em texto para celular
 

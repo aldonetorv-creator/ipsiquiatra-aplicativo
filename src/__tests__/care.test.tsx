@@ -12,6 +12,10 @@ import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { medicationSlots, nextSlotKey } from '@/utils/medications';
 import { boldSegments } from '@/utils/rich-text';
 
+// O cartão do lembrete fica fora destes testes (medication-reminders.test.tsx).
+jest.mock('@/components/care/medication-reminder-card', () => ({
+  MedicationReminderCard: () => null,
+}));
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),

@@ -26,7 +26,7 @@ export type MedicationSlot = {
   medications: Medication[];
 };
 
-const timeOf = (slot: Pick<MedicationSlot, 'period' | 'time'>) =>
+export const timeOf = (slot: Pick<MedicationSlot, 'period' | 'time'>) =>
   slot.time ?? periodTimes[slot.period];
 
 // Os remédios por horário do dia, na ordem do dia, e os de "se precisar".

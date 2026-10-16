@@ -51,7 +51,8 @@ export function useDailyReminders() {
 
   // A conversa só existe com o paciente dentro (login como primeira tela). Se o
   // toque abriu o app ainda lendo a sessão, ou sem sessão, a conversa abre
-  // assim que ele entrar; cada toque abre a conversa uma vez só.
+  // assim que ele entrar; cada toque abre a conversa uma vez só. O toque no
+  // lembrete dos remédios abre Minhas medicações.
   const signedIn = usePatientSession().state.status === 'signed_in';
   const opened = useRef<string | null>(null);
   useEffect(() => {
@@ -59,14 +60,17 @@ export function useDailyReminders() {
       !Notifications ||
       !signedIn ||
       !response ||
-      response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER ||
-      response.notification.request.content.data?.screen !== 'patricia'
+      response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER
     ) {
       return;
     }
+    const screen = response.notification.request.content.data?.screen;
+    const target =
+      screen === 'patricia' ? '/patricia' : screen === 'medicacoes' ? '/medicacoes' : null;
+    if (!target) return;
     const tap = `${response.notification.request.identifier}@${response.notification.date}`;
     if (opened.current === tap) return;
     opened.current = tap;
-    router.push('/patricia');
+    router.push(target);
   }, [response, signedIn]);
 }

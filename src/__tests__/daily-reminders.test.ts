@@ -11,7 +11,11 @@ jest.mock('expo-notifications', () => ({
   setNotificationChannelAsync: jest.fn(async () => null),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
-  cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),
+  getAllScheduledNotificationsAsync: jest.fn(async () => [
+    { identifier: 'lembrete-antigo' },
+    { identifier: 'med.daily.08:00' },
+  ]),
+  cancelScheduledNotificationAsync: jest.fn(async () => undefined),
   scheduleNotificationAsync: jest.fn(async () => 'id'),
 }));
 
@@ -40,7 +44,8 @@ describe('scheduleDailyReminders', () => {
     await scheduleDailyReminders([], morning);
 
     expect(mocked.requestPermissionsAsync).toHaveBeenCalledTimes(1);
-    expect(mocked.cancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
+    // Refaz só os seus avisos: os dos remédios ficam.
+    expect(mocked.cancelScheduledNotificationAsync.mock.calls).toEqual([['lembrete-antigo']]);
     const calls = mocked.scheduleNotificationAsync.mock.calls.map(([request]) => request);
     expect(calls).toHaveLength(14);
     expect(calls[0]).toEqual({
@@ -65,7 +70,7 @@ describe('scheduleDailyReminders', () => {
     await scheduleDailyReminders([], morning);
 
     expect(mocked.requestPermissionsAsync).not.toHaveBeenCalled();
-    expect(mocked.cancelAllScheduledNotificationsAsync).not.toHaveBeenCalled();
+    expect(mocked.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
     expect(mocked.scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 

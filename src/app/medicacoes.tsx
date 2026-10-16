@@ -4,6 +4,7 @@ import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { MedicationReminderCard } from '@/components/care/medication-reminder-card';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientBadge } from '@/components/ui/gradient-badge';
@@ -74,6 +75,8 @@ function Plan({ plan }: { plan: MedicationPlan }) {
           {`Conforme a receita de ${formatDate(source.issuedAt)}, validada por ${source.validatedBy}.`}
         </ThemedText>
       </LinearGradient>
+
+      <MedicationReminderCard plan={plan} />
 
       {slots.map((slot) => (
         <Slot key={slot.key} slot={slot} next={slot.key === next} />

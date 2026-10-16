@@ -135,9 +135,10 @@ Quando a conta Apple existir:
 
 - **Não precisa do computador ligado:** o app abre sozinho, sem Expo Go e sem
   QR Code.
-- **Notificações:** a mensagem das 20h e os contatos de cuidado passam a
-  aparecer como notificação no Android. No Expo Go do Android elas não
-  funcionam.
+- **Notificações:** a mensagem das 20h, os contatos de cuidado e o lembrete
+  dos remédios (com o botão "Já tomei") aparecem como notificação no Android.
+  No Expo Go do Android elas não funcionam. O lembrete dos remédios precisa de
+  um APK feito depois do `expo-task-manager` (16/10/2026).
 - **Biometria:** a entrada pela digital funciona no Expo Go do Android e no
   app instalado. Um APK feito antes dela não a tem: é preciso um build novo.
 - **Atualizações:** cada mudança no código precisa de um novo build. Mais
