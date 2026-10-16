@@ -5,7 +5,9 @@ import { MedicationPlan } from '@/contracts/platform';
 import {
   clearMedicationReminders,
   handleTakenResponse,
+  onTakenChange,
   readRemindersEnabled,
+  readTakenLog,
   remindersAvailable,
   setMedicationReminders,
   syncMedicationReminders,
@@ -81,4 +83,37 @@ export function useMedicationReminderChoice(plan: MedicationPlan | null) {
   );
 
   return { state, enable: () => choose(true), disable: () => choose(false) };
+}
+
+// Os "Já tomei" da semana, para o paciente conferir se tomou. Relê ao voltar
+// para o app e quando um "Já tomei" chega com ele aberto.
+export function useTakenLog() {
+  const [taken, setTaken] = useState<Set<string>>(new Set());
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      const current = new Date();
+      readTakenLog(current)
+        .then((list) => {
+          if (!active) return;
+          setTaken(new Set(list));
+          setNow(current);
+        })
+        .catch(() => undefined);
+    };
+    load();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') load();
+    });
+    const unsubscribe = onTakenChange(load);
+    return () => {
+      active = false;
+      subscription.remove();
+      unsubscribe();
+    };
+  }, []);
+
+  return { taken, now };
 }

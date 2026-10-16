@@ -48,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 237.
+  - Total: 240.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
@@ -75,8 +75,10 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
   no repositório.
 - **Lembrete dos remédios:** só com os horários da receita (o paciente não
   cadastra nada), sem o nome dos remédios na notificação, com "Já tomei" na
-  própria notificação e um segundo aviso 30 min depois se não responder. Sem
-  registro de adesão no app: não responder não quer dizer que não tomou.
+  própria notificação e um segundo aviso 30 min depois se não responder.
+  Cartão com pouco texto. Cada "Já tomei" marca a semana do paciente (segunda
+  a domingo), só no celular; nada vai para o prontuário, e horário sem marca
+  fica neutro.
 - **Plano de cuidados no app:** negrito autorizado; cores do app (roxo,
   branco, azul, degradês de azul para roxo, "futurista, moderno, IA"), e não
   o verde e dourado do PDF.

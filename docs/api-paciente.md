@@ -262,9 +262,13 @@ Os tipos estão em `src/contracts/platform.ts`.
   - a notificação tem o botão **"Já tomei"**, que fecha o aviso sem abrir o
     app. Sem resposta, a Patrícia lembra de novo uma única vez, 30 minutos
     depois; "Já tomei" cancela esse segundo aviso;
-  - **nada vira registro de adesão:** o app não tem lista de doses tomadas,
-    e o "Já tomei" não vai para o prontuário. Não responder não quer dizer
-    que o paciente não tomou;
+  - **registro só no celular** (Dr. Aldo, 16/10/2026): cada "Já tomei" marca
+    o horário na semana do paciente (segunda a domingo), dentro do cartão do
+    lembrete, para ele conferir se tomou. Nada vai para o prontuário, e um
+    horário sem marca fica neutro: não responder não quer dizer que não
+    tomou;
+  - o cartão tem pouco texto: o título, "Horários sugeridos pela IA a partir
+    da sua última receita.", os horários e o botão "Ativar lembretes";
   - com uma receita nova, os horários mudam sozinhos ao abrir o app. "Sair"
     desliga o lembrete deste aparelho.
 

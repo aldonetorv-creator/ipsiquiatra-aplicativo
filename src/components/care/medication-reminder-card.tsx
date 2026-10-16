@@ -1,6 +1,7 @@
 import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { MedicationWeek } from '@/components/care/medication-week';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientBadge } from '@/components/ui/gradient-badge';
@@ -8,10 +9,11 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Gradients, Tokens } from '@/constants/theme';
 import { MedicationPlan } from '@/contracts/platform';
 import { useMedicationReminderChoice } from '@/hooks/use-medication-reminders';
-import { FOLLOW_UP_MINUTES, reminderTimes } from '@/utils/medication-reminders';
+import { reminderTimes } from '@/utils/medication-reminders';
 
 // Sugere o lembrete nos horários da receita: o paciente só aceita, sem
-// cadastrar remédio nem horário (decisão do Dr. Aldo, 16/10/2026).
+// cadastrar remédio nem horário (decisão do Dr. Aldo, 16/10/2026). Pouco
+// texto: título, de onde vêm os horários, os horários e o botão.
 export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
   const times = reminderTimes(plan);
   const { state, enable, disable } = useMedicationReminderChoice(plan);
@@ -52,9 +54,7 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
         </ThemedText>
       ) : state === 'on' ? (
         <>
-          <ThemedText type="small" style={styles.text}>
-            Na notificação, toque em &quot;Já tomei&quot;.
-          </ThemedText>
+          <MedicationWeek times={times} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Desativar lembretes"
@@ -68,12 +68,6 @@ export function MedicationReminderCard({ plan }: { plan: MedicationPlan }) {
         </>
       ) : (
         <>
-          <ThemedText type="small" style={styles.text}>
-            {`O nome dos remédios não aparece na notificação. Se você não responder, a Patrícia lembra de novo ${FOLLOW_UP_MINUTES} minutos depois.`}
-          </ThemedText>
-          <ThemedText type="smallBold" style={styles.question}>
-            Ativar lembretes?
-          </ThemedText>
           {state === 'denied' ? (
             <ThemedText type="small" style={styles.denied}>
               As notificações do iPsiquiatra estão desligadas. Ative nos ajustes do celular e tente
@@ -124,9 +118,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: Tokens.color.muted,
-  },
-  question: {
-    color: Tokens.color.text,
   },
   denied: {
     color: Tokens.color.danger,

@@ -72,10 +72,15 @@ Go) guarda no aparelho o histórico da conversa com a Patrícia e os registros
 de humor (chave `ipsiquiatra:patient-history`; na web, `localStorage`). O
 paciente pode apagar tudo pelo botão "Apagar histórico".
 
-O lembrete dos remédios guarda no aparelho, sem cifrar, só a escolha de
-receber (`ipsiquiatra:medication-reminders`) e quais segundos avisos já foram
-respondidos com "Já tomei" (`ipsiquiatra:medication-answered`, só datas e
-horários, apagados depois do dia). "Sair" apaga os dois e cancela os avisos.
+O lembrete dos remédios guarda no aparelho, sem cifrar:
+- a escolha de receber (`ipsiquiatra:medication-reminders`);
+- quais segundos avisos já foram respondidos com "Já tomei"
+  (`ipsiquiatra:medication-answered`, apagados depois do dia);
+- os "Já tomei" das duas últimas semanas, para a semana do paciente
+  (`ipsiquiatra:medication-taken`).
+
+São só datas e horários, sem o nome dos remédios. "Sair" apaga os três e
+cancela os avisos.
 
 Na demonstração, nada vai para a nuvem. Com a Patrícia real ligada
 (`docs/integracao-plataforma.md`), o que o paciente escreve na conversa e os

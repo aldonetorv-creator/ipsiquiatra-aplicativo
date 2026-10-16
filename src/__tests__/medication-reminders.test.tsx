@@ -1,20 +1,23 @@
 /// <reference types="jest" />
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as Notifications from 'expo-notifications';
 
 import { MedicationReminderCard } from '@/components/care/medication-reminder-card';
+import { MedicationWeek } from '@/components/care/medication-week';
 import { mockMedicationPlan } from '@/mocks/care';
 import { mockAppointments } from '@/mocks/patient-app-gateway';
 import {
   ENABLED_KEY,
   handleTakenResponse,
+  readTakenLog,
   setMedicationReminders,
   syncMedicationReminders,
   TAKEN_ACTION,
 } from '@/services/medication-reminders';
 import { createMemoryStore } from '@/services/storage';
-import { reminderSchedule, reminderTimes } from '@/utils/medication-reminders';
+import { reminderSchedule, reminderTimes, weekDays } from '@/utils/medication-reminders';
 
 jest.mock('expo-notifications', () => ({
   AndroidImportance: { HIGH: 6 },
@@ -160,11 +163,42 @@ describe('lembrete dos remédios', () => {
     expect(ids()).not.toContain('med.followup.2026-10-16.08:00');
     expect(ids()).toContain('med.followup.2026-10-17.08:00');
 
-    // No segundo aviso, "Já tomei" só fecha.
+    // No segundo aviso, "Já tomei" fecha e não há mais nada a cancelar.
     jest.clearAllMocks();
     await handleTakenResponse(response('med.followup.2026-10-16.08:00', true), store);
     expect(mocked.dismissNotificationAsync).toHaveBeenCalledWith('med.followup.2026-10-16.08:00');
     expect(mocked.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
+
+    // A semana guarda o horário uma vez só, no celular.
+    expect(await readTakenLog(new Date(2026, 9, 16, 9, 0), store)).toEqual(['2026-10-16.08:00']);
+  });
+
+  it('o segundo aviso de um horário perto da meia-noite marca o dia certo', async () => {
+    const store = createMemoryStore();
+    await handleTakenResponse(
+      {
+        actionIdentifier: TAKEN_ACTION,
+        notification: {
+          date: new Date(2026, 9, 17, 0, 15).getTime(),
+          request: {
+            identifier: 'med.followup.2026-10-16.23:45',
+            content: {
+              data: { kind: 'medication', time: '23:45', followUp: true, day: '2026-10-16' },
+            },
+          },
+        },
+      } as never,
+      store
+    );
+    expect(await readTakenLog(new Date(2026, 9, 17, 9, 0), store)).toEqual(['2026-10-16.23:45']);
+  });
+
+  it('a semana vai de segunda a domingo', () => {
+    // 16/10/2026 é uma sexta-feira.
+    expect(weekDays(now).map((day) => day.getDate())).toEqual([12, 13, 14, 15, 16, 17, 18]);
+    expect(weekDays(new Date(2026, 9, 18, 9)).map((day) => day.getDate())).toEqual([
+      12, 13, 14, 15, 16, 17, 18,
+    ]);
   });
 });
 
@@ -176,10 +210,29 @@ describe('cartão do lembrete em Minhas medicações', () => {
       await screen.findByText('Horários sugeridos pela IA a partir da sua última receita.')
     ).toBeOnTheScreen();
     expect(screen.getByText('08:00 · 20:00 · 22:00')).toBeOnTheScreen();
-    expect(screen.getByText('Ativar lembretes?')).toBeOnTheScreen();
+    expect(screen.queryByText('Ativar lembretes?')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Ativar lembretes' }));
 
     expect(await screen.findByText('Lembretes ativos')).toBeOnTheScreen();
+    expect(screen.getByText('Sua semana')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Desativar lembretes' })).toBeOnTheScreen();
+  });
+});
+
+describe('semana do paciente', () => {
+  it('marca os horários com "Já tomei" e deixa os outros neutros', async () => {
+    jest.useFakeTimers({ now: new Date(2026, 9, 16, 21, 0), doNotFake: ['setTimeout'] });
+    await AsyncStorage.setItem(
+      'ipsiquiatra:medication-taken',
+      JSON.stringify(['2026-10-16.08:00'])
+    );
+
+    await render(<MedicationWeek times={['08:00', '22:00']} />);
+
+    expect(await screen.findByLabelText('Sexta, 08:00: tomei')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Quinta, 08:00: sem resposta')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Sexta, 22:00: ainda não chegou')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Sábado, 08:00: ainda não chegou')).toBeOnTheScreen();
+    jest.useRealTimers();
   });
 });

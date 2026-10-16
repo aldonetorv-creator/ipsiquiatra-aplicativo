@@ -7,8 +7,10 @@ import { dayKey } from '@/utils/time';
 //   paciente não cadastra remédio nem horário, só aceita o lembrete;
 // - a notificação não diz o nome dos remédios (a tela bloqueada fica à vista);
 // - "Já tomei" na própria notificação fecha o aviso e cancela o segundo aviso,
-//   30 minutos depois, que só vem se ele não responder. Nada vira registro de
-//   adesão: não responder não quer dizer que não tomou.
+//   30 minutos depois, que só vem se ele não responder;
+// - cada "Já tomei" marca o horário na semana do paciente, só no celular, para
+//   ele conferir se tomou. Não vai para o prontuário, e um horário sem marca
+//   não quer dizer que ele não tomou.
 
 export const FOLLOW_UP_MINUTES = 30;
 // Dias à frente com o segundo aviso agendado; o app renova ao abrir e a cada
@@ -64,4 +66,16 @@ export function reminderSchedule(
     }
   }
   return { daily, followUps };
+}
+
+// Marca de "Já tomei" de um horário num dia: "2026-10-16.08:00".
+export const takenKey = (day: string, time: string) => `${day}.${time}`;
+
+// Os dias da semana de segunda a domingo, com hoje dentro.
+export function weekDays(now: Date): Date[] {
+  const monday = now.getDate() - ((now.getDay() + 6) % 7);
+  return Array.from(
+    { length: 7 },
+    (_, index) => new Date(now.getFullYear(), now.getMonth(), monday + index)
+  );
 }

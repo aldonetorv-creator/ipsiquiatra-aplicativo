@@ -12,6 +12,7 @@ import {
   reminderBody,
   reminderSchedule,
   reminderTimes,
+  takenKey,
 } from '@/utils/medication-reminders';
 import { dayKey } from '@/utils/time';
 
@@ -23,6 +24,9 @@ export const CATEGORY_ID = 'medicacao';
 export const TAKEN_ACTION = 'ja_tomei';
 export const ENABLED_KEY = 'ipsiquiatra:medication-reminders';
 const ANSWERED_KEY = 'ipsiquiatra:medication-answered';
+// Os "Já tomei" das duas últimas semanas, para a semana do paciente.
+const TAKEN_KEY = 'ipsiquiatra:medication-taken';
+const TAKEN_DAYS = 14;
 
 // No app, AsyncStorage; os testes passam um armazenamento em memória.
 const deviceStore: KeyValueStore = AsyncStorage;
@@ -69,12 +73,39 @@ async function prepare(Notifications: NotificationsModule) {
   ]);
 }
 
-const content = (body: string, time: string, followUp: boolean) => ({
+// O segundo aviso leva o dia do horário: o das 23:45 chega no dia seguinte.
+const content = (body: string, time: string, followUp: boolean, day?: string) => ({
   title: 'Patrícia',
   body,
-  data: { screen: 'medicacoes', kind: 'medication', time, followUp },
+  data: { screen: 'medicacoes', kind: 'medication', time, followUp, ...(day ? { day } : {}) },
   categoryIdentifier: CATEGORY_ID,
 });
+
+// Avisa a tela quando um "Já tomei" chega com o app aberto.
+type Listener = () => void;
+const takenListeners = new Set<Listener>();
+export function onTakenChange(listener: Listener) {
+  takenListeners.add(listener);
+  return () => {
+    takenListeners.delete(listener);
+  };
+}
+
+// Os "Já tomei" guardados no celular ("2026-10-16.08:00"), das últimas semanas.
+export async function readTakenLog(
+  now: Date = new Date(),
+  store: KeyValueStore = deviceStore
+): Promise<string[]> {
+  const oldest = dayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - TAKEN_DAYS));
+  try {
+    const list = JSON.parse((await store.getItem(TAKEN_KEY)) ?? '[]');
+    return Array.isArray(list)
+      ? list.filter((key): key is string => typeof key === 'string' && key >= oldest)
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 // Refaz todos os avisos dos remédios: os horários podem ter mudado com uma
 // receita nova. Sem a escolha de receber, ou sem permissão, só cancela.
@@ -106,10 +137,10 @@ export async function syncMedicationReminders(
       },
     });
   }
-  for (const { id, time, date } of followUps) {
+  for (const { id, day, time, date } of followUps) {
     await Notifications.scheduleNotificationAsync({
       identifier: id,
-      content: content(followUpBody(time), time, true),
+      content: content(followUpBody(time), time, true, day),
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date,
@@ -142,8 +173,8 @@ export async function setMedicationReminders(
   return enabled ? 'on' : 'off';
 }
 
-// "Já tomei" (na notificação, com o app aberto ou não): fecha o aviso e, se
-// for o primeiro, cancela o segundo aviso daquele horário.
+// "Já tomei" (na notificação, com o app aberto ou não): fecha o aviso, marca o
+// horário na semana do paciente e, se for o primeiro aviso, cancela o segundo.
 export async function handleTakenResponse(
   response: NotificationResponse,
   store: KeyValueStore = deviceStore
@@ -151,10 +182,22 @@ export async function handleTakenResponse(
   const Notifications = notifications();
   if (!Notifications || response.actionIdentifier !== TAKEN_ACTION) return;
   const { request, date } = response.notification;
-  const data = request.content.data as { kind?: string; time?: string; followUp?: boolean };
+  const data = request.content.data as {
+    kind?: string;
+    time?: string;
+    followUp?: boolean;
+    day?: string;
+  };
   await Notifications.dismissNotificationAsync(request.identifier).catch(() => undefined);
-  if (data?.kind !== 'medication' || data.followUp || !data.time) return;
-  const day = dayKey(new Date(date));
+  if (data?.kind !== 'medication' || !data.time) return;
+  const day = data.day ?? dayKey(new Date(date));
+  const taken = await readTakenLog(new Date(date), store);
+  const key = takenKey(day, data.time);
+  if (!taken.includes(key)) {
+    await store.setItem(TAKEN_KEY, JSON.stringify([...taken, key]));
+  }
+  takenListeners.forEach((listener) => listener());
+  if (data.followUp) return;
   const id = followUpId(day, data.time);
   await Notifications.cancelScheduledNotificationAsync(id).catch(() => undefined);
   const answered = await readAnswered(store, day);
@@ -168,5 +211,6 @@ export async function clearMedicationReminders(store: KeyValueStore = deviceStor
   const Notifications = notifications();
   await store.removeItem(ENABLED_KEY).catch(() => undefined);
   await store.removeItem(ANSWERED_KEY).catch(() => undefined);
+  await store.removeItem(TAKEN_KEY).catch(() => undefined);
   if (Notifications) await cancelScheduled(Notifications);
 }
