@@ -249,7 +249,7 @@ Os tipos estão em `src/contracts/platform.ts`.
   receita. A IA não completa o que a receita não diz: sem horário claro, o
   remédio não entra num horário.
 - **No app:** os remédios aparecem por horário do dia (manhã, almoço, tarde,
-  noite, ao deitar), com o próximo horário marcado, e os de "se precisar" à
+  noite, ao deitar), e os de "se precisar" à
   parte. A tela diz de qual receita a lista saiu e quem a validou, e lembra
   "Não pare nem mude a dose por conta própria". O app não calcula nem muda
   dose.

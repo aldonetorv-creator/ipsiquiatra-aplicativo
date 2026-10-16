@@ -48,7 +48,7 @@ branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 - **Testes:**
   - `src/__tests__/login-gate.test.tsx` (23);
   - `src/__tests__/notification-tap.test.tsx` (3).
-  - Total: 240.
+  - Total: 239.
 - **Docs:**
   - `docs/api-paciente.md` (rotas e decisões);
   - `docs/publicacao.md`;
