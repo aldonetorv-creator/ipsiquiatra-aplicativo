@@ -1,9 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { MedicationReminderCard } from '@/components/care/medication-reminder-card';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { GradientBadge } from '@/components/ui/gradient-badge';
@@ -12,7 +12,7 @@ import { PageScreen, SectionLabel } from '@/components/ui/page-screen';
 import { Gradients, Shadows, Tokens } from '@/constants/theme';
 import { Medication, MedicationPeriod, MedicationPlan } from '@/contracts/platform';
 import { useMedicationPlan } from '@/hooks/use-care';
-import { medicationSlots, MedicationSlot, nextSlotKey, periodLabels } from '@/utils/medications';
+import { medicationSlots, MedicationSlot, periodLabels } from '@/utils/medications';
 import { formatDate } from '@/utils/time';
 
 const periodIcons: Record<MedicationPeriod, SymbolViewProps['name']> = {
@@ -52,11 +52,7 @@ export default function MedicacoesScreen() {
 }
 
 function Plan({ plan }: { plan: MedicationPlan }) {
-  // A lista só aparece depois de carregar, já no aparelho: o relógio daqui
-  // não diverge do HTML pré-renderizado da web.
-  const [now] = useState(() => new Date());
   const { slots, asNeeded } = medicationSlots(plan);
-  const next = nextSlotKey(slots, now);
   const source = plan.sources[0];
   return (
     <>
@@ -75,8 +71,10 @@ function Plan({ plan }: { plan: MedicationPlan }) {
         </ThemedText>
       </LinearGradient>
 
+      <MedicationReminderCard plan={plan} />
+
       {slots.map((slot) => (
-        <Slot key={slot.key} slot={slot} next={slot.key === next} />
+        <Slot key={slot.key} slot={slot} />
       ))}
 
       {asNeeded.length > 0 ? (
@@ -104,7 +102,7 @@ function Plan({ plan }: { plan: MedicationPlan }) {
   );
 }
 
-function Slot({ slot, next }: { slot: MedicationSlot; next: boolean }) {
+function Slot({ slot }: { slot: MedicationSlot }) {
   const label = periodLabels[slot.period];
   const heading = slot.time ? `${label} · ${slot.time}` : label;
   return (
@@ -113,26 +111,15 @@ function Slot({ slot, next }: { slot: MedicationSlot; next: boolean }) {
         style={styles.slotHeader}
         accessible
         accessibilityRole="header"
-        accessibilityLabel={next ? `${heading}. Próximo horário` : heading}>
+        accessibilityLabel={heading}>
         <GradientBadge size={40}>
           <SymbolView name={periodIcons[slot.period]} tintColor={Tokens.color.onBrand} size={20} />
         </GradientBadge>
         <ThemedText type="smallBold" style={styles.slotTitle}>
           {heading}
         </ThemedText>
-        {next ? (
-          <LinearGradient
-            colors={Gradients.ai}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.nextChip}>
-            <ThemedText type="smallBold" style={styles.nextText}>
-              Próximo
-            </ThemedText>
-          </LinearGradient>
-        ) : null}
       </View>
-      <Card style={next ? { ...styles.slotCard, ...styles.slotCardNext } : styles.slotCard}>
+      <Card style={styles.slotCard}>
         {slot.medications.map((medication) => (
           <MedicationRow key={medication.id} medication={medication} />
         ))}
@@ -201,22 +188,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 24,
   },
-  nextChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  nextText: {
-    color: Tokens.color.onBrand,
-    fontSize: 12,
-    lineHeight: 16,
-  },
   slotCard: {
     gap: 16,
-  },
-  slotCardNext: {
-    borderColor: Tokens.color.brandBorder,
-    borderWidth: 1.5,
   },
   row: {
     flexDirection: 'row',

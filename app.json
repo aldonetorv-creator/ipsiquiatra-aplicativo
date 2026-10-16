@@ -9,7 +9,6 @@
     "scheme": "ipsiquiatraaplicativo",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "br.com.ipsiquiatra.paciente"
     },
     "android": {

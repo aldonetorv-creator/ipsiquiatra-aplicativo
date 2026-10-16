@@ -103,7 +103,7 @@ e `src/components/auth/`.
   (`#B34FF7` → `#4194F8`) para o texto branco continuar legível. Os ícones
   das seções alternam roxo e azul, como pontos de cor. Destaques em degradê: cartões de abertura
   (acolhimento do plano de cuidados, receita das medicações), números e
-  ícones em círculo, selos como "Próximo". O verde e dourado ficam só no PDF
+  ícones em círculo. O verde e dourado ficam só no PDF
   do plano pós-consulta, fora do app.
 
 ## Fora de escopo por enquanto

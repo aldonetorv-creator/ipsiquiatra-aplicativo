@@ -8,8 +8,7 @@ export const periodLabels: Record<MedicationPeriod, string> = {
   bedtime: 'Ao deitar',
 };
 
-// Hora usada para ordenar e para saber o próximo horário quando a receita só
-// diz o período.
+// Hora usada para ordenar quando a receita só diz o período.
 const periodTimes: Record<MedicationPeriod, string> = {
   morning: '08:00',
   midday: '12:00',
@@ -26,7 +25,7 @@ export type MedicationSlot = {
   medications: Medication[];
 };
 
-const timeOf = (slot: Pick<MedicationSlot, 'period' | 'time'>) =>
+export const timeOf = (slot: Pick<MedicationSlot, 'period' | 'time'>) =>
   slot.time ?? periodTimes[slot.period];
 
 // Os remédios por horário do dia, na ordem do dia, e os de "se precisar".
@@ -48,11 +47,4 @@ export function medicationSlots(plan: MedicationPlan): {
     slots: [...slots.values()].sort((a, b) => timeOf(a).localeCompare(timeOf(b))),
     asNeeded: plan.medications.filter((medication) => medication.asNeeded),
   };
-}
-
-// O próximo horário a partir de agora; depois do último, o primeiro de amanhã.
-export function nextSlotKey(slots: MedicationSlot[], now: Date = new Date()): string | null {
-  if (slots.length === 0) return null;
-  const current = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  return (slots.find((slot) => timeOf(slot) >= current) ?? slots[0]).key;
 }

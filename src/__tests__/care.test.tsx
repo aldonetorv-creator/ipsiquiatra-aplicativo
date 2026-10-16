@@ -9,9 +9,13 @@ import { MedicationPlan, PatientAppGateway } from '@/contracts/platform';
 import { mockMedicationPlan } from '@/mocks/care';
 import { createMockPatientAppGateway, mockAppointments } from '@/mocks/patient-app-gateway';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
-import { medicationSlots, nextSlotKey } from '@/utils/medications';
+import { medicationSlots } from '@/utils/medications';
 import { boldSegments } from '@/utils/rich-text';
 
+// O cartão do lembrete fica fora destes testes (medication-reminders.test.tsx).
+jest.mock('@/components/care/medication-reminder-card', () => ({
+  MedicationReminderCard: () => null,
+}));
 jest.mock('expo-router', () => ({
   router: { push: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),
@@ -61,13 +65,6 @@ describe('remédios por horário', () => {
       'midday',
       'bedtime',
     ]);
-  });
-
-  it('o próximo horário é o seguinte do dia; depois do último, o primeiro de amanhã', () => {
-    const { slots } = medicationSlots(plan);
-    expect(nextSlotKey(slots, new Date(2026, 9, 12, 7, 30))).toBe('morning|08:00');
-    expect(nextSlotKey(slots, new Date(2026, 9, 12, 9, 0))).toBe('evening|20:00');
-    expect(nextSlotKey(slots, new Date(2026, 9, 12, 23, 0))).toBe('morning|08:00');
   });
 });
 

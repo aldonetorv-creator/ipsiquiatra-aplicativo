@@ -55,6 +55,7 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 | `expo-notifications` | Lembrete local da Patrícia às 20h para o diário de humor (fase 1). | Versão do SDK 57, instalada com `npx expo install`. No Expo Go do iPhone, os lembretes locais funcionam. No Expo Go do Android (SDK 53+), só carregar o pacote já dá erro e o app não abre; por isso o app carrega o pacote só onde ele funciona (`src/services/notifications-module.ts`) e, no Expo Go do Android, abre sem notificações (a mensagem diária continua na conversa). Para ver as notificações no Android é preciso o app instalado (build de desenvolvimento). Na fase 2 o lembrete passa a vir da plataforma por push. |
 | `expo-crypto` | Cifra AES-GCM de 256 bits do histórico guardado no aparelho (fase 2, lote 1). | Versão do SDK 57 (`npx expo install`; aqui com `EXPO_OFFLINE=1`, porque a rede do ambiente bloqueia a API do Expo). Vem no Expo Go. Carregado só no celular (`src/services/device-cipher.ts`). |
 | `expo-secure-store` | Guarda no Keychain (iPhone) ou no Keystore (Android) a chave do histórico, a sessão do paciente depois do login e a escolha de entrar pela biometria. | Versão do SDK 57, vem no Expo Go. Pelo padrão do plugin, a chave fica fora do backup automático do Android. O plugin entra no `app.json` com o mesmo texto do Face ID do `expo-local-authentication`: com `faceIDPermission: false`, como era antes, ele apagaria a permissão do Face ID. |
+| `expo-task-manager` | O botão "Já tomei" do lembrete dos remédios responde com o app fechado: no Android, a resposta chega por uma tarefa em segundo plano (`src/services/medication-task.ts`), que fecha o aviso e cancela o segundo aviso. | Versão do SDK 57 (`EXPO_OFFLINE=1 npx expo install`; o `package-lock.json` foi refeito com o npm 11). Módulo nativo: só funciona num APK novo. Carregado só onde há notificação local. |
 | `expo-local-authentication` | Entrar com a biometria (digital ou rosto) depois do primeiro login por SMS. | Versão do SDK 57 (`EXPO_OFFLINE=1 npx expo install`), vem no Expo Go. O app só recebe do sistema se deu certo; a digital e o rosto não saem do celular. O plugin no `app.json` traz o texto do Face ID no iPhone e as permissões `USE_BIOMETRIC` e `USE_FINGERPRINT` no Android. |
 
 ## Removidas
@@ -70,6 +71,16 @@ Removê-las do `package.json` não as tiraria da árvore (critério da issue #1)
 Go) guarda no aparelho o histórico da conversa com a Patrícia e os registros
 de humor (chave `ipsiquiatra:patient-history`; na web, `localStorage`). O
 paciente pode apagar tudo pelo botão "Apagar histórico".
+
+O lembrete dos remédios guarda no aparelho, sem cifrar:
+- a escolha de receber (`ipsiquiatra:medication-reminders`);
+- quais segundos avisos já foram respondidos com "Já tomei"
+  (`ipsiquiatra:medication-answered`, apagados depois do dia);
+- os "Já tomei" das duas últimas semanas, para a semana do paciente
+  (`ipsiquiatra:medication-taken`).
+
+São só datas e horários, sem o nome dos remédios. "Sair" apaga os três e
+cancela os avisos.
 
 Na demonstração, nada vai para a nuvem. Com a Patrícia real ligada
 (`docs/integracao-plataforma.md`), o que o paciente escreve na conversa e os

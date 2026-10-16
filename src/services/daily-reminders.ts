@@ -4,6 +4,7 @@ import { MoodEntry } from '@/contracts/platform';
 import { notifications } from '@/services/notifications-module';
 import { CareReason, careContactsAfter, careNotificationBody } from '@/utils/care-contacts';
 import { reminderDates, reminderNotificationBody } from '@/utils/daily-reminder';
+import { isMedicationId } from '@/utils/medication-reminders';
 import { dayKey } from '@/utils/time';
 
 const CHANNEL_ID = 'diario-de-humor';
@@ -38,8 +39,14 @@ export async function scheduleDailyReminders(moodEntries: MoodEntry[], now: Date
   ];
   if (!(await ensurePermission(Notifications))) return;
 
-  // Nesta fase o app só agenda estas notificações, então pode limpar tudo.
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // Refaz só as suas: os lembretes dos remédios (medication-reminders.ts)
+  // têm agenda própria.
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  await Promise.all(
+    scheduled
+      .filter((request) => !isMedicationId(request.identifier))
+      .map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier))
+  );
   for (const { date, content } of planned) {
     await Notifications.scheduleNotificationAsync({
       content,

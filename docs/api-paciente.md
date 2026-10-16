@@ -249,12 +249,28 @@ Os tipos estão em `src/contracts/platform.ts`.
   receita. A IA não completa o que a receita não diz: sem horário claro, o
   remédio não entra num horário.
 - **No app:** os remédios aparecem por horário do dia (manhã, almoço, tarde,
-  noite, ao deitar), com o próximo horário marcado, e os de "se precisar" à
+  noite, ao deitar), e os de "se precisar" à
   parte. A tela diz de qual receita a lista saiu e quem a validou, e lembra
   "Não pare nem mude a dose por conta própria". O app não calcula nem muda
   dose.
-- **Depois:** lembrete no horário de cada remédio e "tomei" para marcar a dose
-  (ainda não feitos).
+- **Lembrete dos remédios** (decisões do Dr. Aldo, 16/10/2026), só no
+  aparelho, sem rota nova (`src/services/medication-reminders.ts`):
+  - os horários vêm desta lista; o paciente não cadastra remédio nem horário,
+    só aceita o lembrete no cartão de Minhas medicações;
+  - um aviso por horário, todo dia, **sem o nome dos remédios** ("Hora dos
+    seus remédios das 08:00."), porque a tela bloqueada fica à vista;
+  - a notificação tem o botão **"Já tomei"**, que fecha o aviso sem abrir o
+    app. Sem resposta, a Patrícia lembra de novo uma única vez, 30 minutos
+    depois; "Já tomei" cancela esse segundo aviso;
+  - **registro só no celular** (Dr. Aldo, 16/10/2026): cada "Já tomei" marca
+    o horário na semana do paciente (segunda a domingo), dentro do cartão do
+    lembrete, para ele conferir se tomou. Nada vai para o prontuário, e um
+    horário sem marca fica neutro: não responder não quer dizer que não
+    tomou;
+  - o cartão tem pouco texto: o título, "Horários sugeridos pela IA a partir
+    da sua última receita.", os horários e o botão "Ativar lembretes";
+  - com uma receita nova, os horários mudam sozinhos ao abrir o app. "Sair"
+    desliga o lembrete deste aparelho.
 
 ### Plano de cuidados em texto para celular
 

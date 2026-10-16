@@ -7,6 +7,9 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { BiometricOffer } from '@/components/auth/biometric-offer';
 import { useDailyReminders } from '@/hooks/use-daily-reminders';
+import { useMedicationReminderSync } from '@/hooks/use-medication-reminders';
+// Define a tarefa do "Já tomei" logo ao carregar o app.
+import '@/services/medication-task';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { PatientSessionProvider, usePatientSession } from '@/services/patient-session';
 
@@ -38,8 +41,10 @@ function SplashUntilSession() {
   return <AnimatedSplashOverlay ready={state.status !== 'loading'} />;
 }
 
-// Precisa estar dentro do provider para ler o diário de humor pelo gateway.
+// Precisa estar dentro do provider para ler o diário de humor e a receita
+// pelo gateway.
 function DailyReminders() {
   useDailyReminders();
+  useMedicationReminderSync();
   return null;
 }
