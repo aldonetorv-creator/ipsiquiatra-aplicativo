@@ -52,7 +52,7 @@ export default function MedicacoesScreen() {
 }
 
 function Plan({ plan }: { plan: MedicationPlan }) {
-  const { slots, asNeeded } = medicationSlots(plan);
+  const { slots, asNeeded, unscheduled } = medicationSlots(plan);
   const source = plan.sources[0];
   return (
     <>
@@ -84,6 +84,20 @@ function Plan({ plan }: { plan: MedicationPlan }) {
             {asNeeded.map((medication) => (
               <MedicationRow key={medication.id} medication={medication} />
             ))}
+          </Card>
+        </View>
+      ) : null}
+
+      {unscheduled.length > 0 ? (
+        <View style={styles.slot}>
+          <SectionLabel>Sem horário definido</SectionLabel>
+          <Card style={styles.slotCard}>
+            {unscheduled.map((medication) => (
+              <MedicationRow key={medication.id} medication={medication} />
+            ))}
+            <ThemedText type="small" style={styles.muted}>
+              Confira na receita como tomar.
+            </ThemedText>
           </Card>
         </View>
       ) : null}

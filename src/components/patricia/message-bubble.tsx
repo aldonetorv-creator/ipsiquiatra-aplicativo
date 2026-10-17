@@ -13,12 +13,15 @@ type Props = {
   message: TextMessage;
   // Toque num horário oferecido pela Patrícia real.
   onPickSlot?: (slotId: string) => void;
+  // Toque numa das consultas do paciente identificado (qual remarcar ou cancelar).
+  onPickAppointment?: (appointmentId: string) => void;
   busy?: boolean;
 };
 
-export function MessageBubble({ message, onPickSlot, busy = false }: Props) {
+export function MessageBubble({ message, onPickSlot, onPickAppointment, busy = false }: Props) {
   const fromPatient = message.author === 'patient';
   const slots = !fromPatient && onPickSlot ? (message.slots ?? []) : [];
+  const appointments = !fromPatient && onPickAppointment ? (message.appointments ?? []) : [];
 
   const bubble = (
     <View style={[styles.bubble, fromPatient ? styles.bubblePatient : styles.bubblePatricia]}>
@@ -32,7 +35,7 @@ export function MessageBubble({ message, onPickSlot, busy = false }: Props) {
   );
 
   if (fromPatient) return <View style={[styles.row, styles.rowPatient]}>{bubble}</View>;
-  if (!slots.length && !message.crisis) {
+  if (!slots.length && !appointments.length && !message.crisis) {
     return (
       <View style={styles.row}>
         <PatriciaAvatar size={36} zoomable />
@@ -57,6 +60,24 @@ export function MessageBubble({ message, onPickSlot, busy = false }: Props) {
                 style={({ pressed }) => [styles.slot, (pressed || busy) && styles.pressed]}>
                 <ThemedText type="smallBold" style={styles.slotText}>
                   {slot.label}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        {appointments.length ? (
+          <View style={styles.slots}>
+            {appointments.map((appointment) => (
+              <Pressable
+                key={appointment.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Escolher a consulta de ${appointment.label}`}
+                accessibilityState={{ disabled: busy }}
+                disabled={busy}
+                onPress={() => onPickAppointment?.(appointment.id)}
+                style={({ pressed }) => [styles.slot, (pressed || busy) && styles.pressed]}>
+                <ThemedText type="smallBold" style={styles.slotText}>
+                  {appointment.label}
                 </ThemedText>
               </Pressable>
             ))}

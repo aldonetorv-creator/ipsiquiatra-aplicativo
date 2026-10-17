@@ -95,6 +95,11 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
   - "Sair" volta para ela.
   - A abertura animada só some depois que o app lê a sessão salva, para quem
     já entrou não ver o login piscar.
+- **Modo do app** (`src/config/platform.ts`): `EXPO_PUBLIC_PATIENT_APP_MODE=real`
+  usa estas rotas (`src/services/patient-auth-api.ts` e
+  `src/services/patient-app-gateway-http.ts`), no endereço e com o slug da
+  Patrícia; `demo` usa o login simulado (código 123456) e os dados de exemplo.
+  Sem a chave, é `real` quando há endereço e slug. Os testes rodam em `demo`.
 - O CPF só é usado para pedir o código e não fica salvo no celular.
 - A sessão (token, validade e primeiro nome) fica no armazenamento seguro do
   sistema (`expo-secure-store`), em `src/services/patient-session.tsx`.
@@ -185,7 +190,10 @@ como faz com os horários.
 - **A primeira consulta** continua com a Patrícia do site: no app só entra
   quem já tem cadastro.
 
-### No app, quando a rota existir
+### No app (modo `real`)
+
+Feito no PR #52, com as rotas da plataforma (`correcoes` @ `f33afc7`). No modo
+`demo`, o app continua com a conversa pública e os formulários.
 
 - `src/services/patricia-api.ts` passa a usar a rota nova, com o token da
   sessão.
@@ -195,6 +203,10 @@ como faz com os horários.
   saem.
 - Um `401` com `reason: 'signed_out'` leva à tela de entrar, como as outras
   rotas do paciente.
+- Com mais de uma consulta, a resposta traz `appointments` (`[{id, label}]`):
+  o app mostra um botão para cada uma, como os horários, e o toque volta em
+  `/message` como `{session, appointment: id}`. Um `409 {gone: true}` (a
+  consulta não é do paciente) aparece como a resposta da Patrícia.
 
 ## Próximas rotas (depois do login)
 

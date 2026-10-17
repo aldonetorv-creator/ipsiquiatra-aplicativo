@@ -19,6 +19,8 @@ type Props = {
 
 // Cartões da Patrícia real, os mesmos do chat do site: o termo, confirmar a
 // consulta, a remarcação ou o cancelamento, a identificação e o relato sem IA.
+// Com o paciente identificado pelo login, a consulta se confirma direto no
+// cartão, sem formulário (os dados vêm do cadastro).
 export function PatriciaCard({ message, busy, onAnswerTerms, onAction }: Props) {
   const [form, setForm] = useState<PatriciaForm | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,18 +65,27 @@ export function PatriciaCard({ message, busy, onAnswerTerms, onAction }: Props) 
     ];
     actions = (
       <>
-        <GradientButton
-          label="Preencher e confirmar"
-          chevron={false}
-          disabled={busy || remaining === 0}
-          onPress={() =>
-            setForm({
-              kind: 'booking',
-              path: confirm.declared === 'paciente' ? 'paciente' : 'primeira',
-              when: confirm.when,
-            })
-          }
-        />
+        {card.identified ? (
+          <GradientButton
+            label="Confirmar consulta"
+            chevron={false}
+            disabled={busy || remaining === 0}
+            onPress={() => run({ type: 'confirm' })}
+          />
+        ) : (
+          <GradientButton
+            label="Preencher e confirmar"
+            chevron={false}
+            disabled={busy || remaining === 0}
+            onPress={() =>
+              setForm({
+                kind: 'booking',
+                path: confirm.declared === 'paciente' ? 'paciente' : 'primeira',
+                when: confirm.when,
+              })
+            }
+          />
+        )}
         <OutlineButton label="Trocar horário" onPress={() => !busy && run({ type: 'release' })} />
       </>
     );
@@ -132,7 +143,7 @@ export function PatriciaCard({ message, busy, onAnswerTerms, onAction }: Props) 
         label="Escrever relato"
         chevron={false}
         disabled={busy}
-        onPress={() => setForm({ kind: 'report' })}
+        onPress={() => setForm({ kind: 'report', identified: card.identified === true })}
       />
     );
   }

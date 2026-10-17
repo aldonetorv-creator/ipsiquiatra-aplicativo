@@ -23,7 +23,9 @@ import { ageFrom, isoDate, maskCpf, maskDate, maskPhone, maskTime } from '@/util
 export type PatriciaForm =
   | { kind: 'booking'; path: BookingPath; when: string }
   | { kind: 'identify'; action: 'cancelar' | 'remarcar' }
-  | { kind: 'report' };
+  // `identified`: paciente identificado pelo login, só o texto (nome e celular
+  // vêm do cadastro).
+  | { kind: 'report'; identified?: boolean };
 
 type Props = {
   // null: fechado.
@@ -76,7 +78,9 @@ function Sheet({ form, onSubmit, onClose }: { form: PatriciaForm } & Omit<Props,
     if (form.kind === 'report') {
       return {
         type: 'report',
-        data: { name: value('name'), phone: value('phone'), text: value('text') },
+        data: form.identified
+          ? { text: value('text') }
+          : { name: value('name'), phone: value('phone'), text: value('text') },
       };
     }
     if (form.kind === 'identify') {
@@ -244,12 +248,16 @@ function Sheet({ form, onSubmit, onClose }: { form: PatriciaForm } & Omit<Props,
     submitLabel = 'Enviar para a clínica';
     body = (
       <>
-        {field('name', 'Seu nome', { autoComplete: 'name' })}
-        {field(
-          'phone',
-          'Celular com DDD (para a clínica responder)',
-          { keyboardType: 'phone-pad', placeholder: '(19) 99999-9999' },
-          maskPhone
+        {form.identified ? null : (
+          <>
+            {field('name', 'Seu nome', { autoComplete: 'name' })}
+            {field(
+              'phone',
+              'Celular com DDD (para a clínica responder)',
+              { keyboardType: 'phone-pad', placeholder: '(19) 99999-9999' },
+              maskPhone
+            )}
+          </>
         )}
         {field('text', 'O que você quer contar ao médico', { multiline: true, maxLength: 4000 })}
       </>

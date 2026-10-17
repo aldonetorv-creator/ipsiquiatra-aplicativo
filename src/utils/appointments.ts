@@ -1,10 +1,14 @@
-import { Appointment, DocumentMetadata } from '@/contracts/platform';
+import { Appointment, AppointmentModality, DocumentMetadata } from '@/contracts/platform';
 import { calendarDaysBetween, formatDate } from '@/utils/time';
 
-export const modalityLabel: Record<Appointment['modality'], string> = {
+export const modalityLabel: Record<AppointmentModality, string> = {
   telemedicine: 'Teleconsulta',
   in_person: 'Presencial',
 };
+
+// A forma de atendimento, ou nada quando a plataforma não sabe qual é.
+export const modalityText = (appointment: Appointment) =>
+  appointment.modality ? modalityLabel[appointment.modality] : null;
 
 const endOf = (appointment: Appointment) =>
   new Date(appointment.startsAt).getTime() + appointment.durationMinutes * 60000;
@@ -19,7 +23,10 @@ export function splitAppointments(appointments: Appointment[], now: Date = new D
     appointments
       .filter((item) => item.status === 'scheduled' && endOf(item) > now.getTime())
       .sort(byStart)[0] ?? null;
-  const past = appointments.filter((item) => item.status === 'completed').sort(byStart).reverse();
+  const past = appointments
+    .filter((item) => item.status === 'completed')
+    .sort(byStart)
+    .reverse();
   return { next, past };
 }
 
@@ -56,8 +63,7 @@ export function documentTitle(document: DocumentMetadata, appointment: Appointme
   return document.displayName;
 }
 
-export const INVOICE_PENDING_TEXT =
-  'Será emitida 24 horas depois da realização da consulta.';
+export const INVOICE_PENDING_TEXT = 'Será emitida 24 horas depois da realização da consulta.';
 
 export type DocumentGroup = {
   appointment: Appointment | null;

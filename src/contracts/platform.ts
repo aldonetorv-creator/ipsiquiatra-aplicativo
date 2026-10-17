@@ -47,7 +47,9 @@ export type Appointment = {
   id: string;
   startsAt: string;
   durationMinutes: number;
-  modality: AppointmentModality;
+  // null quando a plataforma não sabe (o médico atende das duas formas e a
+  // consulta não diz qual).
+  modality: AppointmentModality | null;
   status: 'scheduled' | 'completed';
   doctor: Doctor;
   // Nas consultas realizadas: até quando o médico pediu o retorno (ISO 8601).
@@ -90,7 +92,9 @@ export type Medication = {
   name: string;
   // Quanto tomar de cada vez ("1 comprimido").
   dose: string;
-  // Horários do dia; `time` ("08:00") quando a receita diz a hora.
+  // Horários do dia; `time` ("08:00") quando a receita diz a hora. Vazio, sem
+  // "se precisar", quando a receita não diz o horário (ex.: "12/12 h"): o app
+  // mostra em "Sem horário definido" e não lembra.
   schedule: { period: MedicationPeriod; time: string | null }[];
   // "Se precisar": fora dos horários fixos.
   asNeeded: boolean;
@@ -141,9 +145,11 @@ export type TextMessage = {
   author: 'patricia' | 'patient';
   text: string;
   sentAt: string;
-  // Respostas da Patrícia real: horários para o paciente tocar e o bloco de
-  // emergência (o servidor detectou um sinal de crise).
+  // Respostas da Patrícia real: horários para o paciente tocar, as consultas
+  // para escolher qual mudar (paciente identificado) e o bloco de emergência
+  // (o servidor detectou um sinal de crise).
   slots?: PatriciaSlot[];
+  appointments?: PatriciaSlot[];
   crisis?: boolean;
 };
 
@@ -160,13 +166,15 @@ export type MoodCheckMessage = {
 
 // Cartões da Patrícia real (os mesmos do chat do site). `open`: esperando o
 // paciente; `done`: concluído; `closed`: expirou ou foi deixado de lado.
+// `identified`: paciente identificado pelo login, sem formulário (a reserva só
+// com "Confirmar", o relato só com o texto).
 export type PatriciaCard =
   | { type: 'consent' }
-  | { type: 'booking'; confirm: BookingConfirm }
+  | { type: 'booking'; confirm: BookingConfirm; identified?: true }
   | { type: 'reschedule'; confirm: RescheduleConfirm }
   | { type: 'cancel'; confirm: CancelConfirm }
   | { type: 'identify'; action: 'cancelar' | 'remarcar' }
-  | { type: 'report' };
+  | { type: 'report'; identified?: true };
 
 export type PatriciaCardMessage = {
   id: string;
@@ -281,10 +289,18 @@ export interface PatientAppGateway {
   // Patrícia de verdade (a mesma do site): 'live' quando o app está ligado à
   // plataforma; 'demo', com respostas fixas, quando não está.
   patriciaMode(): 'live' | 'demo';
+  // Consultas, documentos, medicações e plano: 'real' quando vêm da plataforma
+  // (services/patient-app-gateway-http.ts); 'demo', os de exemplo.
+  dataMode(): 'real' | 'demo';
   // Termo da conversa com IA: concordar abre a conversa; recusar oferece o
   // relato sem IA.
   answerPatriciaTerms(accept: boolean): Promise<ApiResult<ConversationMessage[]>>;
   pickSlot(messageId: string, slotId: string): Promise<ApiResult<ConversationMessage[]>>;
+  // Paciente identificado: a consulta que ele quer remarcar ou cancelar.
+  pickAppointment(
+    messageId: string,
+    appointmentId: string
+  ): Promise<ApiResult<ConversationMessage[]>>;
   submitPatriciaCard(
     cardId: string,
     action: PatriciaCardAction

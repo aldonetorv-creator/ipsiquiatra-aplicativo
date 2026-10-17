@@ -57,6 +57,7 @@ export default function PatriciaScreen() {
     clearHistory,
     answerTerms,
     pickSlot,
+    pickAppointment,
     submitCard,
   } = useConversation();
   const gateway = usePatientAppGateway();
@@ -125,6 +126,12 @@ export default function PatriciaScreen() {
         busy={waiting}
         onPickSlot={
           live ? async (slotId) => setActionError(await pickSlot(message.id, slotId)) : undefined
+        }
+        onPickAppointment={
+          live
+            ? async (appointmentId) =>
+                setActionError(await pickAppointment(message.id, appointmentId))
+            : undefined
         }
       />
     );

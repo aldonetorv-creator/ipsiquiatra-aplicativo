@@ -60,7 +60,7 @@ export function mockAppointments(now: Date): Appointment[] {
       minute
     ).toISOString();
   // Acompanhamento mensal: seis consultas realizadas e a próxima marcada.
-  const schedule: [number, number, number, Appointment['modality']][] = [
+  const schedule: [number, number, number, NonNullable<Appointment['modality']>][] = [
     [-160, 10, 0, 'in_person'],
     [-127, 15, 0, 'in_person'],
     [-95, 10, 0, 'telemedicine'],
@@ -502,6 +502,9 @@ export function createMockPatientAppGateway({
     patriciaMode() {
       return live ? 'live' : 'demo';
     },
+    dataMode() {
+      return 'demo' as const;
+    },
     async answerPatriciaTerms(accept) {
       if (!live) return demoOnly();
       await load();
@@ -511,6 +514,11 @@ export function createMockPatientAppGateway({
       if (!live) return demoOnly();
       await load();
       return live.pickSlot(messageId, slotId);
+    },
+    async pickAppointment(messageId, appointmentId) {
+      if (!live) return demoOnly();
+      await load();
+      return live.pickAppointment(messageId, appointmentId);
     },
     async submitPatriciaCard(cardId, action) {
       if (!live) return demoOnly();

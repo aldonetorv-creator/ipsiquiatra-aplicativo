@@ -22,7 +22,7 @@ const reply = (data: { ok?: boolean } & Record<string, unknown>, status = 200) =
 });
 
 // Patrícia da plataforma de mentira: cada rota é um jest.fn com a resposta padrão.
-type FakeApi = Record<keyof PatriciaApi, jest.Mock>;
+type FakeApi = Record<Exclude<keyof PatriciaApi, 'identified'>, jest.Mock>;
 
 function fakeApi(overrides: Partial<FakeApi> = {}): FakeApi {
   let sessions = 0;

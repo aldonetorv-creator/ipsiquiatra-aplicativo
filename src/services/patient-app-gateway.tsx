@@ -1,30 +1,49 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useContext } from 'react';
 
-import { patriciaSlug, platformUrl } from '@/config/platform';
+import { patientAppMode, patriciaSlug, platformUrl } from '@/config/platform';
 import { PatientAppGateway } from '@/contracts/platform';
 import { createMockPatientAppGateway } from '@/mocks/patient-app-gateway';
 import { createDeviceCipher } from '@/services/device-cipher';
 import { createEncryptedStore } from '@/services/encrypted-store';
+import { createPlatformPatientAppGateway } from '@/services/patient-app-gateway-http';
 import { createPatriciaHttpApi } from '@/services/patricia-api';
+import { patientSessionLink } from '@/services/session-link';
 
 // Ponto único de composição: as telas falam só com a interface
-// PatientAppGateway. Hoje a implementação padrão é o mock local, com a
-// Patrícia real quando o app sabe o endereço dela (config/platform.ts); o
-// resto da plataforma entra aqui na fase 2, sem mudar as telas.
+// PatientAppGateway. No modo 'real' (config/platform.ts), consultas,
+// documentos, medicações e plano vêm da plataforma, com o token do login
+// (services/patient-app-gateway-http.ts); no modo 'demo', são os de exemplo.
+// A conversa, o humor e os questionários continuam no gateway local, com a
+// Patrícia real quando o app sabe o endereço dela: no modo 'real', a do
+// paciente identificado pelo login (sem formulários); no 'demo', a pública do
+// site.
 //
 // O histórico (conversa, humor, questionários e aceite do termo) fica salvo só
 // neste aparelho, via AsyncStorage, cifrado com uma chave guardada no
 // armazenamento seguro do celular (services/device-cipher.ts). Na web
 // (localStorage), fica sem cifra. O termo da Patrícia diz ao paciente que a
-// conversa fica no celular; os dados dos cartões (CPF, nascimento, celular) vão
-// direto à plataforma.
-const defaultGateway = createMockPatientAppGateway({
+// conversa fica no celular; no modo 'demo', os dados dos cartões (CPF,
+// nascimento, celular) vão direto à plataforma.
+const localGateway = createMockPatientAppGateway({
   store: createEncryptedStore(AsyncStorage, createDeviceCipher()),
   patricia: patriciaSlug
-    ? createPatriciaHttpApi({ baseUrl: platformUrl, slug: patriciaSlug })
+    ? createPatriciaHttpApi({
+        baseUrl: platformUrl,
+        slug: patriciaSlug,
+        session: patientAppMode === 'real' ? patientSessionLink : undefined,
+      })
     : undefined,
 });
+const defaultGateway =
+  patientAppMode === 'real'
+    ? createPlatformPatientAppGateway({
+        baseUrl: platformUrl,
+        slug: patriciaSlug,
+        session: patientSessionLink,
+        local: localGateway,
+      })
+    : localGateway;
 
 const PatientAppGatewayContext = createContext<PatientAppGateway>(defaultGateway);
 
