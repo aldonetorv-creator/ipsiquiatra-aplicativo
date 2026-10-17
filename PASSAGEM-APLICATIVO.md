@@ -6,48 +6,38 @@ iPsiquiatra, ao redor da Patrícia (assistente do Dr. Aldo). Estratégia: "app
 agora, plataforma depois". A plataforma (`aldonetorv-creator/ipsiquiatra`,
 branch `correcoes`) está em pausa de produto até o beta: **não mexer nela**.
 
-## Estado
-- **Pronto e mesclado na `main`** (`a768010`):
-  - Patrícia real; histórico cifrado; login simulado por CPF + SMS (código
-    123456) como primeira tela; biometria; aviso do celular desatualizado;
-    EAS, com build pelo site da Expo (PRs até #41);
-  - #42: termo da Patrícia próprio do app + rota da "Patrícia identificada"
-    documentada;
-  - #43/#44: cartão "Agora" da Início (em acompanhamento, retorno atrasado
-    com "Marcar/Remarcar consulta", consulta próxima);
-  - #45: primeiro acesso em ordem e ritmo (termo → apresentação → humor),
-    código do SMS sem duplicar no Android, patches do SDK 57;
-  - #46: aba Minhas medicações (das receitas validadas) e plano de cuidados
-    em texto para celular (`/plano`);
-  - #47: negrito no app e degradê `Gradients.ai` (roxo → azul);
-  - #51: lembrete dos remédios (horários da receita, "Já tomei" na
-    notificação, 2º aviso em 30 min, semana local segunda a domingo).
-- **Em andamento:** nada. Nenhum PR aberto desta frente. Dependabot #48–#50
-  abertos (não são desta frente).
-- **Falta, em ordem:**
-  1. **Pedido mais recente do Dr. Aldo (16/10), sem resposta dele ainda:**
-     "Eu quero que o aplicativo funcione de verdade, tudo integrado ao
-     prontuário, login com paciente teste". Respondi que exige as rotas do
-     paciente na plataforma (pausada) e pedi 3 decisões:
-     - liberar a plataforma (`ipsiquiatra`, `correcoes`) só para isso?
-     - quem faz a parte da plataforma: esta frente (precisa `add_repo` do
-       `ipsiquiatra`) ou a Opus I?
-     - paciente teste com código fixo, sem SMS (recomendado), ou SMS real?
-     Plano proposto (VERMELHO: login e dados de saúde; revisão dele em cada PR):
-     1. plataforma: login CPF + SMS com paciente teste fictício (CPF e dados
-        inventados);
-     2. plataforma: consulta com `returnDueAt`, receita validada e plano de
-        cuidados do paciente teste; rotas `/me`, consultas, documentos,
-        medicações, plano (contrato em `docs/api-paciente.md`);
-     3. plataforma: Patrícia identificada pelo login;
-     4. app: `PatientAuthApi` e `PatientAppGateway` reais no lugar dos mocks
-        (`src/mocks/patient-auth.ts`, `src/mocks/patient-app-gateway.ts`),
-        com chave de configuração para manter o modo demonstração; APK novo.
-     **Não mexer na plataforma antes da resposta dele.**
-  2. Oferta sem resposta: usar `Gradients.ai` também nos botões do app
-     (hoje `Gradients.primary`).
-  3. Dr. Aldo: gerar APK novo pelo site e testar os lembretes no celular.
-  4. Lojas: conta Apple (US$ 99/ano), política de privacidade, Google Play.
+## Estado (17/10/2026)
+- **App de verdade no ar (PR #52, mesclado em `833736e`):** login CPF + SMS real,
+  consultas, documentos liberados, Minhas medicações e Patrícia identificada saem
+  da plataforma. Chave `EXPO_PUBLIC_PATIENT_APP_MODE=demo|real` (`src/config/platform.ts`);
+  sem a chave vale `real`; testes em `demo`; `eas.json` `preview` = `real`.
+- **Plataforma (repositório `ipsiquiatra`, branch `correcoes` = produção no Render,
+  app.ipsiquiatra.com.br, publica sozinho a cada merge):** liberada pelo Dr. Aldo só
+  para a integração do app; esta sessão faz a parte da plataforma (PRs VERMELHO, gate
+  Sonnet Produto + contralateral, merge pela Orquestradora). Mesclados: #580 (login,
+  `patient-app-service.mjs`), #582 (dados, `patient-app-data.mjs` + teto de 10 códigos
+  errados/24 h), #583 (Patrícia identificada), #584 (teste da lista de SMS).
+- **Em auditoria:** #593 (plataforma), script `scripts/seed-app-test-patient.mjs`
+  (`node scripts/seed-demo-patient.mjs --app-test-patient --confirm-account <e-mail>`,
+  depois `--write` + "SIM"): paciente fictício "Teste Aplicativo (paciente fictício)",
+  CPF 529.982.247-25, celular do Dr. Aldo digitado na hora, 8 consultas, 3 pacotes de
+  documentos, 1 consulta futura, na conta dele em produção. Exceção do §9 autorizada por
+  ele (17/10). Depois do merge: mandar a ele o passo a passo do PowerShell (no relatório
+  do PR) e gerar APK novo (expo.dev → `main`, Android, `preview`).
+- **Pedido passado ao Gerente (17/10):** "Registro externo importado" no prontuário
+  (importar prontuário de outro serviço; IA em rascunho; aprovação do médico; marcado
+  com origem e arquivo original; separado no Panorama).
+- **Decisões do Dr. Aldo ainda abertas:**
+  1. 4 situações do login (sem nascimento não entra; CPF repetido ninguém entra;
+     funciona com a Patrícia desligada; >5 códigos/h por celular param sem aviso);
+  2. data do retorno (`returnDueAt` não existe; recomendado guardar a data pedida);
+  3. plano de cuidados em texto (a plataforma não gera; precisa de gerador com revisão);
+  4. abrir documento dentro do app (hoje só a lista);
+  5. alerta de crise com o cadastro do paciente logado;
+  6. textos novos: "Escolho a consulta de {label}.", "Sua sessão terminou. Entre de novo
+     com CPF e SMS.", "Confirmar consulta", nota do Cofre, "Sem horário definido /
+     Confira na receita como tomar.";
+  7. lacunas do app: questionários ainda de exemplo; conversa e humor só no celular.
 
 ## Branch, PRs e arquivos
 - **Branch:** `claude/adoring-mendel-xq8vl9`, base `main`.
