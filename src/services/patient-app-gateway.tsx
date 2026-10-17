@@ -15,18 +15,24 @@ import { patientSessionLink } from '@/services/session-link';
 // documentos, medicações e plano vêm da plataforma, com o token do login
 // (services/patient-app-gateway-http.ts); no modo 'demo', são os de exemplo.
 // A conversa, o humor e os questionários continuam no gateway local, com a
-// Patrícia real quando o app sabe o endereço dela.
+// Patrícia real quando o app sabe o endereço dela: no modo 'real', a do
+// paciente identificado pelo login (sem formulários); no 'demo', a pública do
+// site.
 //
 // O histórico (conversa, humor, questionários e aceite do termo) fica salvo só
 // neste aparelho, via AsyncStorage, cifrado com uma chave guardada no
 // armazenamento seguro do celular (services/device-cipher.ts). Na web
 // (localStorage), fica sem cifra. O termo da Patrícia diz ao paciente que a
-// conversa fica no celular; os dados dos cartões (CPF, nascimento, celular) vão
-// direto à plataforma.
+// conversa fica no celular; no modo 'demo', os dados dos cartões (CPF,
+// nascimento, celular) vão direto à plataforma.
 const localGateway = createMockPatientAppGateway({
   store: createEncryptedStore(AsyncStorage, createDeviceCipher()),
   patricia: patriciaSlug
-    ? createPatriciaHttpApi({ baseUrl: platformUrl, slug: patriciaSlug })
+    ? createPatriciaHttpApi({
+        baseUrl: platformUrl,
+        slug: patriciaSlug,
+        session: patientAppMode === 'real' ? patientSessionLink : undefined,
+      })
     : undefined,
 });
 const defaultGateway =

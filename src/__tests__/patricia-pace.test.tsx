@@ -16,7 +16,7 @@ jest.mock('expo-router', () => ({
 
 const reply = (data: Record<string, unknown>) => ({ status: 200, ok: true, data });
 
-function fakeApi(): Record<keyof PatriciaApi, jest.Mock> {
+function fakeApi(): Record<Exclude<keyof PatriciaApi, 'identified'>, jest.Mock> {
   return {
     info: jest.fn(async () => reply({ greeting: 'Olá, sou a Patrícia.' })),
     startSession: jest.fn(async () => reply({ session: 'tok-1' })),

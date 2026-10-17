@@ -515,6 +515,11 @@ export function createMockPatientAppGateway({
       await load();
       return live.pickSlot(messageId, slotId);
     },
+    async pickAppointment(messageId, appointmentId) {
+      if (!live) return demoOnly();
+      await load();
+      return live.pickAppointment(messageId, appointmentId);
+    },
     async submitPatriciaCard(cardId, action) {
       if (!live) return demoOnly();
       await load();

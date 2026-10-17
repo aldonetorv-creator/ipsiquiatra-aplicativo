@@ -145,9 +145,11 @@ export type TextMessage = {
   author: 'patricia' | 'patient';
   text: string;
   sentAt: string;
-  // Respostas da Patrícia real: horários para o paciente tocar e o bloco de
-  // emergência (o servidor detectou um sinal de crise).
+  // Respostas da Patrícia real: horários para o paciente tocar, as consultas
+  // para escolher qual mudar (paciente identificado) e o bloco de emergência
+  // (o servidor detectou um sinal de crise).
   slots?: PatriciaSlot[];
+  appointments?: PatriciaSlot[];
   crisis?: boolean;
 };
 
@@ -164,13 +166,15 @@ export type MoodCheckMessage = {
 
 // Cartões da Patrícia real (os mesmos do chat do site). `open`: esperando o
 // paciente; `done`: concluído; `closed`: expirou ou foi deixado de lado.
+// `identified`: paciente identificado pelo login, sem formulário (a reserva só
+// com "Confirmar", o relato só com o texto).
 export type PatriciaCard =
   | { type: 'consent' }
-  | { type: 'booking'; confirm: BookingConfirm }
+  | { type: 'booking'; confirm: BookingConfirm; identified?: true }
   | { type: 'reschedule'; confirm: RescheduleConfirm }
   | { type: 'cancel'; confirm: CancelConfirm }
   | { type: 'identify'; action: 'cancelar' | 'remarcar' }
-  | { type: 'report' };
+  | { type: 'report'; identified?: true };
 
 export type PatriciaCardMessage = {
   id: string;
@@ -292,6 +296,11 @@ export interface PatientAppGateway {
   // relato sem IA.
   answerPatriciaTerms(accept: boolean): Promise<ApiResult<ConversationMessage[]>>;
   pickSlot(messageId: string, slotId: string): Promise<ApiResult<ConversationMessage[]>>;
+  // Paciente identificado: a consulta que ele quer remarcar ou cancelar.
+  pickAppointment(
+    messageId: string,
+    appointmentId: string
+  ): Promise<ApiResult<ConversationMessage[]>>;
   submitPatriciaCard(
     cardId: string,
     action: PatriciaCardAction

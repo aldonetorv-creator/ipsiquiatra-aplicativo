@@ -1,4 +1,10 @@
-import { PatriciaApi, PatriciaConfirm, PatriciaResponse, PatriciaTurn } from '@/contracts/patricia';
+import {
+  PatriciaApi,
+  PatriciaConfirm,
+  PatriciaMessagePayload,
+  PatriciaResponse,
+  PatriciaTurn,
+} from '@/contracts/patricia';
 import {
   ApiResult,
   ConversationMessage,
@@ -8,15 +14,18 @@ import {
   PatriciaCardOutcome,
   TextMessage,
 } from '@/contracts/platform';
+import { gatewayTexts } from '@/services/patient-app-gateway-http';
 import { KeyValueStore } from '@/services/storage';
 import { maskCpfInText } from '@/utils/patient-data';
 
-// Conversa com a Patrícia real, a mesma do site (docs/fases.md, frente 1): o
-// app usa as rotas públicas do chat (contracts/patricia.ts) e mostra os mesmos
-// cartões. A conversa fica salva neste aparelho; a sessão com o servidor só
-// existe enquanto o app está aberto (no servidor, ela some depois de 4 horas
-// parada), e os dados dos cartões (CPF, nascimento, celular) vão direto ao
-// servidor, sem ficar no aparelho.
+// Conversa com a Patrícia real, a mesma do site (docs/fases.md, frente 1). A
+// conversa fica salva neste aparelho; a sessão com o servidor só existe
+// enquanto o app está aberto (no servidor, ela some depois de 4 horas parada).
+// Com as rotas públicas do chat (contracts/patricia.ts), o app mostra os
+// mesmos cartões do site, e os dados deles (CPF, nascimento, celular) vão
+// direto ao servidor, sem ficar no aparelho. Com o paciente identificado pelo
+// login (`api.identified`), os cartões só mostram a consulta e "Confirmar": a
+// plataforma usa o cadastro dele.
 
 export const PATRICIA_CONSENT_KEY = 'ipsiquiatra:patricia-consent';
 // Mudou o texto do termo: o paciente concorda de novo.
@@ -44,7 +53,12 @@ export const patriciaTexts = {
   notNow: 'Agora não, obrigado(a).',
   slotGone: 'Esse horário não está mais na lista. Peça novos horários à Patrícia.',
   inactive: 'Este cartão não está mais ativo.',
+  // A plataforma disse que a sessão do login acabou: o app volta à tela de entrar.
+  signedOut: gatewayTexts.signedOut,
 };
+
+// O que aparece como mensagem do paciente ao tocar numa das consultas.
+export const pickedAppointment = (label: string) => `Escolho a consulta de ${label}.`;
 
 const offlineFor = {
   confirm: 'Não consegui confirmar agora por causa da conexão. Toque em Confirmar de novo.',
@@ -64,6 +78,10 @@ const cardTitles: Record<PatriciaCard['type'], string> = {
 
 // Cartões que dependem da conversa aberta com o servidor.
 const sessionCards: PatriciaCard['type'][] = ['booking', 'reschedule', 'cancel', 'identify'];
+
+// Rota do paciente identificado: o token do login não vale mais.
+const signedOut = (result: PatriciaResponse<unknown> | null) =>
+  result?.status === 401 && result.data.reason === 'signed_out';
 
 const ok = <T>(data: T): ApiResult<T> => ({ ok: true, data, requestId: 'patricia' });
 const fail = (message: string): ApiResult<never> => ({
@@ -104,10 +122,12 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
         }
       }));
 
+  const identified = api.identified === true;
+
   const text = (
     author: TextMessage['author'],
     body: string,
-    extras: Pick<TextMessage, 'slots' | 'crisis'> = {}
+    extras: Pick<TextMessage, 'slots' | 'appointments' | 'crisis'> = {}
   ): TextMessage => ({
     id: nextId('msg'),
     kind: 'text',
@@ -154,6 +174,7 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     if (session) return { session };
     const started = await api.startSession();
     if (!started) return { error: patriciaTexts.offline };
+    if (signedOut(started)) return { error: patriciaTexts.signedOut };
     if (!started.ok || !started.data.session) {
       return { error: started.data.error ?? patriciaTexts.failed };
     }
@@ -165,13 +186,13 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
 
   const confirmCard = (confirm: PatriciaConfirm): PatriciaCard =>
     confirm.kind === 'booking'
-      ? { type: 'booking', confirm }
+      ? { type: 'booking', confirm, ...(identified ? { identified: true as const } : {}) }
       : confirm.kind === 'reschedule'
         ? { type: 'reschedule', confirm }
         : { type: 'cancel', confirm };
 
-  // Resposta da Patrícia: os balões (o primeiro com os horários e o bloco de
-  // emergência) e, se houver, o cartão.
+  // Resposta da Patrícia: os balões (o primeiro com os horários, as consultas
+  // para escolher e o bloco de emergência) e, se houver, o cartão.
   function replyMessages(data: Partial<PatriciaTurn>): ConversationMessage[] {
     const bubbles = data.bubbles?.length ? data.bubbles : [data.reply ?? ''];
     const out: ConversationMessage[] = bubbles
@@ -183,19 +204,22 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
           index === 0
             ? {
                 ...(data.slots?.length ? { slots: data.slots } : {}),
+                ...(data.appointments?.length ? { appointments: data.appointments } : {}),
                 ...(data.crisis ? { crisis: true } : {}),
               }
             : {}
         )
       );
-    if (data.identify) out.push(cardMessage({ type: 'identify', action: data.identify.action }));
-    else if (data.confirm) out.push(cardMessage(confirmCard(data.confirm)));
+    // O paciente identificado nunca recebe o cartão de identificação.
+    if (data.identify && !identified) {
+      out.push(cardMessage({ type: 'identify', action: data.identify.action }));
+    } else if (data.confirm) out.push(cardMessage(confirmCard(data.confirm)));
     return out;
   }
 
   // Uma rodada de conversa. `shown`: o que aparece como mensagem do paciente.
   async function turn(
-    payload: { text?: string; slot?: string; continue?: true },
+    payload: PatriciaMessagePayload,
     shown?: string
   ): Promise<ConversationMessage[]> {
     const out: ConversationMessage[] = [];
@@ -204,9 +228,14 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     if ('error' in started) return [...out, ...(await append(text('patricia', started.error)))];
 
     let result = await api.message(started.session, payload);
+    if (signedOut(result)) {
+      // A sessão do login acabou: o app volta à tela de entrar.
+      session = null;
+      return [...out, ...(await append(text('patricia', patriciaTexts.signedOut)))];
+    }
     if (result?.status === 401) {
       // A conversa expirou no servidor: abre outra. Só um texto pode ser
-      // reenviado; horário e continuação eram da conversa antiga.
+      // reenviado; horário, consulta e continuação eram da conversa antiga.
       session = null;
       const again = await ensureSession();
       if ('error' in again) return [...out, ...(await append(text('patricia', again.error)))];
@@ -218,6 +247,10 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
         ];
       }
       result = await api.message(again.session, payload);
+      if (signedOut(result)) {
+        session = null;
+        return [...out, ...(await append(text('patricia', patriciaTexts.signedOut)))];
+      }
     }
     if (!result) return [...out, ...(await append(text('patricia', patriciaTexts.offline)))];
     if (!result.ok) {
@@ -253,8 +286,8 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     if (!session) {
       changed = closeSessionCards(patriciaTexts.expired).length > 0;
       for (const message of messages()) {
-        if (message.kind === 'text' && message.slots?.length) {
-          replace({ ...message, slots: undefined });
+        if (message.kind === 'text' && (message.slots?.length || message.appointments?.length)) {
+          replace({ ...message, slots: undefined, appointments: undefined });
           changed = true;
         }
       }
@@ -281,7 +314,7 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
       const added = await append(
         text('patient', patriciaTexts.refused),
         text('patricia', patriciaTexts.noAi),
-        cardMessage({ type: 'report' })
+        cardMessage({ type: 'report', ...(identified ? { identified: true as const } : {}) })
       );
       return ok([...updated, ...added]);
     }
@@ -317,6 +350,22 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     return ok([used, ...(await turn({ slot: slotId }, `Escolho ${slot.label}.`))]);
   }
 
+  // Paciente identificado com mais de uma consulta: a que ele quer mudar.
+  async function pickAppointment(messageId: string, appointmentId: string) {
+    const message = messages().find(
+      (item): item is TextMessage => item.id === messageId && item.kind === 'text'
+    );
+    const picked = message?.appointments?.find((item) => item.id === appointmentId);
+    if (!message || !picked) return fail(patriciaTexts.slotGone);
+    // As consultas somem depois do toque, como os horários.
+    const used = replace({ ...message, appointments: undefined });
+    await save();
+    return ok([
+      used,
+      ...(await turn({ appointment: appointmentId }, pickedAppointment(picked.label))),
+    ]);
+  }
+
   // Termina o cartão: `done` com o resumo, ou `closed`, e as mensagens da Patrícia.
   async function finish(
     card: PatriciaCardMessage,
@@ -347,6 +396,10 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     doneNote: string
   ): Promise<ApiResult<PatriciaCardOutcome>> {
     if (!result) return fail(offline);
+    if (signedOut(result)) {
+      session = null;
+      return fail(patriciaTexts.signedOut);
+    }
     if (result.status === 401) return ok(await expire(card));
     if (result.status === 429) return fail(result.data.error ?? patriciaTexts.failed);
     if (result.ok) {
@@ -370,8 +423,10 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     const type = card.card.type;
 
     if (action.type === 'report' && type === 'report') {
-      const result = await api.noAiReport(action.data);
+      // Paciente identificado: só o texto; nome e celular vêm do cadastro.
+      const result = await api.noAiReport(identified ? { text: action.data.text } : action.data);
       if (!result) return fail(offlineFor.report);
+      if (signedOut(result)) return fail(patriciaTexts.signedOut);
       if (result.status === 422) return ok({ messages: [], fieldErrors: result.data.errors ?? {} });
       if (!result.ok) return fail(result.data.error ?? patriciaTexts.failed);
       return ok(
@@ -399,7 +454,21 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
       return ok(await finish(card, 'closed', 'Horário liberado.', [patriciaTexts.released]));
     }
 
-    if (action.type === 'confirm_booking' && card.card.type === 'booking') {
+    // Paciente identificado: a reserva vai só com o holdId (os dados vêm do cadastro).
+    if (action.type === 'confirm' && card.card.type === 'booking' && identified) {
+      const outcome = await conclude(
+        card,
+        await api.confirm(current, card.card.confirm.holdId),
+        offlineFor.confirm,
+        'Consulta marcada.'
+      );
+      if (outcome.ok && outcome.data.messages[0]?.kind === 'patricia_card') {
+        booked = booked || (outcome.data.messages[0] as PatriciaCardMessage).status === 'done';
+      }
+      return outcome;
+    }
+
+    if (action.type === 'confirm_booking' && card.card.type === 'booking' && !identified) {
       const result = await api.confirm(current, card.card.confirm.holdId, {
         declared: action.declared,
         data: action.data,
@@ -440,7 +509,7 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
       );
     }
 
-    if (action.type === 'identify' && type === 'identify') {
+    if (action.type === 'identify' && type === 'identify' && !identified) {
       const result = await api.identify(current, action.data);
       if (!result) return fail(offlineFor.identify);
       if (result.status === 401) return ok(await expire(card));
@@ -485,7 +554,17 @@ export function createPatriciaLive({ api, store, now, nextId, messages, save, we
     leaveSent = false;
   };
 
-  return { send, onLoad, answerTerms, pickSlot, submitCard, leave, reset, hasConsent };
+  return {
+    send,
+    onLoad,
+    answerTerms,
+    pickSlot,
+    pickAppointment,
+    submitCard,
+    leave,
+    reset,
+    hasConsent,
+  };
 }
 
 export type PatriciaLive = ReturnType<typeof createPatriciaLive>;

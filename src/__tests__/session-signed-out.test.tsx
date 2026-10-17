@@ -1,10 +1,12 @@
 /// <reference types="jest" />
 
-import { renderRouter, screen } from 'expo-router/testing-library';
+import { router } from 'expo-router';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { Text } from 'react-native';
 
 import EntrarScreen from '@/app/entrar';
 import HomeScreen from '@/app/index';
+import PatriciaScreen from '@/app/patricia';
 import AppTabs from '@/components/app-tabs';
 import { PatientAuthApi, PatientSession } from '@/contracts/patient-auth';
 import { PatientAppGateway } from '@/contracts/platform';
@@ -13,6 +15,7 @@ import { createMockPatientAuth } from '@/mocks/patient-auth';
 import { noBiometrics } from '@/services/biometrics';
 import { PatientAppGatewayProvider } from '@/services/patient-app-gateway';
 import { createPlatformPatientAppGateway } from '@/services/patient-app-gateway-http';
+import { createPatriciaHttpApi } from '@/services/patricia-api';
 import { createMemorySessionStore, PatientSessionProvider } from '@/services/patient-session';
 import { AttachableSessionLink, createSessionLink } from '@/services/session-link';
 
@@ -41,10 +44,12 @@ async function renderApp({
   gateway = createMockPatientAppGateway(),
   api = createMockPatientAuth({ firstName: 'Ana' }),
   link = createSessionLink(),
+  patricia = stub('Conversa com a Patrícia'),
 }: {
   gateway?: PatientAppGateway;
   api?: PatientAuthApi;
   link?: AttachableSessionLink;
+  patricia?: () => React.JSX.Element;
 } = {}) {
   const store = createMemorySessionStore(savedSession);
   function Layout() {
@@ -61,7 +66,7 @@ async function renderApp({
       _layout: Layout,
       index: HomeScreen,
       entrar: EntrarScreen,
-      patricia: stub('Conversa com a Patrícia'),
+      patricia,
       medicacoes: stub('Minhas medicações'),
       consultas: stub('Consultas'),
       cofre: stub('Cofre'),
@@ -112,5 +117,36 @@ describe('sessão encerrada na plataforma', () => {
     expect(await screen.findByRole('button', { name: ACCOUNT })).toBeOnTheScreen();
     expect(checkSession).toHaveBeenCalledWith('tok');
     expect(await store.load()).toEqual(savedSession);
+  });
+
+  it('um 401 signed_out na Patrícia do paciente identificado também volta para a tela de entrar', async () => {
+    const link = createSessionLink();
+    const patriciaFetch = jest.fn(async () => ({
+      status: 401,
+      ok: false,
+      json: async () => ({ ok: false, reason: 'signed_out' }),
+    })) as unknown as jest.MockedFunction<typeof fetch>;
+    const gateway = createMockPatientAppGateway({
+      patricia: createPatriciaHttpApi({
+        baseUrl: 'https://app.ipsiquiatra.com.br',
+        slug: 'dr-aldo-araujo-psiquiatra',
+        fetch: patriciaFetch,
+        session: link,
+      }),
+    });
+    const store = await renderApp({ gateway, link, patricia: PatriciaScreen });
+    expect(await screen.findByRole('button', { name: ACCOUNT })).toBeOnTheScreen();
+    await act(() => router.push('/patricia'));
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Concordo e continuar' }));
+
+    expect(await screen.findByRole('button', { name: ENTER })).toBeOnTheScreen();
+    expect(await store.load()).toBeNull();
+    expect(patriciaFetch).toHaveBeenCalledWith(
+      'https://app.ipsiquiatra.com.br/api/patient-app/dr-aldo-araujo-psiquiatra/patricia/session',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer tok' }),
+      })
+    );
   });
 });

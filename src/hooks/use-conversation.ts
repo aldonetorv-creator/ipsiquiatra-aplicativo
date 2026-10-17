@@ -265,6 +265,14 @@ export function useConversation() {
       ),
     [apply, gateway]
   );
+  const pickAppointment = useCallback(
+    (messageId: string, appointmentId: string) =>
+      apply(
+        () => gateway.pickAppointment(messageId, appointmentId),
+        (messages) => messages
+      ),
+    [apply, gateway]
+  );
   // Devolve o resultado do cartão (avisos dos campos, quando ele continua
   // aberto) ou a mensagem de erro.
   const submitCard = useCallback(
@@ -295,6 +303,7 @@ export function useConversation() {
     clearHistory,
     answerTerms,
     pickSlot,
+    pickAppointment,
     submitCard,
   };
 }

@@ -22,7 +22,7 @@ const reply = (data: { ok?: boolean } & Record<string, unknown>, status = 200) =
 const SLOT = 'terça-feira, 13/10, às 08:00';
 
 // Patrícia da plataforma de mentira, só com as rotas que o fluxo de agendamento usa.
-function fakeApi(): Record<keyof PatriciaApi, jest.Mock> {
+function fakeApi(): Record<Exclude<keyof PatriciaApi, 'identified'>, jest.Mock> {
   return {
     info: jest.fn(async () =>
       reply({ ok: true, greeting: 'Olá, sou a Patrícia. Em que posso ajudar?' })
