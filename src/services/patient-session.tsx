@@ -16,8 +16,11 @@ import {
   PatientAuthApi,
   PatientSession,
 } from '@/contracts/patient-auth';
+import { patientAppMode, patriciaSlug, platformUrl } from '@/config/platform';
 import { createMockPatientAuth, DEMO_LOGIN_CODE } from '@/mocks/patient-auth';
 import { BiometricAuth, BiometricKind, createDeviceBiometrics } from '@/services/biometrics';
+import { createPatientAuthHttpApi } from '@/services/patient-auth-api';
+import { AttachableSessionLink, patientSessionLink } from '@/services/session-link';
 
 type SecureStoreModule = typeof import('expo-secure-store');
 
@@ -129,13 +132,19 @@ type ProviderProps = {
   store?: SessionStore;
   biometrics?: BiometricAuth;
   demoCode?: string | null;
+  // Por onde o gateway da plataforma lê o token e avisa que a sessão acabou.
+  link?: AttachableSessionLink;
   now?: () => Date;
   children: ReactNode;
 };
 
-// Por enquanto o login é o simulado (docs/api-paciente.md): a plataforma ainda
-// não tem as rotas do paciente.
-const defaultApi = createMockPatientAuth();
+// Login de verdade no modo 'real' (config/platform.ts, docs/api-paciente.md);
+// no modo 'demo', o simulado, com o código fixo.
+const realMode = patientAppMode === 'real';
+const defaultApi = realMode
+  ? createPatientAuthHttpApi({ baseUrl: platformUrl, slug: patriciaSlug })
+  : createMockPatientAuth();
+const defaultDemoCode = realMode ? null : DEMO_LOGIN_CODE;
 let defaultStore: SessionStore | null = null;
 let defaultBiometrics: BiometricAuth | null = null;
 const systemNow = () => new Date();
@@ -144,7 +153,8 @@ export function PatientSessionProvider({
   api = defaultApi,
   store,
   biometrics,
-  demoCode = DEMO_LOGIN_CODE,
+  demoCode = defaultDemoCode,
+  link = patientSessionLink,
   now = systemNow,
   children,
 }: ProviderProps) {
@@ -159,6 +169,29 @@ export function PatientSessionProvider({
   // Um pedido de biometria por vez (a tela pede sozinha e o botão também).
   const authenticating = useRef(false);
   const leftAt = useRef<number | null>(null);
+  // Token da sessão atual, para o gateway da plataforma ler fora da tela.
+  const tokenRef = useRef<string | null>(null);
+  // Troca a sessão (entrou, saiu): o token acompanha.
+  const enter = useCallback((next: SessionState) => {
+    tokenRef.current = 'session' in next ? next.session.token : null;
+    setState(next);
+  }, []);
+
+  // A sessão acabou na plataforma (401 signed_out): sai só do celular, sem
+  // chamar a logout, porque o token já não vale. As abas somem e o app volta
+  // à tela de entrar.
+  const endSession = useCallback(() => {
+    if (tokenRef.current === null) return;
+    enter({ status: 'signed_out' });
+    setBiometricUnlock(false);
+    setOfferBiometrics(false);
+    sessionStore.clear().catch(() => undefined);
+  }, [enter, sessionStore]);
+
+  useEffect(
+    () => link.attach({ token: () => tokenRef.current, signedOut: endSession }),
+    [link, endSession]
+  );
 
   useEffect(() => {
     let active = true;
@@ -172,19 +205,31 @@ export function PatientSessionProvider({
       // Sessão vencida não vale: o paciente entra de novo.
       if (!session || new Date(session.expiresAt) <= now()) {
         if (session) sessionStore.clear().catch(() => undefined);
-        setState({ status: 'signed_out' });
-      } else if (!unlockOn) {
-        setState({ status: 'signed_in', session });
-      } else if (!kind) {
+        enter({ status: 'signed_out' });
+        return;
+      }
+      if (unlockOn && !kind) {
         // A biometria estava ligada, mas o aparelho não tem mais nenhuma
         // cadastrada: por segurança, o paciente entra de novo pelo SMS.
         sessionStore.clear().catch(() => undefined);
         api.logout(session.token).catch(() => undefined);
-        setState({ status: 'signed_out' });
-      } else {
-        setBiometricUnlock(true);
-        setState({ status: 'locked', session });
+        enter({ status: 'signed_out' });
+        return;
       }
+      if (unlockOn) {
+        setBiometricUnlock(true);
+        enter({ status: 'locked', session });
+      } else {
+        enter({ status: 'signed_in', session });
+      }
+      // Confere na plataforma se a sessão salva ainda vale (Sair em outro
+      // aparelho, celular trocado no cadastro). Sem conexão, fica como está.
+      api
+        .checkSession?.(session.token)
+        .then((check) => {
+          if (active && check.status === 'signed_out') endSession();
+        })
+        .catch(() => undefined);
     });
     return () => {
       active = false;
@@ -222,11 +267,11 @@ export function PatientSessionProvider({
         await sessionStore.save(result.data).catch(() => undefined);
         setBiometricKind(kind);
         setOfferBiometrics(kind !== null);
-        setState({ status: 'signed_in', session: result.data });
+        enter({ status: 'signed_in', session: result.data });
       }
       return result;
     },
-    [api, sessionStore, biometricAuth]
+    [api, enter, sessionStore, biometricAuth]
   );
 
   const confirmBiometrics = useCallback(
@@ -277,12 +322,12 @@ export function PatientSessionProvider({
   const logout = useCallback(async () => {
     const current =
       state.status === 'signed_in' || state.status === 'locked' ? state.session : null;
-    setState({ status: 'signed_out' });
+    enter({ status: 'signed_out' });
     setBiometricUnlock(false);
     setOfferBiometrics(false);
     await sessionStore.clear().catch(() => undefined);
     if (current) await api.logout(current.token).catch(() => undefined);
-  }, [api, sessionStore, state]);
+  }, [api, enter, sessionStore, state]);
 
   const value = useMemo<SessionContext>(
     () => ({

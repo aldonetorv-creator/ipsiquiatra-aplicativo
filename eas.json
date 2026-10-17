@@ -6,6 +6,11 @@
   "build": {
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_PATIENT_APP_MODE": "real",
+        "EXPO_PUBLIC_PLATFORM_URL": "https://app.ipsiquiatra.com.br",
+        "EXPO_PUBLIC_PATRICIA_SLUG": "dr-aldo-araujo-psiquiatra"
+      },
       "android": {
         "buildType": "apk",
         "image": "latest"

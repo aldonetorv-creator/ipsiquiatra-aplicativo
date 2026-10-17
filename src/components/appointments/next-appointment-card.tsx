@@ -9,7 +9,7 @@ import { IconBadge } from '@/components/ui/icon-badge';
 import { OutlineButton } from '@/components/ui/outline-button';
 import { Tokens } from '@/constants/theme';
 import { Appointment } from '@/contracts/platform';
-import { modalityLabel } from '@/utils/appointments';
+import { modalityText } from '@/utils/appointments';
 import { formatDayMonth, formatDaysUntil, formatTime } from '@/utils/time';
 
 type Props = {
@@ -21,6 +21,8 @@ type Props = {
 
 export function NextAppointmentCard({ appointment, onReschedule, onOpen }: Props) {
   const isTelemedicine = appointment.modality === 'telemedicine';
+  // Sem a forma de atendimento (a plataforma não sabe), o selo não aparece.
+  const modality = modalityText(appointment);
   return (
     <Card>
       <View style={styles.header}>
@@ -54,20 +56,22 @@ export function NextAppointmentCard({ appointment, onReschedule, onOpen }: Props
             {appointment.doctor.specialty}
           </ThemedText>
         </View>
-        <View style={styles.modality}>
-          <SymbolView
-            name={
-              isTelemedicine
-                ? { ios: 'video.fill', android: 'videocam', web: 'videocam' }
-                : { ios: 'building.2', android: 'apartment', web: 'apartment' }
-            }
-            tintColor={Tokens.color.brand}
-            size={16}
-          />
-          <ThemedText type="smallBold" style={styles.modalityText}>
-            {modalityLabel[appointment.modality]}
-          </ThemedText>
-        </View>
+        {modality ? (
+          <View style={styles.modality}>
+            <SymbolView
+              name={
+                isTelemedicine
+                  ? { ios: 'video.fill', android: 'videocam', web: 'videocam' }
+                  : { ios: 'building.2', android: 'apartment', web: 'apartment' }
+              }
+              tintColor={Tokens.color.brand}
+              size={16}
+            />
+            <ThemedText type="smallBold" style={styles.modalityText}>
+              {modality}
+            </ThemedText>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.actions}>

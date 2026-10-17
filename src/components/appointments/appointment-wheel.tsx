@@ -14,7 +14,7 @@ import { DateBadge } from '@/components/appointments/date-badge';
 import { ThemedText } from '@/components/themed-text';
 import { Tokens } from '@/constants/theme';
 import { Appointment } from '@/contracts/platform';
-import { modalityLabel } from '@/utils/appointments';
+import { modalityText } from '@/utils/appointments';
 import { formatLongDate } from '@/utils/time';
 import { wheelIndexAt, wheelInterpolation } from '@/utils/wheel';
 
@@ -103,7 +103,9 @@ export function AppointmentWheel({ appointments, onSelect }: Props) {
                     {when}
                   </ThemedText>
                   <ThemedText type="small" style={styles.muted} numberOfLines={1}>
-                    {`${appointment.doctor.name} · ${modalityLabel[appointment.modality]}`}
+                    {[appointment.doctor.name, modalityText(appointment)]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </ThemedText>
                 </View>
               </Pressable>

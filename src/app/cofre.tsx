@@ -10,16 +10,18 @@ import { PageScreen } from '@/components/ui/page-screen';
 import { Tokens } from '@/constants/theme';
 import { Appointment, DocumentMetadata } from '@/contracts/platform';
 import { useDocuments } from '@/hooks/use-documents';
+import { usePatientAppGateway } from '@/services/patient-app-gateway';
 import {
   DocumentGroup,
   documentTitle,
   INVOICE_PENDING_TEXT,
-  modalityLabel,
+  modalityText,
 } from '@/utils/appointments';
 import { dateBadge, formatDate, formatLongDate, formatTime } from '@/utils/time';
 
 export default function CofreScreen() {
   const documents = useDocuments();
+  const realData = usePatientAppGateway().dataMode() === 'real';
   // Vindo da roleta de Consultas: mostra só os documentos daquela consulta.
   const { consulta } = useLocalSearchParams<{ consulta?: string }>();
   const groups =
@@ -38,7 +40,9 @@ export default function CofreScreen() {
           size={18}
         />
         <ThemedText type="small" style={styles.noticeText}>
-          Documentos de exemplo, para demonstração. Os arquivos ainda não abrem nesta versão.
+          {realData
+            ? 'Cada documento chega a você por link no SMS. Por enquanto, os arquivos não abrem pelo app.'
+            : 'Documentos de exemplo, para demonstração. Os arquivos ainda não abrem nesta versão.'}
         </ThemedText>
       </View>
 
@@ -109,9 +113,13 @@ function AppointmentRow({ appointment }: { appointment: Appointment }) {
           {`Consulta com ${appointment.doctor.name}`}
         </ThemedText>
         <ThemedText type="small" style={styles.muted}>
-          {`${formatLongDate(appointment.startsAt)} · ${formatTime(appointment.startsAt)} · ${
-            modalityLabel[appointment.modality]
-          }`}
+          {[
+            formatLongDate(appointment.startsAt),
+            formatTime(appointment.startsAt),
+            modalityText(appointment),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </ThemedText>
       </View>
     </View>

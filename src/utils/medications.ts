@@ -28,11 +28,14 @@ export type MedicationSlot = {
 export const timeOf = (slot: Pick<MedicationSlot, 'period' | 'time'>) =>
   slot.time ?? periodTimes[slot.period];
 
-// Os remédios por horário do dia, na ordem do dia, e os de "se precisar".
-// Um remédio de duas tomadas aparece nos dois horários.
+// Os remédios por horário do dia, na ordem do dia, os de "se precisar" e os
+// que a receita não diz o horário ("12/12 h" não vira hora: a plataforma não
+// inventa). Um remédio de duas tomadas aparece nos dois horários. Os sem
+// horário não têm lembrete (utils/medication-reminders.ts só usa `slots`).
 export function medicationSlots(plan: MedicationPlan): {
   slots: MedicationSlot[];
   asNeeded: Medication[];
+  unscheduled: Medication[];
 } {
   const slots = new Map<string, MedicationSlot>();
   for (const medication of plan.medications) {
@@ -46,5 +49,8 @@ export function medicationSlots(plan: MedicationPlan): {
   return {
     slots: [...slots.values()].sort((a, b) => timeOf(a).localeCompare(timeOf(b))),
     asNeeded: plan.medications.filter((medication) => medication.asNeeded),
+    unscheduled: plan.medications.filter(
+      (medication) => !medication.asNeeded && medication.schedule.length === 0
+    ),
   };
 }

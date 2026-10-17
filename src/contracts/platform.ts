@@ -47,7 +47,9 @@ export type Appointment = {
   id: string;
   startsAt: string;
   durationMinutes: number;
-  modality: AppointmentModality;
+  // null quando a plataforma não sabe (o médico atende das duas formas e a
+  // consulta não diz qual).
+  modality: AppointmentModality | null;
   status: 'scheduled' | 'completed';
   doctor: Doctor;
   // Nas consultas realizadas: até quando o médico pediu o retorno (ISO 8601).
@@ -90,7 +92,9 @@ export type Medication = {
   name: string;
   // Quanto tomar de cada vez ("1 comprimido").
   dose: string;
-  // Horários do dia; `time` ("08:00") quando a receita diz a hora.
+  // Horários do dia; `time` ("08:00") quando a receita diz a hora. Vazio, sem
+  // "se precisar", quando a receita não diz o horário (ex.: "12/12 h"): o app
+  // mostra em "Sem horário definido" e não lembra.
   schedule: { period: MedicationPeriod; time: string | null }[];
   // "Se precisar": fora dos horários fixos.
   asNeeded: boolean;
@@ -281,6 +285,9 @@ export interface PatientAppGateway {
   // Patrícia de verdade (a mesma do site): 'live' quando o app está ligado à
   // plataforma; 'demo', com respostas fixas, quando não está.
   patriciaMode(): 'live' | 'demo';
+  // Consultas, documentos, medicações e plano: 'real' quando vêm da plataforma
+  // (services/patient-app-gateway-http.ts); 'demo', os de exemplo.
+  dataMode(): 'real' | 'demo';
   // Termo da conversa com IA: concordar abre a conversa; recusar oferece o
   // relato sem IA.
   answerPatriciaTerms(accept: boolean): Promise<ApiResult<ConversationMessage[]>>;

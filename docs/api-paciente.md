@@ -95,6 +95,11 @@ risco de CSRF; o CORS pode continuar fechado para outros sites.
   - "Sair" volta para ela.
   - A abertura animada só some depois que o app lê a sessão salva, para quem
     já entrou não ver o login piscar.
+- **Modo do app** (`src/config/platform.ts`): `EXPO_PUBLIC_PATIENT_APP_MODE=real`
+  usa estas rotas (`src/services/patient-auth-api.ts` e
+  `src/services/patient-app-gateway-http.ts`), no endereço e com o slug da
+  Patrícia; `demo` usa o login simulado (código 123456) e os dados de exemplo.
+  Sem a chave, é `real` quando há endereço e slug. Os testes rodam em `demo`.
 - O CPF só é usado para pedir o código e não fica salvo no celular.
 - A sessão (token, validade e primeiro nome) fica no armazenamento seguro do
   sistema (`expo-secure-store`), em `src/services/patient-session.tsx`.
